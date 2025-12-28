@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlparse
 from typing import Optional
 
 from db.database import AsyncDB, PostgresDB, SQLiteDB
@@ -50,6 +51,31 @@ async def init_database():
 
     await db.connect()
     await apply_migrations(db, db_type)
+
+    # Log a clear confirmation that the database is connected and usable
+    try:
+        if db_type == "postgres":
+            # Get server version information
+            row = await db.fetch_one("SELECT version() AS version")
+            version = row.get("version") if row else "unknown"
+
+            # Sanitize DATABASE_URL for logging (mask password)
+            parsed = urlparse(os.environ.get("DATABASE_URL", ""))
+            host = parsed.hostname or "?"
+            port = parsed.port or 5432
+            dbname = (parsed.path or "/").lstrip("/") or "?"
+            logger.info(
+                f"Database connected: type=postgres host={host} port={port} db={dbname} version={version}"
+            )
+        elif db_type == "sqlite":
+            row = await db.fetch_one("SELECT sqlite_version() AS version")
+            version = row.get("version") if row else "unknown"
+            db_path = os.environ.get("DATABASE_URL", "lorecard.db")
+            logger.info(
+                f"Database connected: type=sqlite file={db_path} version={version}"
+            )
+    except Exception as e:
+        logger.warning(f"Database info log failed: {e}")
 
 
 async def close_database():
