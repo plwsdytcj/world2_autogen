@@ -12,6 +12,7 @@ import { RegenerateFieldModal } from './RegenerateFieldModal';
 import { useProjectSources } from '../../hooks/useProjectSources';
 import { notifications } from '@mantine/notifications';
 import apiClient from '../../services/api';
+import { ExportToMobileModal } from '../common/ExportToMobileModal';
 
 interface CharacterEditorProps {
   project: Project;
@@ -28,6 +29,8 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
   const [regenerateModalOpened, { open: openRegenerateModal, close: closeRegenerateModal }] = useDisclosure(false);
   const [fieldToRegen, setFieldToRegen] = useState<keyof typeof form.values | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingJson, setIsDownloadingJson] = useState(false);
+  const [exportMobileOpened, setExportMobileOpened] = useState(false);
 
   const form = useForm({
     initialValues: {
@@ -104,6 +107,44 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
     }
   };
 
+  const handleExportJson = async () => {
+    if (!characterCardResponse?.data?.name) {
+      notifications.show({
+        color: 'yellow',
+        title: 'Cannot Export',
+        message: 'Please generate or enter a name for the character before exporting.',
+      });
+      return;
+    }
+    setIsDownloadingJson(true);
+    try {
+      const response = await apiClient.get(`/projects/${project.id}/character/export`, {
+        params: { format: 'json' },
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `${characterCardResponse.data.name}.json`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export JSON failed:', err);
+      notifications.show({
+        title: 'Export JSON Failed',
+        message: 'Could not export the character card as JSON.',
+        color: 'red',
+      });
+    } finally {
+      setIsDownloadingJson(false);
+    }
+  };
+
   if (isLoadingCard) {
     return <Loader />;
   }
@@ -145,6 +186,13 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
       />
       <form onSubmit={form.onSubmit((values) => updateCardMutation.mutate({ projectId: project.id, data: values }))}>
         <Stack>
+          <ExportToMobileModal
+            opened={exportMobileOpened}
+            onClose={() => setExportMobileOpened(false)}
+            projectId={project.id}
+            contentType="character"
+            defaultFormat="png"
+          />
           <Group justify="space-between">
             <Title order={4}>Character Card</Title>
             <Group>
@@ -176,6 +224,22 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 disabled={!characterCardResponse?.data.name}
               >
                 Export Card
+              </Button>
+              <Button
+                leftSection={<IconDownload size={16} />}
+                variant="light"
+                onClick={handleExportJson}
+                loading={isDownloadingJson}
+                disabled={!characterCardResponse?.data.name}
+              >
+                Export JSON
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => setExportMobileOpened(true)}
+                disabled={!characterCardResponse?.data.name}
+              >
+                Export to Mobile
               </Button>
             </Group>
           </Group>

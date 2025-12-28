@@ -1,4 +1,6 @@
 from typing import Literal
+import os
+from urllib.parse import urlparse, quote
 from html_to_markdown import convert_to_markdown
 import httpx
 from bs4 import BeautifulSoup
@@ -130,13 +132,43 @@ class Scraper:
         Returns the HTML content as a string.
         """
         cookies = {"ageVerified": "true"}
-        async with httpx.AsyncClient(follow_redirects=True) as client:
-            response = await client.get(url, timeout=self.timeout, cookies=cookies)
-            response.raise_for_status()
-            content_type = response.headers.get("Content-Type", "")
+        headers = {
+            "User-Agent": os.getenv(
+                "SCRAPER_USER_AGENT",
+                "lorecard/2.5 (+https://github.com/bmen25124/lorecard)",
+            ),
+            "Accept-Language": os.getenv("SCRAPER_ACCEPT_LANGUAGE", "en-US,en;q=0.9"),
+        }
+
+        async with httpx.AsyncClient(follow_redirects=True, headers=headers) as client:
+            try:
+                response = await client.get(url, timeout=self.timeout, cookies=cookies)
+                response.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                # Fallback for Wikipedia: try the REST HTML endpoint when blocked
+                host = urlparse(url).netloc
+                if (
+                    e.response is not None
+                    and e.response.status_code in (403, 429)
+                    and "wikipedia.org" in host
+                ):
+                    rest_html = await self._fetch_wikipedia_rest_html(client, url)
+                    if rest_html:
+                        html = rest_html
+                        # continue to the post-processing section below
+                        content_type = "text/html"
+                        # fall through
+                    else:
+                        raise
+                else:
+                    raise
+            else:
+                content_type = response.headers.get("Content-Type", "")
+                html = response.text
+
             if "text/html" not in content_type:
                 raise ValueError(f"Invalid content type: {content_type}")
-            html = response.text
+
             if clean:
                 html = clean_html(html)
             if type == "markdown":
@@ -145,3 +177,25 @@ class Scraper:
             if pretty and type == "html":
                 html = BeautifulSoup(html, "lxml").prettify()
             return html.strip()
+
+    async def _fetch_wikipedia_rest_html(self, client: httpx.AsyncClient, url: str) -> str | None:
+        """Attempt to fetch HTML via Wikimedia REST API for a /wiki/<Title> page.
+
+        Example: https://en.wikipedia.org/wiki/Foobar ->
+                 https://en.wikipedia.org/api/rest_v1/page/html/Foobar
+        """
+        try:
+            parsed = urlparse(url)
+            if not parsed.path.startswith("/wiki/"):
+                return None
+            title = parsed.path[len("/wiki/") :]
+            if not title:
+                return None
+            rest_url = f"{parsed.scheme}://{parsed.netloc}/api/rest_v1/page/html/{quote(title)}"
+            resp = await client.get(rest_url, timeout=self.timeout)
+            resp.raise_for_status()
+            if "text/html" in resp.headers.get("Content-Type", ""):
+                return resp.text
+            return None
+        except Exception:
+            return None

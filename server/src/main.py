@@ -39,6 +39,7 @@ from controllers.background_jobs import (  # noqa: E402
 )
 from controllers.analytics import AnalyticsController  # noqa: E402
 from controllers.global_templates import GlobalTemplateController  # noqa: E402
+from controllers.shares import ShareController  # noqa: E402
 from controllers.credentials import CredentialsController  # noqa: E402
 from controllers.health import HealthController  # noqa: E402
 from exceptions import (  # noqa: E402
@@ -285,6 +286,7 @@ def create_app():
             BackgroundJobController,
             AnalyticsController,
             GlobalTemplateController,
+            ShareController,
         ],
     )
 

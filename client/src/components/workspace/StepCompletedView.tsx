@@ -23,6 +23,7 @@ import { useDeleteLorebookEntry } from '../../hooks/useLorebookEntryMutations';
 import { useSearchParams } from 'react-router-dom';
 import { useDebouncedValue, useDisclosure } from '@mantine/hooks';
 import { LorebookEntryModal } from './LorebookEntryModal';
+import { ExportToMobileModal } from '../common/ExportToMobileModal';
 
 interface StepCompletedViewProps {
   project: Project;
@@ -86,6 +87,7 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
   };
 
   const [isDownloading, setIsDownloading] = useState(false);
+  const [exportMobileOpened, setExportMobileOpened] = useState(false);
   const modals = useModals();
   const deleteEntryMutation = useDeleteLorebookEntry(project.id);
 
@@ -151,6 +153,13 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
 
   return (
     <>
+      <ExportToMobileModal
+        opened={exportMobileOpened}
+        onClose={() => setExportMobileOpened(false)}
+        projectId={project.id}
+        contentType="lorebook"
+        defaultFormat="json"
+      />
       <LorebookEntryModal opened={editModalOpened} onClose={closeEditModal} entry={selectedEntry} />
       <Stack mt="md">
         <Group justify="space-between">
@@ -162,6 +171,9 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
             disabled={totalItems === 0 && !debouncedFilterText}
           >
             Download Lorebook
+          </Button>
+          <Button variant="default" onClick={() => setExportMobileOpened(true)} disabled={totalItems === 0}>
+            Export to Mobile
           </Button>
         </Group>
 

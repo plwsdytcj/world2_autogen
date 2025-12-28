@@ -71,8 +71,13 @@ class CharacterCardController(Controller):
         return SingleResponse(data=card)
 
     @get("/export")
-    async def export_character_card(self, project_id: str) -> Response:
-        """Export the character card as a v2 PNG file."""
+    async def export_character_card(self, project_id: str, format: str | None = None) -> Response:
+        """
+        Export the character card.
+
+        - Default: PNG file embedding a Chara Card v2 JSON payload.
+        - If `?format=json` is provided, returns the raw JSON instead.
+        """
         card = await get_character_card_by_project(project_id)
         if not card or not card.name:
             raise NotFoundException("Character card is not generated or is empty.")
@@ -99,6 +104,22 @@ class CharacterCardController(Controller):
             },
         }
 
+        safe_filename = "".join(
+            c for c in card.name if c.isalnum() or c in " ._-"
+        ).rstrip()
+
+        # If JSON is requested, return raw JSON
+        if format and format.lower() == "json":
+            json_data = json.dumps(spec_v2_data, ensure_ascii=False)
+            return Response(
+                content=json_data,
+                media_type="application/json",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{safe_filename}.json"'
+                },
+            )
+
+        # Otherwise, export as PNG with embedded JSON (v2 spec)
         json_data = json.dumps(spec_v2_data, ensure_ascii=False)
         encoded_data = base64.b64encode(json_data.encode("utf-8")).decode("utf-8")
 
@@ -112,9 +133,6 @@ class CharacterCardController(Controller):
         image.save(byte_io, "PNG", pnginfo=png_info)
         byte_io.seek(0)
 
-        safe_filename = "".join(
-            c for c in card.name if c.isalnum() or c in " ._-"
-        ).rstrip()
         return Response(
             content=byte_io.read(),
             media_type="image/png",
