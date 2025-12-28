@@ -13,7 +13,7 @@ import {
 } from '@mantine/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import apiClient from '../../services/api';
-import QRCode from 'qrcode';
+import * as QRCode from 'qrcode';
 import { notifications } from '@mantine/notifications';
 
 type ContentType = 'character' | 'lorebook';
@@ -157,4 +157,3 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
     </Modal>
   );
 }
-
