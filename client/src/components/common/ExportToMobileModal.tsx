@@ -32,12 +32,14 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
   const [creating, setCreating] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [schemeLink, setSchemeLink] = useState<string | null>(null);
+  const [deepLink, setDeepLink] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     setExportFormat(defaultFormat || (contentType === 'character' ? 'png' : 'json'));
     setShareLink(null);
     setSchemeLink(null);
+    setDeepLink(null);
   }, [opened, contentType, defaultFormat]);
 
   const isCharacter = contentType === 'character';
@@ -60,6 +62,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       const full = universalPath.startsWith('http') ? universalPath : `${base}${universalPath}`;
       setShareLink(full);
       setSchemeLink(scheme || null);
+      setDeepLink(`poki://import?url=${encodeURIComponent(full)}`);
       notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
     } catch (err) {
       console.error(err);
@@ -72,18 +75,19 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
   // 在 shareLink 更新且 canvas 已渲染后再绘制二维码
   useEffect(() => {
     const draw = async () => {
-      if (!shareLink || !canvasRef.current) return;
+      const value = deepLink || shareLink;
+      if (!value || !canvasRef.current) return;
       try {
         // 清空画布
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        await QRCode.toCanvas(canvasRef.current, shareLink, { width: 220, margin: 1 });
+        await QRCode.toCanvas(canvasRef.current, value, { width: 220, margin: 1 });
       } catch (e) {
         console.error('QR render failed', e);
       }
     };
     draw();
-  }, [shareLink]);
+  }, [shareLink, deepLink]);
 
   const handleCopy = async () => {
     if (!shareLink) return;
@@ -137,6 +141,12 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
             <Group align="flex-start" wrap="nowrap">
               <canvas ref={canvasRef} style={{ borderRadius: 8 }} />
               <Stack gap={6} style={{ flex: 1 }}>
+                {deepLink && (
+                  <>
+                    <Text size="sm" fw={500}>Deep Link (QR content)</Text>
+                    <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>{deepLink}</Text>
+                  </>
+                )}
                 <Text size="sm" fw={500}>
                   Universal Link
                 </Text>

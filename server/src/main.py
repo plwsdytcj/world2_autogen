@@ -208,6 +208,29 @@ async def spa_fallback(path: str | None = None) -> ASGIFileResponse:
     )
 
 
+@get(
+    path=["/.well-known/apple-app-site-association", "/apple-app-site-association"],
+    sync_to_thread=False,
+)
+async def apple_app_site_association() -> dict:
+    """
+    Serve the Apple App Site Association (AASA) file for Universal Links.
+
+    Must be served over HTTPS with application/json content type and without redirects.
+    """
+    return {
+        "applinks": {
+            "apps": [],
+            "details": [
+                {
+                    "appID": "HKD74AF4JH.com.creeklabs.World2",
+                    "paths": ["/i", "/i?*"],
+                }
+            ],
+        }
+    }
+
+
 class AppInfo(BaseModel):
     current_version: str
     latest_version: Optional[str] = None
@@ -300,6 +323,7 @@ def create_app():
         route_handlers=[
             api_router,
             serve_assets,
+            apple_app_site_association,
             spa_fallback,
         ],
         on_startup=[
