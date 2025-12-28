@@ -60,11 +60,6 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       const full = universalPath.startsWith('http') ? universalPath : `${base}${universalPath}`;
       setShareLink(full);
       setSchemeLink(scheme || null);
-
-      // 生成 QR
-      if (canvasRef.current) {
-        await QRCode.toCanvas(canvasRef.current, full, { width: 220, margin: 1 });
-      }
       notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
     } catch (err) {
       console.error(err);
@@ -73,6 +68,22 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       setCreating(false);
     }
   };
+
+  // 在 shareLink 更新且 canvas 已渲染后再绘制二维码
+  useEffect(() => {
+    const draw = async () => {
+      if (!shareLink || !canvasRef.current) return;
+      try {
+        // 清空画布
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        await QRCode.toCanvas(canvasRef.current, shareLink, { width: 220, margin: 1 });
+      } catch (e) {
+        console.error('QR render failed', e);
+      }
+    };
+    draw();
+  }, [shareLink]);
 
   const handleCopy = async () => {
     if (!shareLink) return;
