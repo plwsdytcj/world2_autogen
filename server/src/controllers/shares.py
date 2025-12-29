@@ -91,19 +91,26 @@ class ShareController(Controller):
         )
 
         t = "c" if share.content_type == "character" else "l"
-        # 在生成的链接中附带一次性 token，便于扫码端直接解析并导入
-        universal = f"/i?s={share.id}&t={t}&v=1&k={token}"  # 前端可拼接域名
+        # 使用 URL 编码库统一生成查询串，避免手动 quote 导致的重复编码
+        import urllib.parse as _urlparse
 
-        # URL Scheme（包含可选 avatar 外链，便于移动端快速展示头像）
-        # 使用 poki:// 作为备用 scheme
-        scheme = f"poki://import?s={share.id}&t={t}&v=1&k={token}"
+        base_params = {"s": share.id, "t": t, "v": 1, "k": token}
+        avatar_url: str | None = None
         if share.content_type == "character":
             card = await get_character_card_by_project(share.project_id)
             if card and card.avatar_url:
-                import urllib.parse as _urlparse
-                scheme += f"&avatar={_urlparse.quote(card.avatar_url, safe='')}"
-                # 同时在 Universal Link 上附带 avatar，方便客户端无需额外解析
-                universal += f"&avatar={_urlparse.quote(card.avatar_url, safe='')}"
+                avatar_url = card.avatar_url
+                base_params_with_avatar = {**base_params, "avatar": avatar_url}
+            else:
+                base_params_with_avatar = base_params
+        else:
+            base_params_with_avatar = base_params
+
+        universal_qs = _urlparse.urlencode(base_params_with_avatar)
+        scheme_qs = universal_qs
+
+        universal = f"/i?{universal_qs}"  # 前端可拼接域名
+        scheme = f"poki://import?{scheme_qs}"
 
         return CreateShareResponse(
             share_id=share.id,

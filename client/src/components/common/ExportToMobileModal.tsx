@@ -70,14 +70,30 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
         try {
           const qm = scheme.indexOf('?');
           if (qm >= 0) {
-            const qs = scheme.slice(qm + 1);
-            const p = new URLSearchParams(qs);
-            const v = p.get('avatar');
-            if (v) avatar = v;
+          const qs = scheme.slice(qm + 1);
+          const p = new URLSearchParams(qs);
+          const v = p.get('avatar');
+          if (v) {
+            try {
+              avatar = decodeURIComponent(v);
+            } catch {
+              avatar = v;
+            }
+          }
           }
         } catch {}
       }
-      const deep = `poki://import?url=${encodeURIComponent(full)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;
+      // Avoid double-encoding avatar by removing it from Universal Link used inside deep link
+      let fullNoAvatar = full;
+      try {
+        const u = new URL(full);
+        u.searchParams.delete('avatar');
+        fullNoAvatar = u.toString();
+      } catch {
+        // Fallback string removal if URL parsing fails
+        fullNoAvatar = full.replace(/([?&])avatar=[^&]+(&|$)/, '$1').replace(/[?&]$/, '');
+      }
+      const deep = `poki://import?url=${encodeURIComponent(fullNoAvatar)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;
       setDeepLink(deep);
       notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
     } catch (err) {
