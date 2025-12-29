@@ -112,6 +112,7 @@ export interface ProjectSource {
   raw_content?: string; // Note: Not typically sent in list views
   content_type?: ContentType;
   content_char_count?: number;
+  all_image_url?: string[];
 }
 
 export interface ProjectSourceHierarchy {
@@ -162,6 +163,7 @@ export interface CharacterCard {
   scenario?: string;
   first_message?: string;
   example_messages?: string;
+  avatar_url?: string;
   created_at: string;
   updated_at: string;
 }

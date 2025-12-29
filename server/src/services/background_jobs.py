@@ -185,11 +185,36 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                 failed_count += 1
                 continue
 
+            reference_image_url = None
+            all_image_url: list[str] | None = None
             if project.project_type == ProjectType.CHARACTER:
+                # For character projects, also try to extract a reference image URL from raw HTML.
+                # 1) Get cleaned markdown for content display
                 content = await scraper.get_content(
                     source.url, type="markdown", clean=True
                 )
                 content_type = "markdown"
+                # 2) Fetch raw HTML (uncleaned) for image extraction
+                try:
+                    raw_html = await scraper.get_content(
+                        source.url, type="html", clean=False
+                    )
+                except Exception:
+                    raw_html = None
+                if raw_html:
+                    try:
+                        from services.image_extraction import (
+                            extract_reference_image_url,
+                            extract_all_image_urls,
+                        )
+
+                        reference_image_url = extract_reference_image_url(
+                            raw_html, source.url
+                        )
+                        all_image_url = extract_all_image_urls(raw_html, source.url)
+                    except Exception:
+                        reference_image_url = None
+                        all_image_url = None
             else:  # Lorebook
                 content = await scraper.get_content(source.url, type="html", clean=True)
                 content_type = "html"
@@ -200,6 +225,7 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                     raw_content=content,
                     content_type=content_type,
                     content_char_count=len(content),
+                    all_image_url=([reference_image_url] if reference_image_url else all_image_url),
                     last_crawled_at=datetime.now(),
                 ),
             )

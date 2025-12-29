@@ -25,6 +25,7 @@ class ProjectSource(BaseModel):
     raw_content: Optional[str] = None
     content_type: Optional[ContentType] = None
     content_char_count: Optional[int] = None
+    all_image_url: Optional[List[str]] = None
 
 
 class CreateProjectSource(BaseModel):
@@ -46,6 +47,7 @@ class UpdateProjectSource(BaseModel):
     raw_content: Optional[str] = None
     content_type: Optional[ContentType] = None
     content_char_count: Optional[int] = None
+    all_image_url: Optional[List[str]] = None
 
 
 async def create_project_source(
@@ -102,7 +104,7 @@ async def list_sources_by_project(
         query = (
             "SELECT id, project_id, url, link_extraction_selector, link_extraction_pagination_selector, "
             "url_exclusion_patterns, max_pages_to_crawl, max_crawl_depth, last_crawled_at, created_at, updated_at, "
-            "content_type, content_char_count "
+            "content_type, content_char_count, all_image_url "
             'FROM "ProjectSource" WHERE project_id = %s ORDER BY created_at ASC'
         )
     results = await db.fetch_all(query, (project_id,))

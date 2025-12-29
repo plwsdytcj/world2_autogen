@@ -1,4 +1,4 @@
-import { Stack, Text, Button, Group, Loader, Paper, Title, Textarea, ActionIcon, Tooltip } from '@mantine/core';
+import { Stack, Text, Button, Group, Loader, Paper, Title, Textarea, ActionIcon, Tooltip, Image, TextInput, SimpleGrid } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import type { Project, ProjectSource } from '../../types';
 import { useGenerateCharacterJob } from '../../hooks/useJobMutations';
@@ -40,12 +40,13 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
       scenario: '',
       first_message: '',
       example_messages: '',
+      avatar_url: '',
     },
   });
 
   useEffect(() => {
     if (characterCardResponse?.data) {
-      const { name, description, persona, scenario, first_message, example_messages } = characterCardResponse.data;
+      const { name, description, persona, scenario, first_message, example_messages, avatar_url } = characterCardResponse.data;
       const values = {
         name: name || '',
         description: description || '',
@@ -53,6 +54,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
         scenario: scenario || '',
         first_message: first_message || '',
         example_messages: example_messages || '',
+        avatar_url: avatar_url || '',
       };
       form.setValues(values);
       form.resetDirty(values);
@@ -66,6 +68,10 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
   };
 
   const fetchedSources = sources?.filter((s) => s.content_char_count && s.content_char_count > 0) || [];
+  const candidateImages = (fetchedSources
+    .flatMap((s) => s.all_image_url || [])
+    .filter((u): u is string => !!u))
+    .slice(0, 12);
   const canGenerate = selectedSourceIds.length > 0;
   const isGenerationJobActive =
     generateCharacterJob?.status === 'pending' || generateCharacterJob?.status === 'in_progress';
@@ -251,6 +257,43 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
 
           <Paper withBorder p="md" mt="xs">
             <Stack>
+              <Group align="flex-start" justify="space-between" gap="xl">
+                <Stack style={{ flex: 1, minWidth: 280 }}>
+                  <Text size="sm" fw={500}>Avatar</Text>
+                  {form.values.avatar_url ? (
+                    <Image src={form.values.avatar_url} alt="Avatar" radius="sm" w={160} h={160} fit="cover" withPlaceholder />
+                  ) : (
+                    <Image src={undefined} alt="Avatar placeholder" radius="sm" w={160} h={160} withPlaceholder />
+                  )}
+                  <TextInput
+                    label="Avatar URL"
+                    placeholder="https://..."
+                    value={form.values.avatar_url}
+                    onChange={(e) => form.setFieldValue('avatar_url', e.currentTarget.value)}
+                  />
+                </Stack>
+                {candidateImages.length > 0 && (
+                  <Stack style={{ flex: 2 }}>
+                    <Text size="sm" c="dimmed">Suggestions from sources</Text>
+                    <SimpleGrid cols={{ base: 4, sm: 6 }} spacing={8}>
+                      {candidateImages.map((url) => (
+                        <Image
+                          key={url}
+                          src={url}
+                          alt="candidate"
+                          radius="sm"
+                          w={80}
+                          h={80}
+                          fit="cover"
+                          style={{ cursor: 'pointer', border: url === form.values.avatar_url ? '2px solid #4dabf7' : '1px solid rgba(255,255,255,0.1)' }}
+                          onClick={() => form.setFieldValue('avatar_url', url)}
+                          withPlaceholder
+                        />
+                      ))}
+                    </SimpleGrid>
+                  </Stack>
+                )}
+              </Group>
               {renderTextareaWithRegen('name', 'Name', 1)}
               {renderTextareaWithRegen('description', 'Description', 4)}
               {renderTextareaWithRegen('persona', 'Persona', 4)}

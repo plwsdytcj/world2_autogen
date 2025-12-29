@@ -15,6 +15,7 @@ class CreateCharacterCard(BaseModel):
     scenario: Optional[str] = None
     first_message: Optional[str] = None
     example_messages: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class UpdateCharacterCard(BaseModel):
@@ -24,6 +25,7 @@ class UpdateCharacterCard(BaseModel):
     scenario: Optional[str] = None
     first_message: Optional[str] = None
     example_messages: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 
 class CharacterCard(CreateCharacterCard):
@@ -45,8 +47,8 @@ async def create_or_update_character_card(
 
     # Create new card
     query = """
-        INSERT INTO "CharacterCard" (id, project_id, name, description, persona, scenario, first_message, example_messages)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO "CharacterCard" (id, project_id, name, description, persona, scenario, first_message, example_messages, avatar_url)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING *
     """
     params = (
@@ -58,6 +60,7 @@ async def create_or_update_character_card(
         card.scenario,
         card.first_message,
         card.example_messages,
+        card.avatar_url,
     )
     result = await db.execute_and_fetch_one(query, params)
     if not result:
