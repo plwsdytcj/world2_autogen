@@ -72,6 +72,12 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
     .flatMap((s) => s.all_image_url || [])
     .filter((u): u is string => !!u))
     .slice(0, 12);
+
+  // Client-side debug to help diagnose empty candidates
+  if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
+    console.debug('[CharacterEditor] candidateImages count:', candidateImages.length, 'first:', candidateImages.slice(0, 3));
+  }
   const canGenerate = selectedSourceIds.length > 0;
   const isGenerationJobActive =
     generateCharacterJob?.status === 'pending' || generateCharacterJob?.status === 'in_progress';

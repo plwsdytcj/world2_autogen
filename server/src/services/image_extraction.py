@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Optional, List
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
+from logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def _first_non_empty(values: list[Optional[str]]) -> Optional[str]:
@@ -38,6 +41,9 @@ def extract_reference_image_url(html: str, page_url: str) -> Optional[str]:
         if meta_candidates:
             url = _normalize_image_url(meta_candidates[0], page_url)
             if url:
+                logger.debug(
+                    f"[image_extraction] Meta image chosen for {page_url}: {url}"
+                )
                 return url
 
         # 2) Content images in common containers
@@ -53,6 +59,9 @@ def extract_reference_image_url(html: str, page_url: str) -> Optional[str]:
             if img and img.get("src"):
                 url = _normalize_image_url(img.get("src"), page_url)  # type: ignore[arg-type]
                 if url:
+                    logger.debug(
+                        f"[image_extraction] Content image chosen for {page_url}: {url}"
+                    )
                     return url
 
         # 3) Any <img>
@@ -62,6 +71,9 @@ def extract_reference_image_url(html: str, page_url: str) -> Optional[str]:
                 continue
             url = _normalize_image_url(src, page_url)
             if url:
+                logger.debug(
+                    f"[image_extraction] Fallback <img> chosen for {page_url}: {url}"
+                )
                 return url
     except Exception:
         return None
@@ -133,6 +145,18 @@ def extract_all_image_urls(html: str, page_url: str, limit: int = 12) -> List[st
             maybe_add(img.get("src"))
             if len(results) >= limit:
                 break
-    except Exception:
+    except Exception as e:
+        logger.debug(
+            f"[image_extraction] Failed to extract images from {page_url}: {e}"
+        )
         return results[:limit]
+    if results:
+        shown = ", ".join(results[:3])
+        logger.debug(
+            f"[image_extraction] Extracted {len(results)} image urls for {page_url}. First: {shown}"
+        )
+    else:
+        logger.debug(
+            f"[image_extraction] No image urls extracted for {page_url}."
+        )
     return results[:limit]

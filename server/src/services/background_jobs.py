@@ -212,9 +212,25 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                             raw_html, source.url
                         )
                         all_image_url = extract_all_image_urls(raw_html, source.url)
-                    except Exception:
+                        from_count = len(all_image_url) if all_image_url else 0
+                        logger.info(
+                            f"[{job.id}] Image extraction for source {source.id} ({source.url}): best={'yes' if reference_image_url else 'no'}, total={from_count}"
+                        )
+                        if all_image_url and len(all_image_url) > 0:
+                            sample = ", ".join(all_image_url[:3])
+                            logger.debug(
+                                f"[{job.id}] Candidates (first up to 3) for source {source.id}: {sample}"
+                            )
+                    except Exception as e:
+                        logger.warning(
+                            f"[{job.id}] Image extraction failed for source {source.id}: {e}"
+                        )
                         reference_image_url = None
                         all_image_url = None
+                else:
+                    logger.debug(
+                        f"[{job.id}] Skipping image extraction (no raw HTML) for {source.url}"
+                    )
             else:  # Lorebook
                 content = await scraper.get_content(source.url, type="html", clean=True)
                 content_type = "html"
@@ -230,6 +246,14 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                 ),
             )
             if updated_source:
+                img_count = (
+                    len(updated_source.all_image_url)
+                    if getattr(updated_source, "all_image_url", None)
+                    else 0
+                )
+                logger.info(
+                    f"[{job.id}] Updated source {source.id}: content_type={content_type}, chars={len(content)}, images={img_count}"
+                )
                 await send_source_update_notification(project.id, updated_source)
             processed_count += 1
         except Exception as e:
