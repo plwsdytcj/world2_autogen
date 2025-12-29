@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, List
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, parse_qs
 from bs4 import BeautifulSoup
 from logging_config import get_logger
 
@@ -91,8 +91,38 @@ def _normalize_image_url(src: str, page_url: str) -> Optional[str]:
     # Convert to absolute URL
     try:
         abs_url = urljoin(page_url, s)
-        if abs_url.startswith("http://") or abs_url.startswith("https://"):
-            return abs_url
+        if not (abs_url.startswith("http://") or abs_url.startswith("https://")):
+            return None
+
+        # Basic heuristics to exclude non-image endpoints (directories, html pages)
+        parsed = urlparse(abs_url)
+        path = parsed.path.lower()
+        if path.endswith("/"):
+            logger.debug(f"[image_extraction] Rejecting non-file URL: {abs_url}")
+            return None
+
+        # Accept common image extensions
+        image_exts = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".ico", ".tif", ".tiff")
+        has_ext = any(path.endswith(ext) for ext in image_exts)
+
+        # Accept fandom/wikia style .../filename.png/revision/latest?... where extension appears before '/revision'
+        # by checking for an extension in the last path segment before '/revision'
+        if not has_ext and "/revision" in path:
+            base_part = path.split("/revision", 1)[0]
+            has_ext = any(base_part.endswith(ext) for ext in image_exts)
+
+        # Sometimes extension is indicated via query, e.g., ?format=png
+        if not has_ext and parsed.query:
+            q = parse_qs(parsed.query)
+            fmt = (q.get("format") or q.get("fm") or q.get("ext") or [None])[0]
+            if isinstance(fmt, str):
+                has_ext = fmt.lower() in {e.lstrip('.') for e in image_exts}
+
+        if not has_ext:
+            logger.debug(f"[image_extraction] Rejecting URL without image extension: {abs_url}")
+            return None
+
+        return abs_url
     except Exception:
         return None
     return None
