@@ -23,17 +23,26 @@ class JsonFormatter(logging.Formatter):
 
 def setup_logging():
     is_production = os.getenv("APP_ENV", "development").lower() == "production"
+    env_level = os.getenv("LOG_LEVEL")
+    level = None
+    if env_level:
+        try:
+            level = getattr(logging, env_level.upper())
+        except AttributeError:
+            level = logging.DEBUG if not is_production else logging.INFO
+    else:
+        level = logging.DEBUG if not is_production else logging.INFO
 
     if is_production:
         # Configure for production: JSON output to stdout
         handler = logging.StreamHandler()
         handler.setFormatter(JsonFormatter())
-        logging.basicConfig(level=logging.INFO, handlers=[handler])
+        logging.basicConfig(level=level, handlers=[handler])
         # Suppress uvicorn's default access logger to avoid duplicate logs
         logging.getLogger("uvicorn.access").handlers = []
     else:
         logging.basicConfig(
-            level=logging.INFO,
+            level=level,
             format="%(message)s",
             datefmt="[%X]",
             handlers=[RichHandler(rich_tracebacks=True)],

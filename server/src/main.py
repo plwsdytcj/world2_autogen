@@ -42,6 +42,7 @@ from controllers.global_templates import GlobalTemplateController  # noqa: E402
 from controllers.shares import ShareController  # noqa: E402
 from controllers.credentials import CredentialsController  # noqa: E402
 from controllers.health import HealthController  # noqa: E402
+from controllers.proxy import ProxyController  # noqa: E402
 from exceptions import (  # noqa: E402
     generic_exception_handler,
     validation_exception_handler,
@@ -310,6 +311,7 @@ def create_app():
             AnalyticsController,
             GlobalTemplateController,
             ShareController,
+            ProxyController,
         ],
     )
 

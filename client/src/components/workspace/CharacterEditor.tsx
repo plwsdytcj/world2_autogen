@@ -44,6 +44,9 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
     },
   });
 
+  const apiBase = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : '/api';
+  const toProxy = (url?: string) => (url ? `${apiBase}/proxy/image?url=${encodeURIComponent(url)}` : undefined);
+
   useEffect(() => {
     if (characterCardResponse?.data) {
       const { name, description, persona, scenario, first_message, example_messages, avatar_url } = characterCardResponse.data;
@@ -267,7 +270,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 <Stack style={{ flex: 1, minWidth: 280 }}>
                   <Text size="sm" fw={500}>Avatar</Text>
                   {form.values.avatar_url ? (
-                    <Image src={form.values.avatar_url} alt="Avatar" radius="sm" w={160} h={160} fit="cover" />
+                    <Image src={toProxy(form.values.avatar_url)} alt="Avatar" radius="sm" w={160} h={160} fit="cover" />
                   ) : (
                     <Box w={160} h={160} style={{ borderRadius: 'var(--mantine-radius-sm)', backgroundColor: 'var(--mantine-color-dark-5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Text size="xs" c="dimmed">No Avatar</Text>
@@ -287,7 +290,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                       {candidateImages.map((url) => (
                         <Image
                           key={url}
-                          src={url}
+                          src={toProxy(url)}
                           alt="candidate"
                           radius="sm"
                           w={80}
