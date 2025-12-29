@@ -13,6 +13,7 @@ import {
 } from '@mantine/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import apiClient from '../../services/api';
+import { useCharacterCard } from '../../hooks/useCharacterCard';
 import * as QRCode from 'qrcode';
 import { notifications } from '@mantine/notifications';
 
@@ -34,6 +35,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
   const [schemeLink, setSchemeLink] = useState<string | null>(null);
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { data: cardResp } = useCharacterCard(projectId);
 
   useEffect(() => {
     setExportFormat(defaultFormat || (contentType === 'character' ? 'png' : 'json'));
@@ -62,7 +64,9 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       const full = universalPath.startsWith('http') ? universalPath : `${base}${universalPath}`;
       setShareLink(full);
       setSchemeLink(scheme || null);
-      setDeepLink(`poki://import?url=${encodeURIComponent(full)}`);
+      const avatar = cardResp?.data?.avatar_url;
+      const deep = `poki://import?url=${encodeURIComponent(full)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;
+      setDeepLink(deep);
       notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
     } catch (err) {
       console.error(err);

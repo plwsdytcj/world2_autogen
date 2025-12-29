@@ -93,8 +93,21 @@ class ShareController(Controller):
         t = "c" if share.content_type == "character" else "l"
         # 在生成的链接中附带一次性 token，便于扫码端直接解析并导入
         universal = f"/i?s={share.id}&t={t}&v=1&k={token}"  # 前端可拼接域名
-        scheme = f"lorecard://import?s={share.id}&t={t}&v=1&k={token}"
-        return CreateShareResponse(share_id=share.id, token=token, links={"universal": universal, "scheme": scheme})
+
+        # URL Scheme（包含可选 avatar 外链，便于移动端快速展示头像）
+        # 使用 poki:// 作为备用 scheme
+        scheme = f"poki://import?s={share.id}&t={t}&v=1&k={token}"
+        if share.content_type == "character":
+            card = await get_character_card_by_project(share.project_id)
+            if card and card.avatar_url:
+                import urllib.parse as _urlparse
+                scheme += f"&avatar={_urlparse.quote(card.avatar_url, safe='')}"
+
+        return CreateShareResponse(
+            share_id=share.id,
+            token=token,
+            links={"universal": universal, "scheme": scheme},
+        )
 
     @post("/{share_id:str}/resolve")
     async def resolve_share(self, share_id: str, data: ResolvePayload = Body()) -> ResolveResponse:
@@ -160,7 +173,9 @@ class ShareController(Controller):
                     "tags": [],
                     "creator": "Lorecard",
                     "character_version": "1.0",
-                    "extensions": {},
+                    "extensions": {
+                        "lorecard": {"avatar_url": card.avatar_url} if card.avatar_url else {},
+                    },
                 },
             }
 

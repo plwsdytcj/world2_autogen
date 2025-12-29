@@ -100,7 +100,10 @@ class CharacterCardController(Controller):
                 "tags": [],
                 "creator": "Lorecard",
                 "character_version": "1.0",
-                "extensions": {},
+                "extensions": {
+                    # Lorecard-specific extension fields
+                    "lorecard": {"avatar_url": card.avatar_url} if card.avatar_url else {},
+                },
             },
         }
 
