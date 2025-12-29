@@ -27,19 +27,50 @@ class ProxyController(Controller):
         if parsed.scheme not in ("http", "https"):
             raise HTTPException(status_code=400, detail="Invalid scheme")
 
-        headers = {
-            "User-Agent": "lorecard/2.5 (+image-proxy)",
-            "Accept": "image/*,*/*;q=0.8",
+        base_headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36 Lorecard/2.5",
+            "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
+            # Default referer: origin of the target URL.
+            "Referer": f"{parsed.scheme}://{parsed.netloc}/",
         }
 
         max_bytes = 5 * 1024 * 1024  # 5MB
         try:
-            async with httpx.AsyncClient(follow_redirects=True, headers=headers) as client:
-                r = await client.get(url, timeout=10.0)
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                # Attempt 1: origin referer
+                r = await client.get(url, timeout=10.0, headers=base_headers)
+                # If blocked by fandom/static.wikia, retry with fandom referer derived from path
+                if r.status_code in (401, 403) and parsed.netloc.endswith("nocookie.net"):
+                    segs = [s for s in parsed.path.split("/") if s]
+                    if segs:
+                        fandom_referer = f"https://{segs[0]}.fandom.com/"
+                        headers2 = dict(base_headers)
+                        headers2["Referer"] = fandom_referer
+                        logger.debug(
+                            f"Proxy retry with fandom referer {fandom_referer} for {url}"
+                        )
+                        r = await client.get(url, timeout=10.0, headers=headers2)
                 r.raise_for_status()
-                ctype = r.headers.get("Content-Type", "")
-                if not ctype.startswith("image/"):
-                    raise HTTPException(status_code=415, detail=f"Upstream not image: {ctype}")
+                ctype = r.headers.get("Content-Type", "") or ""
+                if not (ctype.startswith("image/") or ctype == "application/octet-stream"):
+                    # Fallback: guess from URL path extension
+                    path = parsed.path.lower()
+                    for ext, mime in (
+                        (".png", "image/png"),
+                        (".jpg", "image/jpeg"),
+                        (".jpeg", "image/jpeg"),
+                        (".webp", "image/webp"),
+                        (".gif", "image/gif"),
+                        (".bmp", "image/bmp"),
+                        (".tif", "image/tiff"),
+                        (".tiff", "image/tiff"),
+                        (".ico", "image/x-icon"),
+                    ):
+                        if path.endswith(ext):
+                            ctype = mime
+                            break
+                    if not ctype or not ctype.startswith("image/"):
+                        raise HTTPException(status_code=415, detail=f"Upstream not image: {r.headers.get('Content-Type')}")
                 content = r.content[: max_bytes + 1]
                 if len(content) > max_bytes:
                     raise HTTPException(status_code=413, detail="Image too large")
@@ -58,4 +89,3 @@ class ProxyController(Controller):
         except Exception as e:
             logger.warning(f"Image proxy failed for {url}: {e}")
             raise HTTPException(status_code=502, detail="Image proxy failed")
-
