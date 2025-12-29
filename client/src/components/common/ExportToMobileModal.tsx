@@ -64,7 +64,15 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       const full = universalPath.startsWith('http') ? universalPath : `${base}${universalPath}`;
       setShareLink(full);
       setSchemeLink(scheme || null);
-      const avatar = cardResp?.data?.avatar_url;
+      // Prefer avatar from card; fallback to "avatar" query in scheme returned by backend
+      let avatar = cardResp?.data?.avatar_url || undefined;
+      if (!avatar && scheme) {
+        try {
+          const q = new URL(scheme).searchParams;
+          const v = q.get('avatar');
+          if (v) avatar = v;
+        } catch {}
+      }
       const deep = `poki://import?url=${encodeURIComponent(full)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;
       setDeepLink(deep);
       notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
