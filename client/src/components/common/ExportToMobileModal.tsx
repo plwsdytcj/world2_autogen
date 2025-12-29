@@ -68,9 +68,13 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       let avatar = cardResp?.data?.avatar_url || undefined;
       if (!avatar && scheme) {
         try {
-          const q = new URL(scheme).searchParams;
-          const v = q.get('avatar');
-          if (v) avatar = v;
+          const qm = scheme.indexOf('?');
+          if (qm >= 0) {
+            const qs = scheme.slice(qm + 1);
+            const p = new URLSearchParams(qs);
+            const v = p.get('avatar');
+            if (v) avatar = v;
+          }
         } catch {}
       }
       const deep = `poki://import?url=${encodeURIComponent(full)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;

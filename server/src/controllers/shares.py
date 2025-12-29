@@ -102,6 +102,8 @@ class ShareController(Controller):
             if card and card.avatar_url:
                 import urllib.parse as _urlparse
                 scheme += f"&avatar={_urlparse.quote(card.avatar_url, safe='')}"
+                # 同时在 Universal Link 上附带 avatar，方便客户端无需额外解析
+                universal += f"&avatar={_urlparse.quote(card.avatar_url, safe='')}"
 
         return CreateShareResponse(
             share_id=share.id,
