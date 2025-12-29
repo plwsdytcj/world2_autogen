@@ -1,4 +1,4 @@
-import { Stack, Text, Button, Group, Loader, Paper, Title, Textarea, ActionIcon, Tooltip, Image, TextInput, SimpleGrid } from '@mantine/core';
+import { Stack, Text, Button, Group, Loader, Paper, Title, Textarea, ActionIcon, Tooltip, Image, TextInput, SimpleGrid, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import type { Project, ProjectSource } from '../../types';
 import { useGenerateCharacterJob } from '../../hooks/useJobMutations';
@@ -261,9 +261,11 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 <Stack style={{ flex: 1, minWidth: 280 }}>
                   <Text size="sm" fw={500}>Avatar</Text>
                   {form.values.avatar_url ? (
-                    <Image src={form.values.avatar_url} alt="Avatar" radius="sm" w={160} h={160} fit="cover" withPlaceholder />
+                    <Image src={form.values.avatar_url} alt="Avatar" radius="sm" w={160} h={160} fit="cover" />
                   ) : (
-                    <Image src={undefined} alt="Avatar placeholder" radius="sm" w={160} h={160} withPlaceholder />
+                    <Box w={160} h={160} style={{ borderRadius: 'var(--mantine-radius-sm)', backgroundColor: 'var(--mantine-color-dark-5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text size="xs" c="dimmed">No Avatar</Text>
+                    </Box>
                   )}
                   <TextInput
                     label="Avatar URL"
@@ -287,7 +289,6 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                           fit="cover"
                           style={{ cursor: 'pointer', border: url === form.values.avatar_url ? '2px solid #4dabf7' : '1px solid rgba(255,255,255,0.1)' }}
                           onClick={() => form.setFieldValue('avatar_url', url)}
-                          withPlaceholder
                         />
                       ))}
                     </SimpleGrid>
