@@ -1,4 +1,4 @@
-# lorecard server
+# world2 server
 
 ## Setup
 

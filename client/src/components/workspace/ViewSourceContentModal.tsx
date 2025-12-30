@@ -108,7 +108,7 @@ export function ViewSourceContentModal({ opened, onClose, projectId, sourceId }:
                 h1: { fontSize: '2em' },
                 h2: { fontSize: '1.5em' },
                 h3: { fontSize: '1.25em' },
-                a: { color: theme.colors.blue[4], textDecoration: 'none' },
+                a: { color: theme.colors.sakura ? theme.colors.sakura[6] : theme.colors.blue[4], textDecoration: 'none' },
                 'a:hover': { textDecoration: 'underline' },
                 'p, ul, ol': {
                   marginBottom: '16px',

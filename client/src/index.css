@@ -1,0 +1,22 @@
+/* Global anime-inspired background for world2 */
+html, body, #root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 800px at 10% -10%, rgba(255, 182, 193, 0.18), transparent),
+    radial-gradient(1000px 600px at 110% 10%, rgba(186, 85, 211, 0.12), transparent),
+    linear-gradient(180deg, #0e0f12, #121318 60%, #0f1014);
+}
+
+/* Soft card glow */
+.mantine-Paper-root {
+  box-shadow: 0 10px 24px rgba(255, 192, 203, 0.08), 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Accent selection color */
+::selection {
+  background: rgba(255, 182, 193, 0.35);
+}
+

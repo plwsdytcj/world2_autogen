@@ -16,18 +16,8 @@ window.__TANSTACK_QUERY_CLIENT__ = queryClient;
 
 const theme = createTheme({
   colors: {
-    'terra-cotta': [
-      '#FBF5F3',
-      '#F3D8D2',
-      '#EABCB1',
-      '#E2A190',
-      '#DA8570',
-      '#D26A4F',
-      '#C84E2E',
-      '#A93F22',
-      '#8A3016',
-      '#6B210A',
-    ],
+    // Sakura-inspired palette for anime feel
+    sakura: ['#fff7fb','#ffe3f2','#ffcfe9','#ffbade','#ffa6d4','#ff91ca','#ff7cc1','#e56aa9','#cc5992','#b2487b'],
     'app-gray': [
       '#F8F7F6',
       '#E9E7E6',
@@ -54,9 +44,9 @@ const theme = createTheme({
     ],
   },
 
-  primaryColor: 'terra-cotta',
+  primaryColor: 'sakura',
 
-  fontFamily: "'Manrope', system-ui, -apple-system, sans-serif",
+  fontFamily: "'Nunito', system-ui, -apple-system, sans-serif",
   fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', monospace",
 
   fontSizes: {
@@ -106,11 +96,18 @@ const theme = createTheme({
       defaultProps: {
         withBorder: true,
       },
+      styles: {
+        root: {
+          borderRadius: '16px',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+          borderColor: 'rgba(255, 192, 203, 0.15)'
+        }
+      }
     },
     Title: {
       styles: {
         root: {
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: 'rgba(255, 255, 255, 0.95)',
         },
       },
     },
@@ -120,6 +117,13 @@ const theme = createTheme({
           '&[data-dimmed]': {
             color: 'rgba(255, 255, 255, 0.6) !important',
           },
+        },
+      },
+    },
+    Button: {
+      styles: {
+        root: {
+          borderRadius: 9999,
         },
       },
     },
@@ -141,7 +145,7 @@ const theme = createTheme({
       styles: {
         root: {
           backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          color: 'var(--terra-cotta-color)',
+          color: 'var(--mantine-color-sakura-6)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           fontWeight: 500,
         },

@@ -134,7 +134,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
     const url = canvasRef.current.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'lorecard-share-qr.png';
+    a.download = 'world2-share-qr.png';
     a.click();
   };
 

@@ -69,10 +69,10 @@ export function AppLayout() {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
+        <Group h="100%" px="md" style={{ background: 'linear-gradient(90deg, rgba(255,182,193,0.15), rgba(186,85,211,0.08))' }}>
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Title order={3}>Lorecard</Title>
+            <Title order={3} style={{ letterSpacing: 0.5 }}>world2</Title>
           </Link>
         </Group>
       </AppShell.Header>
@@ -107,10 +107,10 @@ export function AppLayout() {
         <Outlet />
         <Box component="footer" p="md" mt="xl" style={{ textAlign: 'center' }}>
           <Text c="dimmed" size="xs">
-            Lorecard
+            world2
             {appInfo?.current_version && ` - Version: ${appInfo.current_version}`}
             {' | '}
-            <Anchor href="https://github.com/bmen25124/lorecard" target="_blank" c="dimmed" size="xs">
+            <Anchor href="#" target="_blank" c="dimmed" size="xs">
               GitHub
             </Anchor>
           </Text>

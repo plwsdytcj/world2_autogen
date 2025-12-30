@@ -240,22 +240,25 @@ class AppInfo(BaseModel):
 
 
 async def get_latest_github_version() -> Optional[str]:
-    """Fetches the latest tag name from the GitHub repository."""
-    # Use the /tags endpoint since the repo uses tags, not formal releases
-    repo_url = "https://api.github.com/repos/bmen25124/lorecard/tags"
+    """Fetches the latest tag from a repo set by UPDATE_REPO.
+
+    If UPDATE_REPO is unset, the update check is skipped.
+    """
+    repo = os.getenv("UPDATE_REPO")
+    if not repo:
+        return None
     headers = {"Accept": "application/vnd.github.v3+json"}
     try:
         async with httpx.AsyncClient() as client:
-            # Get the list of tags; the API returns them in reverse chronological order
-            response = await client.get(repo_url, headers=headers, timeout=5.0)
+            response = await client.get(
+                f"https://api.github.com/repos/{repo}/tags", headers=headers, timeout=5.0
+            )
             response.raise_for_status()
             data = response.json()
-            # The latest tag is the first one in the list
             if data and isinstance(data, list) and len(data) > 0:
                 return data[0].get("name")
-            else:
-                logger.warning("No tags found in the GitHub repository.")
-                return None
+            logger.warning("No tags found in the GitHub repository.")
+            return None
     except httpx.RequestError as e:
         logger.warning(f"Could not fetch latest version from GitHub: {e}")
         return None

@@ -1,4 +1,4 @@
-# Mobile Import via Deep Links and QR
+# world2 Mobile Import via Deep Links and QR
 
 ## Goals
 
@@ -11,6 +11,7 @@
 - Character
   - PNG v2：JSON 以 base64 形式写入 PNG `chara` 文本块（已支持）。
   - JSON：已支持 `GET /api/projects/{project_id}/character/export?format=json`。
+  - 头像外链：写入 `data.extensions.world2.avatar_url`；Deep Link 与 Scheme/Universal Link 会携带 `avatar=` 参数。
 - Lorebook
   - JSON：`GET /api/projects/{project_id}/lorebook/download`（已支持）。
 
@@ -21,8 +22,8 @@
 
 ## Deep Link 形态
 
-- Universal Link（推荐）：`https://share.lorecard.app/i?s=<share_id>&t=<c|l>&v=1`
-- 自定义 Scheme（兜底）：`lorecard://import?s=<share_id>&t=<c|l>&v=1`
+- Universal Link（推荐）：`https://<your-host>/i?s=<share_id>&t=<c|l>&v=1[&avatar=<url-encoded>]`
+- 自定义 Scheme（兜底）：`poki://import?s=<share_id>&t=<c|l>&v=1[&avatar=<url-encoded>]`
 - 说明：
   - `s`：分享 ID，例如 `sh_ab12cd`。
   - `t`：内容类型（`c`=character, `l`=lorebook）。
@@ -118,10 +119,9 @@
 ## 版本化
 
 - Deep Link `v=1`。
-- 响应头可携带 `X-Lorecard-Schema`（如 `lorebook.v1`）。
+- 响应头可携带 `X-World2-Schema`（如 `lorebook.v1`）。
 
 ## 初期取舍（MVP）
 
 - `resolve` 返回带 `token` 的直链（无需额外一次性签名）；后续可升级为一次性临时签名 URL。
 - 内容实时生成（角色卡 PNG 在请求时生成），如有性能瓶颈再引入 `storage_ref` 预生成缓存。
-

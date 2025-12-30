@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 pushd "%~dp0"
 
 echo ===========================================
-echo  Lorecard - Startup Script
+echo  world2 - Startup Script
 echo ===========================================
 echo.
 
