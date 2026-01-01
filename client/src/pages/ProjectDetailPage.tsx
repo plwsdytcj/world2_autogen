@@ -14,6 +14,7 @@ import { ApiRequestLogModal } from '../components/projects/ApiRequestLogModal';
 import { ProjectAnalyticsModal } from '../components/projects/ProjectAnalyticsModal';
 import { ProjectModal } from '../components/projects/ProjectModal';
 import { useEffect } from 'react';
+import { useI18n } from '../i18n';
 import { CharacterWorkspace } from '../components/workspace/CharacterWorkspace';
 
 const stepIdentifiers = ['search-params', 'sources', 'links', 'entries', 'completed'] as const;
@@ -104,19 +105,19 @@ export function ProjectDetailPage() {
 
     return (
       <Stepper active={activeStep} onStepClick={handleStepClick}>
-        <Stepper.Step label="Step 1" description="Search Params" style={futureStepStyle(0)}>
+        <Stepper.Step label="Step 1" description={t('searchParams.stepDesc') || 'Search Params'} style={futureStepStyle(0)}>
           <StepGenerateSearchParams project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 2" description="Manage Sources & Crawl" style={futureStepStyle(1)}>
+        <Stepper.Step label="Step 2" description={t('sources.tip')} style={futureStepStyle(1)}>
           <ManageSourcesStep project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 3" description="Confirm Links" style={futureStepStyle(2)}>
+        <Stepper.Step label="Step 3" description={t('confirmLinks.desc') || 'Confirm Links'} style={futureStepStyle(2)}>
           <StepConfirmLinks project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 4" description="Generate Entries" style={futureStepStyle(3)}>
+        <Stepper.Step label="Step 4" description={t('entries.stepDesc') || 'Generate Entries'} style={futureStepStyle(3)}>
           <StepProcessEntries project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Completed" description="Review & Download" style={futureStepStyle(4)}>
+        <Stepper.Step label="Completed" description={t('completed.stepDesc') || 'Review & Download'} style={futureStepStyle(4)}>
           <StepCompletedView project={project} />
         </Stepper.Step>
       </Stepper>
@@ -154,3 +155,4 @@ export function ProjectDetailPage() {
     </>
   );
 }
+  const { t } = useI18n();

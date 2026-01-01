@@ -9,6 +9,7 @@ import {
 } from '../../hooks/useProjectSources';
 import { useDisclosure } from '@mantine/hooks';
 import { IconAlertCircle } from '@tabler/icons-react';
+import { useI18n } from '../../i18n';
 
 interface ProjectSourceModalProps {
   opened: boolean;
@@ -34,6 +35,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
   const testSelectorsMutation = useTestProjectSourceSelectors(projectId);
   const [selectorsVisible, { toggle: toggleSelectors }] = useDisclosure(false);
   const [testResult, setTestResult] = useState<TestSelectorsResult | null>(null);
+  const { t } = useI18n();
 
   const form = useForm<SourceFormValues>({
     initialValues: {
@@ -51,7 +53,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
           return null;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
         } catch (e: any) {
-          return 'Please enter a valid URL';
+          return t('sources.validUrl');
         }
       },
     },
@@ -123,7 +125,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<Text fw={700}>{isEditMode ? 'Edit Source' : 'Add New Source'}</Text>}
+      title={<Text fw={700}>{isEditMode ? t('sources.edit') : t('sources.add')}</Text>}
       size="lg"
       centered
     >
@@ -131,7 +133,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
         <Stack gap="md">
           <TextInput
             withAsterisk
-            label="Source URL"
+            label={t('sources.url')}
             placeholder={
               isLorebookProject
                 ? 'e.g., https://elderscrolls.fandom.com/wiki/Category:Skyrim:_Locations'
@@ -144,16 +146,16 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
             <>
               <Group grow>
                 <NumberInput
-                  label="Max Pages to Crawl"
-                  description="Pagination limit per source. Set to 1 to disable."
+                  label={t('sources.maxPages')}
+                  description={t('sources.maxPagesDesc')}
                   defaultValue={20}
                   min={1}
                   max={100}
                   {...form.getInputProps('max_pages_to_crawl')}
                 />
                 <NumberInput
-                  label="Max Crawl Depth"
-                  description="How many levels of sub-categories to discover."
+                  label={t('sources.maxDepth')}
+                  description={t('sources.maxDepthDesc')}
                   defaultValue={1}
                   min={1}
                   max={5}
@@ -163,8 +165,8 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
               <Group grow>
                 <Textarea
                   w={'100%'}
-                  label="URL Exclusion Patterns"
-                  description="URLs containing any of these patterns (one per line) will be ignored during crawling."
+                  label={t('sources.exclusions')}
+                  description={t('sources.exclusionsDesc')}
                   autosize
                   minRows={3}
                   {...form.getInputProps('url_exclusion_patterns')}
@@ -174,20 +176,20 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
               {isEditMode && (
                 <>
                   <Button variant="subtle" size="xs" onClick={toggleSelectors}>
-                    {selectorsVisible ? 'Hide' : 'Show'} Advanced: CSS Selectors
+                    {selectorsVisible ? t('common.hide') : t('common.show')} {t('sources.advanced')}
                   </Button>
                   <Collapse in={selectorsVisible}>
                     <Stack>
                       <Textarea
-                        label="Content Link Selectors"
-                        description="CSS selectors for links to content pages, one per line."
+                        label={t('sources.contentSelectors')}
+                        description={t('sources.contentSelectorsDesc')}
                         autosize
                         minRows={3}
                         {...form.getInputProps('link_extraction_selector')}
                       />
                       <TextInput
-                        label="Pagination Link Selector"
-                        description="CSS selector for the 'next page' link."
+                        label={t('sources.paginationSelector')}
+                        description={t('sources.paginationSelectorDesc')}
                         {...form.getInputProps('link_extraction_pagination_selector')}
                       />
                       <Group justify="flex-end">
@@ -197,13 +199,13 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
                           loading={testSelectorsMutation.isPending}
                           disabled={!form.values.url}
                         >
-                          Test Selectors
+                          {t('sources.testSelectors')}
                         </Button>
                       </Group>
                       {testResult && (
                         <Alert
                           icon={<IconAlertCircle size="1rem" />}
-                          title="Selector Test Result"
+                          title={t('sources.selectorTestResult')}
                           color={testResult.error ? 'red' : 'green'}
                           withCloseButton
                           onClose={() => setTestResult(null)}
@@ -212,15 +214,15 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
                             <Text>{testResult.error}</Text>
                           ) : (
                             <Stack>
-                              <Text>Found {testResult.link_count} content links.</Text>
+                              <Text>{t('sources.linksFound').replace('{count}', String(testResult.link_count))}</Text>
                               {testResult.pagination_link ? (
-                                <Text>Pagination link found: {testResult.pagination_link}</Text>
+                                <Text>{t('sources.paginationFound').replace('{url}', testResult.pagination_link)}</Text>
                               ) : (
-                                <Text>No pagination link found.</Text>
+                                <Text>{t('sources.paginationNotFound')}</Text>
                               )}
                               {testResult.content_links.length > 0 && (
                                 <Text size="xs" c="dimmed">
-                                  First link: {testResult.content_links[0]}
+                                  {t('sources.firstLink')}: {testResult.content_links[0]}
                                 </Text>
                               )}
                             </Stack>
@@ -236,10 +238,10 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isLoading}>
-              {isEditMode ? 'Save Changes' : 'Add Source'}
+              {isEditMode ? t('btn.save') : t('sources.add')}
             </Button>
           </Group>
         </Stack>

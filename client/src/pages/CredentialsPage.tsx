@@ -7,6 +7,7 @@ import { useModals } from '@mantine/modals';
 import { formatDate } from '../utils/formatDate';
 import { useCredentials } from '../hooks/useCredentials';
 import { CredentialModal } from '../components/credentials/CredentialModal';
+import { useI18n } from '../i18n';
 import { useDeleteCredential } from '../hooks/useCredentialsMutations';
 
 export function CredentialsPage() {
@@ -15,18 +16,16 @@ export function CredentialsPage() {
   const [selectedCredential, setSelectedCredential] = useState<Credential | null>(null);
   const modals = useModals();
   const deleteCredentialMutation = useDeleteCredential();
+  const { t } = useI18n();
 
   const openDeleteModal = (credential: Credential) =>
     modals.openConfirmModal({
-      title: 'Delete Credential',
+      title: t('credentials.deleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the credential "<strong>{credential.name}</strong>"? This action is
-          irreversible.
-        </Text>
+        <Text size="sm">{t('credentials.deleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Credential', cancel: 'Cancel' },
+      labels: { confirm: t('credentials.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteCredentialMutation.mutate(credential.id),
     });
@@ -88,19 +87,19 @@ export function CredentialsPage() {
       <CredentialModal opened={modalOpened} onClose={closeModal} credential={selectedCredential} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>Credentials</Title>
-          <Button onClick={handleOpenCreateModal}>Add New Credential</Button>
+          <Title order={1}>{t('nav.credentials')}</Title>
+          <Button onClick={handleOpenCreateModal}>{t('credentials.create')}</Button>
         </Group>
 
-        {error && <Text color="red">Failed to load credentials: {error.message}</Text>}
+        {error && <Text color="red">{t('credentials.loadFailed')}: {error.message}</Text>}
 
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Provider Type</Table.Th>
-              <Table.Th>Last Updated</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th>{t('common.name')}</Table.Th>
+              <Table.Th>{t('credentials.providerType')}</Table.Th>
+              <Table.Th>{t('common.lastUpdated')}</Table.Th>
+              <Table.Th>{t('common.actions')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -111,9 +110,7 @@ export function CredentialsPage() {
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={4}>
-                  <Text c="dimmed" ta="center">
-                    No credentials found. Create one to get started!
-                  </Text>
+                  <Text c="dimmed" ta="center">{t('credentials.empty')}</Text>
                 </Table.Td>
               </Table.Tr>
             )}

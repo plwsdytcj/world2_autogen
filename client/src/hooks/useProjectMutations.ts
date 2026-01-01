@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import type { Project, SingleResponse, CreateProjectPayload } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 import { useNavigate } from 'react-router-dom';
 
 // Types for mutation
@@ -15,24 +16,17 @@ const createProject = async (projectData: CreateProjectPayload): Promise<SingleR
 
 export const useCreateProject = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: createProject,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      notifications.show({
-        title: 'Project Created',
-        message: 'The new project has been created successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('projects.createdTitle'), message: t('projects.createdMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to create project: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('projects.createFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -51,6 +45,7 @@ const updateProject = async ({
 
 export const useUpdateProject = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: updateProject,
@@ -59,19 +54,11 @@ export const useUpdateProject = () => {
       // Invalidate both the list of projects and the specific project query
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
-      notifications.show({
-        title: 'Project Updated',
-        message: 'The project has been updated successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('projects.updatedTitle'), message: t('projects.updatedMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to update project: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('projects.updateFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -83,6 +70,7 @@ const deleteProject = async (projectId: string): Promise<void> => {
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: deleteProject,
@@ -92,11 +80,7 @@ export const useDeleteProject = () => {
       // Invalidate the list of all projects to refetch it
       queryClient.invalidateQueries({ queryKey: ['projects'] });
 
-      notifications.show({
-        title: 'Project Deleted',
-        message: 'The project has been successfully deleted.',
-        color: 'green',
-      });
+      notifications.show({ title: t('projects.deletedTitle'), message: t('projects.deletedMsg'), color: 'green' });
 
       // Navigate to the home page if the user was on the deleted project's page
       if (window.location.pathname.includes(`/projects/${deletedProjectId}`)) {
@@ -105,11 +89,7 @@ export const useDeleteProject = () => {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to delete project: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('projects.deleteFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };

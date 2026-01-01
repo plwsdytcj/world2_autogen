@@ -19,6 +19,7 @@ import { useProviders } from '../../hooks/useProviders';
 import type { Credential, CreateCredentialPayload, ModelInfo } from '../../types';
 import { useFetchProviderModels, useTestCredential } from '../../hooks/useProviderMutations';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../../i18n';
 import { IconRefresh } from '@tabler/icons-react';
 
 interface CredentialModalProps {
@@ -35,6 +36,7 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
   const testCredentialMutation = useTestCredential();
   const fetchModelsMutation = useFetchProviderModels();
   const { data: providers, isLoading: isLoadingProviders } = useProviders();
+  const { t } = useI18n();
 
   const [testModelName, setTestModelName] = useState('');
   const [localModels, setLocalModels] = useState<ModelInfo[] | null>(null);
@@ -50,13 +52,13 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
       },
     },
     validate: {
-      name: (value) => (value.trim().length > 0 ? null : 'Name is required'),
-      provider_type: (value) => (value ? null : 'Provider is required'),
+      name: (value) => (value.trim().length > 0 ? null : (t('creds.nameRequired') || 'Name is required')),
+      provider_type: (value) => (value ? null : (t('creds.providerRequired') || 'Provider is required')),
       values: {
         api_key: (value, values) =>
-          !isEditMode && values.provider_type !== 'openai_compatible' && !value ? 'API Key is required' : null,
+          !isEditMode && values.provider_type !== 'openai_compatible' && !value ? (t('creds.apiKeyRequired') || 'API Key is required') : null,
         base_url: (value, values) =>
-          !isEditMode && values.provider_type === 'openai_compatible' && !value ? 'Base URL is required' : null,
+          !isEditMode && values.provider_type === 'openai_compatible' && !value ? (t('creds.baseUrlRequired') || 'Base URL is required') : null,
       },
     },
   });
@@ -117,11 +119,7 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
 
   const handleTest = () => {
     if (!testModelName) {
-      notifications.show({
-        title: 'Missing Model',
-        message: 'Please select a model to run the test.',
-        color: 'yellow',
-      });
+      notifications.show({ title: t('creds.missingModelTitle') || 'Missing Model', message: t('creds.missingModelMsg') || 'Please select a model to run the test.', color: 'yellow' });
       return;
     }
     testCredentialMutation.mutate({
@@ -175,7 +173,7 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<Text fw={700}>{isEditMode ? 'Edit Credential' : 'Create New Credential'}</Text>}
+      title={<Text fw={700}>{isEditMode ? (t('creds.edit') || 'Edit Credential') : (t('creds.create') || 'Create New Credential')}</Text>}
       size="lg"
       centered
       zIndex={1001}
@@ -184,14 +182,14 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
         <Stack gap="md">
           <TextInput
             withAsterisk
-            label="Credential Name"
+            label={t('creds.name') || 'Credential Name'}
             placeholder="e.g., My Personal Key"
             {...form.getInputProps('name')}
           />
           <Select
             withAsterisk
-            label="Provider Type"
-            placeholder="Select a provider type"
+            label={t('creds.providerType')}
+            placeholder={t('creds.selectProvider')}
             data={providerOptions}
             disabled={isLoadingProviders || isEditMode}
             comboboxProps={{ zIndex: 1002 }}
@@ -207,7 +205,7 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
             <>
               {isOaiCompatible && (
                 <TextInput
-                  label="Base URL"
+                  label={t('creds.baseUrl')}
                   withAsterisk={!isEditMode}
                   placeholder="e.g., http://localhost:11434/v1"
                   {...form.getInputProps('values.base_url')}
@@ -223,18 +221,14 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
 
                       if (finalUrl !== currentValue) {
                         form.setFieldValue('values.base_url', finalUrl);
-                        notifications.show({
-                          title: 'Base URL Corrected',
-                          message: 'The /chat/completions suffix has been removed automatically.',
-                          color: 'blue',
-                        });
+                        notifications.show({ title: t('creds.baseUrlCorrected') || 'Base URL Corrected', message: t('creds.baseUrlCorrectedMsg') || 'The /chat/completions suffix has been removed automatically.', color: 'blue' });
                       }
                     }
                   }}
                 />
               )}
               <PasswordInput
-                label="API Key"
+                label={t('creds.apiKey')}
                 withAsterisk={!isEditMode && !isOaiCompatible}
                 placeholder={isEditMode ? 'Leave blank to keep unchanged' : 'Enter API Key'}
                 {...form.getInputProps('values.api_key')}
@@ -243,8 +237,8 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
               <Group justify="space-between" align="flex-end" wrap="nowrap">
                 {isOaiCompatible ? (
                   <TextInput
-                    label="Test Model Name"
-                    description="Enter a model name to use for testing."
+                    label={t('creds.testModel')}
+                    description={t('creds.testModelDesc')}
                     placeholder="e.g., llama3"
                     value={testModelName}
                     onChange={(e) => setTestModelName(e.currentTarget.value)}
@@ -252,9 +246,9 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
                   />
                 ) : (
                   <Select
-                    label="Test Model Name"
-                    description="Select a model to use for testing."
-                    placeholder="Select a model for testing"
+                    label={t('creds.testModel')}
+                    description={t('creds.testModelDesc')}
+                    placeholder={t('creds.selectModel')}
                     data={modelOptions}
                     value={testModelName}
                     onChange={(value) => setTestModelName(value || '')}
@@ -264,7 +258,7 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
                     style={{ flexGrow: 1 }}
                   />
                 )}
-                <Tooltip label="Refresh model list" withArrow zIndex={1002}>
+                <Tooltip label={t('creds.refreshModels')} withArrow zIndex={1002}>
                   <ActionIcon
                     variant="default"
                     size="input-sm"
@@ -278,16 +272,14 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
               </Group>
 
               <Stack gap="xs" mt="sm">
-                <Text size="sm" fw={500}>
-                  JSON Test Mode
-                </Text>
+                <Text size="sm" fw={500}>{t('creds.jsonTestMode')}</Text>
                 <SegmentedControl
                   fullWidth
                   value={jsonMode}
                   onChange={(value) => setJsonMode(value as 'api_native' | 'prompt_engineering')}
                   data={[
-                    { label: 'API Native', value: 'api_native' },
-                    { label: 'Prompt Engineering', value: 'prompt_engineering' },
+                    { label: t('creds.apiNative'), value: 'api_native' },
+                    { label: t('creds.promptEng'), value: 'prompt_engineering' },
                   ]}
                 />
               </Stack>
@@ -301,13 +293,13 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
               loading={testCredentialMutation.isPending}
               disabled={!isTestable}
             >
-              Test Credential
+              {t('creds.test')}
             </Button>
             <Button variant="default" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isLoading}>
-              {isEditMode ? 'Save Changes' : 'Create Credential'}
+              {isEditMode ? (t('btn.save')) : (t('creds.create'))}
             </Button>
           </Group>
         </Stack>

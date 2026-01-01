@@ -26,6 +26,7 @@ import { IconPlayerPlay, IconTrash, IconPlus } from '@tabler/icons-react';
 import { useDeleteLinksBulk } from '../../hooks/useLinkMutations';
 import { useDisclosure } from '@mantine/hooks';
 import { useConfirmLinksJob } from '../../hooks/useJobMutations';
+import { useI18n } from '../../i18n';
 
 interface StepProps {
   project: Project;
@@ -69,11 +70,11 @@ function AddLinksModal({
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Add Manual Links" centered>
+    <Modal opened={opened} onClose={onClose} title={useI18n().t('entries.addManualTitle') || 'Add Manual Links'} centered>
       <Stack>
         <Textarea
-          label="Links"
-          description="Enter one URL per line."
+          label={useI18n().t('entries.linksLabel') || 'Links'}
+          description={useI18n().t('entries.linksDesc') || 'Enter one URL per line.'}
           placeholder="https://example.com/page1&#10;https://example.com/page2"
           autosize
           minRows={4}
@@ -81,7 +82,7 @@ function AddLinksModal({
           onChange={(e) => setUrlsToAdd(e.currentTarget.value)}
         />
         <Button onClick={handleAdd} disabled={urls.length === 0}>
-          Add {urls.length} Links
+          {(useI18n().t('entries.addNLinks') || 'Add {n} Links').replace('{n}', String(urls.length))}
         </Button>
       </Stack>
     </Modal>
@@ -96,6 +97,7 @@ export function StepProcessEntries({ project }: StepProps) {
   const modals = useModals();
   const [addLinksModalOpened, { open: openAddLinksModal, close: closeAddLinksModal }] = useDisclosure(false);
   const confirmLinks = useConfirmLinksJob();
+  const { t } = useI18n();
 
   const startGeneration = useProcessProjectEntriesJob();
   const { job: processingJob } = useLatestJob(project.id, 'process_project_entries');
@@ -154,31 +156,21 @@ export function StepProcessEntries({ project }: StepProps) {
       const processableCount = response.data.data.count;
 
       if (processableCount === 0) {
-        notifications.show({
-          title: 'No Links to Process',
-          message: 'All links for this project have already been processed.',
-          color: 'blue',
-        });
+        notifications.show({ title: t('entries.noneToProcessTitle'), message: t('entries.noneToProcessMsg'), color: 'blue' });
         return;
       }
 
       modals.openConfirmModal({
-        title: 'Confirm Generation',
+        title: t('entries.confirmGenTitle'),
         centered: true,
         children: (
           <Stack>
-            <Text size="sm">
-              You are about to process <strong>{processableCount}</strong> pending or failed links.
-            </Text>
-            <Text size="sm">
-              This will make up to {processableCount} API calls to the <strong>{project.model_name}</strong> model.
-            </Text>
-            <Text size="sm" fw={700}>
-              Are you sure you want to proceed?
-            </Text>
+            <Text size="sm">{t('entries.confirmGenMsg1').replace('{n}', String(processableCount))}</Text>
+            <Text size="sm">{t('entries.confirmGenMsg2').replace('{n}', String(processableCount)).replace('{model}', String(project.model_name))}</Text>
+            <Text size="sm" fw={700}>{t('sources.deepCrawlConfirm')}</Text>
           </Stack>
         ),
-        labels: { confirm: 'Start Generation', cancel: 'Cancel' },
+        labels: { confirm: t('entries.startGen'), cancel: t('common.cancel') },
         confirmProps: { color: 'blue' },
         onConfirm: () => startGeneration.mutate({ project_id: project.id }),
       });
@@ -189,14 +181,12 @@ export function StepProcessEntries({ project }: StepProps) {
 
   const openDeleteModal = () =>
     modals.openConfirmModal({
-      title: 'Delete Selected Links',
+      title: t('entries.deleteSelectedTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the <strong>{selectedLinkIds.length}</strong> selected links?
-        </Text>
+        <Text size="sm">{t('entries.deleteSelectedMsg').replace('{n}', String(selectedLinkIds.length))}</Text>
       ),
-      labels: { confirm: 'Delete Links', cancel: 'Cancel' },
+      labels: { confirm: t('entries.deleteLinks'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () =>
         deleteLinksMutation.mutate(
@@ -207,14 +197,12 @@ export function StepProcessEntries({ project }: StepProps) {
 
   const openReprocessModal = () =>
     modals.openConfirmModal({
-      title: 'Reprocess Selected Links',
+      title: t('entries.reprocessTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          You are about to reprocess <strong>{processableSelectedLinks.length}</strong> selected links.
-        </Text>
+        <Text size="sm">{t('entries.reprocessMsg').replace('{n}', String(processableSelectedLinks.length))}</Text>
       ),
-      labels: { confirm: 'Reprocess', cancel: 'Cancel' },
+      labels: { confirm: t('entries.reprocess'), cancel: t('common.cancel') },
       confirmProps: { color: 'blue' },
       onConfirm: () =>
         processEntriesMutation.mutate(
@@ -236,17 +224,14 @@ export function StepProcessEntries({ project }: StepProps) {
     project.status === 'search_params_generated' ||
     project.status === 'selector_generated'
   ) {
-    return <Text c="dimmed">Complete the previous steps to generate entries.</Text>;
+    return <Text c="dimmed">{t('entries.completePrev')}</Text>;
   }
 
   return (
     <>
       <AddLinksModal opened={addLinksModalOpened} onClose={closeAddLinksModal} onAdd={handleAddManualLinks} />
       <Stack>
-        <Text>
-          Manage your project's links below. You can start a job to process all pending/failed links, or select specific
-          links to reprocess or delete.
-        </Text>
+        <Text>{t('entries.tip')}</Text>
 
         <Group>
           <Button
@@ -254,7 +239,7 @@ export function StepProcessEntries({ project }: StepProps) {
             loading={startGeneration.isPending || isJobActive || isFetchingCount}
             disabled={isJobActive || isFetchingCount}
           >
-            Start Generation for All
+            {t('entries.startAll')}
           </Button>
           <Button
             leftSection={<IconPlayerPlay size={14} />}
@@ -263,7 +248,7 @@ export function StepProcessEntries({ project }: StepProps) {
             loading={processEntriesMutation.isPending}
             variant="outline"
           >
-            Reprocess Selected ({processableSelectedLinks.length})
+            {t('entries.reprocessSel')} ({processableSelectedLinks.length})
           </Button>
           <Button
             leftSection={<IconTrash size={14} />}
@@ -273,14 +258,14 @@ export function StepProcessEntries({ project }: StepProps) {
             onClick={openDeleteModal}
             loading={deleteLinksMutation.isPending}
           >
-            Delete Selected ({selectedLinkIds.length})
+            {t('entries.deleteSel')} ({selectedLinkIds.length})
           </Button>
           <Button leftSection={<IconPlus size={14} />} onClick={openAddLinksModal} variant="outline">
-            Add Manual Links
+            {t('entries.addManual')}
           </Button>
         </Group>
 
-        <JobStatusIndicator job={processingJob} title="Main Generation Job Status" />
+        <JobStatusIndicator job={processingJob} title={t('entries.statusTitle')} />
 
         {isLoadingLinks && <Loader />}
 
@@ -296,8 +281,8 @@ export function StepProcessEntries({ project }: StepProps) {
                       onChange={handleSelectAll}
                     />
                   </Table.Th>
-                  <Table.Th>Link URL</Table.Th>
-                  <Table.Th>Status</Table.Th>
+                  <Table.Th>{t('entries.linkUrl')}</Table.Th>
+                  <Table.Th>{t('common.status')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>

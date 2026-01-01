@@ -8,6 +8,7 @@ import { useSearchParams } from 'react-router-dom';
 import type { GlobalTemplate } from '../types';
 import { useModals } from '@mantine/modals';
 import { GlobalTemplateModal } from '../components/templates/GlobalTemplateModal';
+import { useI18n } from '../i18n';
 import { useDeleteGlobalTemplate } from '../hooks/useGlobalTemplatesMutations';
 
 const PAGE_SIZE = 25;
@@ -36,6 +37,7 @@ export function GlobalTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<GlobalTemplate | null>(null);
   const modals = useModals();
   const deleteTemplateMutation = useDeleteGlobalTemplate();
+  const { t } = useI18n();
 
   const templates = templatesResponse?.data || [];
   const totalItems = templatesResponse?.meta.total_items || 0;
@@ -43,14 +45,12 @@ export function GlobalTemplatesPage() {
 
   const openDeleteModal = (template: GlobalTemplate) =>
     modals.openConfirmModal({
-      title: 'Delete Global Template',
+      title: t('templates.deleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the template "<strong>{template.name}</strong>"? This action is irreversible.
-        </Text>
+        <Text size="sm">{t('templates.deleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Template', cancel: 'Cancel' },
+      labels: { confirm: t('templates.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteTemplateMutation.mutate(template.id),
     });
@@ -126,18 +126,18 @@ export function GlobalTemplatesPage() {
       <GlobalTemplateModal opened={modalOpened} onClose={closeModal} template={selectedTemplate} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>Global Templates</Title>
-          <Button onClick={handleOpenCreateModal}>Create New Template</Button>
+          <Title order={1}>{t('templates.title')}</Title>
+          <Button onClick={handleOpenCreateModal}>{t('templates.create')}</Button>
         </Group>
 
-        {error && <Text color="red">Failed to load templates: {error.message}</Text>}
+        {error && <Text color="red">{t('templates.loadFailed')}: {error.message}</Text>}
 
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name / ID</Table.Th>
-              <Table.Th>Last Updated</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th>{t('common.nameId')}</Table.Th>
+              <Table.Th>{t('common.lastUpdated')}</Table.Th>
+              <Table.Th>{t('common.actions')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -148,9 +148,7 @@ export function GlobalTemplatesPage() {
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={3}>
-                  <Text c="dimmed" ta="center">
-                    No global templates found. Create one to get started!
-                  </Text>
+                  <Text c="dimmed" ta="center">{t('templates.empty')}</Text>
                 </Table.Td>
               </Table.Tr>
             )}

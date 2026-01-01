@@ -12,6 +12,7 @@ import { RegenerateFieldModal } from './RegenerateFieldModal';
 import { useProjectSources } from '../../hooks/useProjectSources';
 import { notifications } from '@mantine/notifications';
 import apiClient from '../../services/api';
+import { useI18n } from '../../i18n';
 import { ExportToMobileModal } from '../common/ExportToMobileModal';
 
 interface CharacterEditorProps {
@@ -20,6 +21,7 @@ interface CharacterEditorProps {
 }
 
 export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorProps) {
+  const { t } = useI18n();
   const { data: characterCardResponse, isLoading: isLoadingCard } = useCharacterCard(project.id);
   const { data: sources } = useProjectSources(project.id);
   const updateCardMutation = useUpdateCharacterCard(project.id);
@@ -209,7 +211,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
             defaultFormat="png"
           />
           <Group justify="space-between">
-            <Title order={4}>Character Card</Title>
+            <Title order={4}>{t('character.title')}</Title>
             <Group>
               <Button
                 leftSection={<IconPlayerPlay size={16} />}
@@ -220,7 +222,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 loading={isGenerationJobActive}
                 title={!canGenerate ? 'Select at least one fetched source to enable generation.' : ''}
               >
-                Generate
+                {t('btn.generate')}
               </Button>
               <Button
                 leftSection={<IconDeviceFloppy size={16} />}
@@ -229,7 +231,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 disabled={!form.isDirty()}
                 loading={updateCardMutation.isPending}
               >
-                Save Changes
+                {t('btn.save')}
               </Button>
               <Button
                 leftSection={<IconDownload size={16} />}
@@ -238,7 +240,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 loading={isDownloading}
                 disabled={!characterCardResponse?.data.name}
               >
-                Export Card
+                {t('btn.exportCard')}
               </Button>
               <Button
                 leftSection={<IconDownload size={16} />}
@@ -247,14 +249,14 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 loading={isDownloadingJson}
                 disabled={!characterCardResponse?.data.name}
               >
-                Export JSON
+                {t('btn.exportJson')}
               </Button>
               <Button
                 variant="default"
                 onClick={() => setExportMobileOpened(true)}
                 disabled={!characterCardResponse?.data.name}
               >
-                Export to Mobile
+                {t('btn.exportMobile')}
               </Button>
             </Group>
           </Group>
@@ -268,7 +270,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
             <Stack>
               <Group align="flex-start" justify="space-between" gap="xl">
                 <Stack style={{ flex: 1, minWidth: 280 }}>
-                  <Text size="sm" fw={500}>Avatar</Text>
+                  <Text size="sm" fw={500}>{t('character.avatar')}</Text>
                   {form.values.avatar_url ? (
                     <Image src={toProxy(form.values.avatar_url)} alt="Avatar" radius="sm" w={160} h={160} fit="cover" />
                   ) : (
@@ -285,7 +287,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 </Stack>
                 {candidateImages.length > 0 && (
                   <Stack style={{ flex: 2 }}>
-                    <Text size="sm" c="dimmed">Suggestions from sources</Text>
+                    <Text size="sm" c="dimmed">{t('character.suggestions')}</Text>
                     <SimpleGrid cols={{ base: 4, sm: 6 }} spacing={8}>
                       {candidateImages.map((url) => (
                         <Image
@@ -304,12 +306,12 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                   </Stack>
                 )}
               </Group>
-              {renderTextareaWithRegen('name', 'Name', 1)}
-              {renderTextareaWithRegen('description', 'Description', 4)}
-              {renderTextareaWithRegen('persona', 'Persona', 4)}
-              {renderTextareaWithRegen('scenario', 'Scenario', 2)}
-              {renderTextareaWithRegen('first_message', 'First Message', 4)}
-              {renderTextareaWithRegen('example_messages', 'Example Messages', 4)}
+              {renderTextareaWithRegen('name', t('character.name'), 1)}
+              {renderTextareaWithRegen('description', t('character.description'), 4)}
+              {renderTextareaWithRegen('persona', t('character.persona'), 4)}
+              {renderTextareaWithRegen('scenario', t('character.scenario'), 2)}
+              {renderTextareaWithRegen('first_message', t('character.firstMessage'), 4)}
+              {renderTextareaWithRegen('example_messages', t('character.exampleMessages'), 4)}
             </Stack>
           </Paper>
         </Stack>

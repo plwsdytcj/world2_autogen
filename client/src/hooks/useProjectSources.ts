@@ -8,6 +8,7 @@ import type {
   TestSelectorsResult,
 } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 // --- Fetch ---
 const fetchProjectSources = async (projectId: string): Promise<ProjectSource[]> => {
@@ -74,24 +75,17 @@ const createProjectSource = async ({
 
 export const useCreateProjectSource = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: createProjectSource,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sources', projectId] });
       queryClient.invalidateQueries({ queryKey: ['sourcesHierarchy', projectId] });
-      notifications.show({
-        title: 'Source Added',
-        message: 'The new source has been added successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('sources.addedTitle') || 'Source Added', message: t('sources.addedMsg') || 'The new source has been added successfully.', color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to add source: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('sources.addFailed') || 'Failed to add source'}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -117,24 +111,17 @@ const updateProjectSource = async ({
 
 export const useUpdateProjectSource = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: updateProjectSource,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sources', projectId] });
       queryClient.invalidateQueries({ queryKey: ['sourcesHierarchy', projectId] });
-      notifications.show({
-        title: 'Source Updated',
-        message: 'The source has been updated successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('sources.updatedTitle') || 'Source Updated', message: t('sources.updatedMsg') || 'The source has been updated successfully.', color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to update source: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('sources.updateFailed') || 'Failed to update source'}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -146,24 +133,17 @@ const deleteProjectSource = async ({ projectId, sourceId }: { projectId: string;
 
 export const useDeleteProjectSource = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: deleteProjectSource,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sources', projectId] });
       queryClient.invalidateQueries({ queryKey: ['sourcesHierarchy', projectId] });
-      notifications.show({
-        title: 'Source Deleted',
-        message: 'The source has been successfully deleted.',
-        color: 'green',
-      });
+      notifications.show({ title: t('sources.deletedTitle') || 'Source Deleted', message: t('sources.deletedMsg') || 'The source has been successfully deleted.', color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to delete source: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('sources.deleteFailed') || 'Failed to delete source'}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -179,24 +159,17 @@ const deleteProjectSourcesBulk = async ({ projectId, source_ids }: BulkDeletePay
 
 export const useDeleteProjectSourcesBulk = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: deleteProjectSourcesBulk,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sources', projectId] });
       queryClient.invalidateQueries({ queryKey: ['sourcesHierarchy', projectId] });
-      notifications.show({
-        title: 'Sources Deleted',
-        message: `${variables.source_ids.length} sources have been successfully deleted.`,
-        color: 'green',
-      });
+      notifications.show({ title: t('sources.bulkDeletedTitle') || 'Sources Deleted', message: (t('sources.bulkDeletedMsg') || '{n} sources have been successfully deleted.').replace('{n}', String(variables.source_ids.length)), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to delete sources: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('sources.bulkDeleteFailed') || 'Failed to delete sources'}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };

@@ -24,6 +24,7 @@ import { JobStatusIndicator } from '../common/JobStatusIndicator';
 import { IconDownload, IconEye, IconPlus, IconTrash } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
+import { useI18n } from '../../i18n';
 
 interface CharacterSourcesProps {
   project: Project;
@@ -42,6 +43,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const deleteSourceMutation = useDeleteProjectSource(project.id);
   const fetchContentMutation = useFetchContentJob();
   const { job: fetchContentJob } = useLatestJob(project.id, 'fetch_source_content');
+  const { t } = useI18n();
 
   const handleOpenCreateModal = () => {
     setSelectedSource(null);
@@ -55,14 +57,12 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
 
   const openDeleteModal = (source: ProjectSource) =>
     modals.openConfirmModal({
-      title: 'Delete Source',
+      title: t('sources.deleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the source "<strong>{source.url}</strong>"? This is irreversible.
-        </Text>
+        <Text size="sm">{t('sources.deleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Source', cancel: 'Cancel' },
+      labels: { confirm: t('sources.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteSourceMutation.mutate({ projectId: project.id, sourceId: source.id }),
     });
@@ -90,16 +90,14 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
       />
       <Stack>
         <Group justify="space-between">
-          <Title order={4}>Context Sources</Title>
+          <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
           <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreateModal} size="xs">
-            Add Source
+            {t('sources.add')}
           </Button>
         </Group>
-        <Text size="sm" c="dimmed">
-          Add source URLs, fetch their content, then select which ones to use for generation.
-        </Text>
+        <Text size="sm" c="dimmed">{t('character.sourcesTip') || 'Add source URLs, fetch their content, then select which ones to use for generation.'}</Text>
 
-        <JobStatusIndicator job={fetchContentJob} title="Content Fetching" />
+        <JobStatusIndicator job={fetchContentJob} title={t('character.contentFetching') || 'Content Fetching'} />
 
         <Paper withBorder p="md" mt="xs">
           {isLoadingSources ? (
@@ -127,26 +125,26 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                           </Text>
                           <Group gap="xs">
                             {source.last_crawled_at ? (
-                              <Tooltip label={`Last fetched: ${formatDate(source.last_crawled_at)}`}>
+                              <Tooltip label={`${t('character.lastFetched') || 'Last fetched'}: ${formatDate(source.last_crawled_at)}`}>
                                 <Badge size="sm" variant="light" color="green">
-                                  Fetched
+                                  {t('character.fetched') || 'Fetched'}
                                 </Badge>
                               </Tooltip>
                             ) : (
                               <Badge size="sm" variant="light" color="gray">
-                                Not Fetched
+                                {t('character.notFetched') || 'Not Fetched'}
                               </Badge>
                             )}
                             {source.content_char_count && (
                               <Text size="xs" c="dimmed">
-                                ~{Math.ceil(source.content_char_count / 4)} tokens
+                                ~{Math.ceil(source.content_char_count / 4)} {t('character.tokens') || 'tokens'}
                               </Text>
                             )}
                           </Group>
                         </Box>
                       </Group>
                       <Group gap="xs" wrap="nowrap">
-                        <Tooltip label="View Content">
+                        <Tooltip label={t('character.viewContent') || 'View Content'}>
                           <ActionIcon
                             onClick={() => handleOpenViewModal(source.id)}
                             variant="default"
@@ -155,7 +153,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                             <IconEye size={16} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label="Fetch/Re-fetch Content">
+                        <Tooltip label={t('character.fetchContent') || 'Fetch/Re-fetch Content'}>
                           <ActionIcon
                             onClick={() => handleFetchContent(source.id)}
                             variant="default"
@@ -165,7 +163,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                             <IconDownload size={16} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label="Delete Source">
+                        <Tooltip label={t('sources.deleteTitle')}>
                           <ActionIcon
                             onClick={() => openDeleteModal(source)}
                             variant="default"
@@ -180,9 +178,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                   </Paper>
                 ))
               ) : (
-                <Text ta="center" c="dimmed" p="md">
-                  No sources added yet.
-                </Text>
+                <Text ta="center" c="dimmed" p="md">{t('sources.empty')}</Text>
               )}
             </Stack>
           )}

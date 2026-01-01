@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import { IconAlertCircle, IconInfoCircle } from '@tabler/icons-react';
 import { useProjectAnalytics } from '../../hooks/useProjectAnalytics';
+import { useI18n } from '../../i18n';
 import type { JobStatus, LinkStatus } from '../../types';
 
 interface ProjectAnalyticsModalProps {
@@ -53,23 +54,24 @@ const jobStatusColors: Record<JobStatus, string> = {
 export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAnalyticsModalProps) {
   const { data, isLoading, isError, error } = useProjectAnalytics(projectId);
   const analytics = data?.data;
+  const { t } = useI18n();
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Project Analytics" size="xl">
+    <Modal opened={opened} onClose={onClose} title={t('analytics.title') || 'Project Analytics'} size="xl">
       {isLoading && <Loader />}
       {isError && (
-        <Alert icon={<IconAlertCircle size="1rem" />} title="Error!" color="red">
-          Failed to load analytics: {error.message}
+        <Alert icon={<IconAlertCircle size="1rem" />} title={t('common.error') || 'Error!'} color="red">
+          {(t('analytics.loadFailed') || 'Failed to load analytics')}: {error.message}
         </Alert>
       )}
       {analytics && (
         <>
           <Title order={4} mb="md">
-            Usage & Cost
+            {t('analytics.usageCost') || 'Usage & Cost'}
           </Title>
           <SimpleGrid cols={{ base: 1, sm: 3 }}>
             <StatCard
-              title="Total Requests"
+              title={t('analytics.totalRequests')}
               value={
                 <Text fw={700} size="xl">
                   {analytics.total_requests}
@@ -77,7 +79,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
               }
             />
             <StatCard
-              title="Total Cost"
+              title={t('analytics.totalCost')}
               value={
                 <Group gap="xs" align="center">
                   <Text fw={700} size="xl">
@@ -85,7 +87,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
                   </Text>
                   {analytics.has_unknown_costs && (
                     <Tooltip
-                      label="Total is partial as some requests used models with unknown pricing."
+                      label={t('analytics.partialCostTip')}
                       withArrow
                       multiline
                       w={220}
@@ -97,7 +99,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
               }
             />
             <StatCard
-              title="Avg. Latency"
+              title={t('analytics.avgLatency')}
               value={
                 <Text fw={700} size="xl">
                   {`${analytics.average_latency_ms.toFixed(0)} ms`}
@@ -105,7 +107,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
               }
             />
             <StatCard
-              title="Input Tokens"
+              title={t('analytics.inputTokens')}
               value={
                 <Text fw={700} size="xl">
                   {analytics.total_input_tokens}
@@ -113,7 +115,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
               }
             />
             <StatCard
-              title="Output Tokens"
+              title={t('analytics.outputTokens')}
               value={
                 <Text fw={700} size="xl">
                   {analytics.total_output_tokens}
@@ -123,10 +125,10 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
           </SimpleGrid>
 
           <Title order={4} mt="xl" mb="md">
-            Project Status
+            {t('analytics.projectStatus')}
           </Title>
           <StatCard
-            title="Lorebook Entries"
+            title={t('analytics.lorebookEntries')}
             value={
               <Text fw={700} size="xl">
                 {analytics.total_lorebook_entries}
@@ -135,7 +137,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
           />
 
           <Title order={5} mt="lg">
-            Link Statuses
+            {t('analytics.linkStatuses')}
           </Title>
           <Stack gap="xs" mt="xs">
             <Progress.Root size="xl">
@@ -167,7 +169,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
           </Stack>
 
           <Title order={5} mt="lg">
-            Job Statuses
+            {t('analytics.jobStatuses')}
           </Title>
           <Stack gap="xs" mt="xs">
             <Progress.Root size="xl">

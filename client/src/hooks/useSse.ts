@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSseStore } from '../stores/sseStore';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 import type { BackgroundJob, PaginatedResponse, Link, LorebookEntry, CharacterCard, ProjectSource } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -9,6 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 export function useSse(projectId: string | undefined) {
   const queryClient = useQueryClient();
   const { setStatus } = useSseStore();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!projectId) return;
@@ -55,11 +57,7 @@ export function useSse(projectId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['project', updatedJob.project_id] });
 
       if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
-        notifications.show({
-          title: `Job ${updatedJob.status}: ${updatedJob.task_name.replace(/_/g, ' ')}`,
-          message: `The job has finished with status: ${updatedJob.status}.`,
-          color: updatedJob.status === 'completed' ? 'green' : 'red',
-        });
+        notifications.show({ title: (t('jobs.statusTitle') || 'Job') + ` ${updatedJob.status}: ${updatedJob.task_name.replace(/_/g, ' ')}` , message: (t('jobs.finished') || 'The job has finished with status') + `: ${updatedJob.status}.`, color: updatedJob.status === 'completed' ? 'green' : 'red' });
 
         if (updatedJob.task_name === 'discover_and_crawl_sources' || updatedJob.task_name === 'rescan_links') {
           queryClient.invalidateQueries({ queryKey: ['sources', updatedJob.project_id] });

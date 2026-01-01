@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import apiClient from '../../services/api';
 import { useCharacterCard } from '../../hooks/useCharacterCard';
+import { useI18n } from '../../i18n';
 import * as QRCode from 'qrcode';
 import { notifications } from '@mantine/notifications';
 
@@ -36,6 +37,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
   const [deepLink, setDeepLink] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { data: cardResp } = useCharacterCard(projectId);
+  const { t } = useI18n();
 
   useEffect(() => {
     setExportFormat(defaultFormat || (contentType === 'character' ? 'png' : 'json'));
@@ -147,56 +149,52 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
   }, [canPickFormat]);
 
   return (
-    <Modal opened={opened} onClose={onClose} title={<Text fw={700}>Export to Mobile</Text>} centered size="lg">
+    <Modal opened={opened} onClose={onClose} title={<Text fw={700}>{t('export.title')}</Text>} centered size="lg">
       <Stack gap="md">
         <Group grow>
-          <TextInput label="Project ID" value={projectId} readOnly />
-          <TextInput label="Content Type" value={contentType} readOnly />
-          <Select label="Format" value={exportFormat} data={formatOptions} onChange={(v) => setExportFormat((v as ExportFormat) || exportFormat)} disabled={!canPickFormat} />
+          <TextInput label={t('export.projectId')} value={projectId} readOnly />
+          <TextInput label={t('export.contentType')} value={contentType} readOnly />
+          <Select label={t('export.format')} value={exportFormat} data={formatOptions} onChange={(v) => setExportFormat((v as ExportFormat) || exportFormat)} disabled={!canPickFormat} />
         </Group>
 
         <Group>
           <Button onClick={createShare} loading={creating} leftSection={creating ? <Loader size="xs" /> : undefined}>
-            Generate Link & QR
+            {t('export.generate')}
           </Button>
           {shareLink && (
             <>
-              <Button variant="light" onClick={handleCopy}>Copy Link</Button>
-              <Button variant="default" onClick={() => shareLink && window.open(shareLink, '_blank')}>Open</Button>
+              <Button variant="light" onClick={handleCopy}>{t('export.copy')}</Button>
+              <Button variant="default" onClick={() => shareLink && window.open(shareLink, '_blank')}>{t('export.open')}</Button>
             </>
           )}
         </Group>
 
         {shareLink && (
           <>
-            <Divider label="Scan with iOS App" />
+            <Divider label={t('export.scan')} />
             <Group align="flex-start" wrap="nowrap">
               <canvas ref={canvasRef} style={{ borderRadius: 8 }} />
               <Stack gap={6} style={{ flex: 1 }}>
                 {deepLink && (
                   <>
-                    <Text size="sm" fw={500}>Deep Link (QR content)</Text>
+                    <Text size="sm" fw={500}>{t('export.deepLink')}</Text>
                     <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>{deepLink}</Text>
                   </>
                 )}
-                <Text size="sm" fw={500}>
-                  Universal Link
-                </Text>
+                <Text size="sm" fw={500}>{t('export.universal')}</Text>
                 <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
                   {shareLink}
                 </Text>
                 {schemeLink && (
                   <>
-                    <Text size="sm" fw={500}>
-                      URL Scheme (fallback)
-                    </Text>
+                    <Text size="sm" fw={500}>{t('export.scheme')}</Text>
                     <Text size="xs" c="dimmed" style={{ wordBreak: 'break-all' }}>
                       {schemeLink}
                     </Text>
                   </>
                 )}
                 <Group>
-                  <Tooltip label="Download QR as image" withArrow>
+                  <Tooltip label={t('export.downloadQr')} withArrow>
                     <ActionIcon onClick={downloadQr} variant="subtle" aria-label="Download QR">
                       ⤓
                     </ActionIcon>

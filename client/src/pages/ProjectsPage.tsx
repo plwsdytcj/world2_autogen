@@ -8,6 +8,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
 import type { Project } from '../types';
 import { useModals } from '@mantine/modals';
+import { useI18n } from '../i18n';
 import { useDeleteProject } from '../hooks/useProjectMutations';
 
 const statusColors: Record<string, string> = {
@@ -25,18 +26,16 @@ export function ProjectsPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const modals = useModals();
   const deleteProjectMutation = useDeleteProject();
+  const { t } = useI18n();
 
   const openDeleteModal = (project: Project) =>
     modals.openConfirmModal({
-      title: 'Delete Project',
+      title: t('projects.deleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the project "<strong>{project.name}</strong>"? This action is irreversible and
-          will delete all associated data.
-        </Text>
+        <Text size="sm">{t('projects.deleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Project', cancel: 'Cancel' },
+      labels: { confirm: t('projects.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteProjectMutation.mutate(project.id),
     });
@@ -119,19 +118,19 @@ export function ProjectsPage() {
       <ProjectModal opened={modalOpened} onClose={closeModal} project={selectedProject} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>Projects</Title>
-          <Button onClick={handleOpenCreateModal}>Create New Project</Button>
+          <Title order={1}>{t('nav.projects')}</Title>
+          <Button onClick={handleOpenCreateModal}>{t('projects.create')}</Button>
         </Group>
 
-        {error && <Text color="red">Failed to load projects: {error.message}</Text>}
+        {error && <Text color="red">{t('projects.loadFailed')}: {error.message}</Text>}
 
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>Name / ID</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Last Updated</Table.Th>
-              <Table.Th>Actions</Table.Th>
+              <Table.Th>{t('common.nameId')}</Table.Th>
+              <Table.Th>{t('common.status')}</Table.Th>
+              <Table.Th>{t('common.lastUpdated')}</Table.Th>
+              <Table.Th>{t('common.actions')}</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -142,9 +141,7 @@ export function ProjectsPage() {
             ) : (
               <Table.Tr>
                 <Table.Td colSpan={4}>
-                  <Text c="dimmed" ta="center">
-                    No projects found. Create one to get started!
-                  </Text>
+                  <Text c="dimmed" ta="center">{t('projects.empty')}</Text>
                 </Table.Td>
               </Table.Tr>
             )}

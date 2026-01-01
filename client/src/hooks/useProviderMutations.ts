@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import type { ModelInfo, TestCredentialPayload, TestCredentialResult } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 const testCredential = async (data: TestCredentialPayload): Promise<TestCredentialResult> => {
   const response = await apiClient.post('/providers/test', data);
@@ -9,23 +10,15 @@ const testCredential = async (data: TestCredentialPayload): Promise<TestCredenti
 };
 
 export const useTestCredential = () => {
+  const { t } = useI18n();
   return useMutation({
     mutationFn: testCredential,
     onSuccess: (data) => {
-      notifications.show({
-        title: data.success ? 'Success' : 'Test Failed',
-        message: data.message,
-        color: data.success ? (data.native_json_supported ? 'green' : 'blue') : 'red',
-        autoClose: data.success ? 7000 : 15000,
-      });
+      notifications.show({ title: data.success ? (t('creds.testSuccess') || 'Success') : (t('creds.testFailed') || 'Test Failed'), message: data.message, color: data.success ? (data.native_json_supported ? 'green' : 'blue') : 'red', autoClose: data.success ? 7000 : 15000 });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Test Failed',
-        message: `Error: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('creds.testFailed') || 'Test Failed', message: `Error: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -37,6 +30,7 @@ const fetchProviderModels = async (data: TestCredentialPayload): Promise<ModelIn
 
 export const useFetchProviderModels = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: fetchProviderModels,
     onSuccess: () => {
@@ -45,11 +39,7 @@ export const useFetchProviderModels = () => {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Failed to Fetch Models',
-        message: `Error: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('creds.fetchModelsFailed') || 'Failed to Fetch Models', message: `Error: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };

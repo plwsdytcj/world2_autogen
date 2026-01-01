@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import { notifications } from '@mantine/notifications';
 import { useEffect } from 'react';
+import { useI18n } from '../../i18n';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
 interface AppInfo {
   current_version: string;
@@ -35,6 +37,7 @@ const UpdateInstructions = ({ runtimeEnv }: { runtimeEnv: 'docker' | 'source' })
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const { pathname } = useLocation();
+  const { t } = useI18n();
   const { data: appInfo } = useQuery({
     queryKey: ['appInfo'],
     queryFn: fetchAppInfo,
@@ -72,8 +75,11 @@ export function AppLayout() {
         <Group h="100%" px="md" style={{ background: 'linear-gradient(90deg, rgba(255,182,193,0.15), rgba(186,85,211,0.08))' }}>
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <Title order={3} style={{ letterSpacing: 0.5 }}>world2</Title>
+            <Title order={3} style={{ letterSpacing: 0.5 }}>{t('app.title')}</Title>
           </Link>
+          <Box ml="auto">
+            <LanguageSwitcher />
+          </Box>
         </Group>
       </AppShell.Header>
 
@@ -82,21 +88,21 @@ export function AppLayout() {
           <NavLink
             component={Link}
             to="/"
-            label="Projects"
+            label={t('nav.projects')}
             leftSection={<IconHome size="1rem" />}
             active={pathname === '/' || pathname.startsWith('/projects')}
           />
           <NavLink
             component={Link}
             to="/credentials"
-            label="Credentials"
+            label={t('nav.credentials')}
             leftSection={<IconKey size="1rem" />}
             active={pathname === '/credentials'}
           />
           <NavLink
             component={Link}
             to="/templates"
-            label="Templates"
+            label={t('nav.templates')}
             leftSection={<IconTemplate size="1rem" />}
             active={pathname === '/templates'}
           />
@@ -108,7 +114,7 @@ export function AppLayout() {
         <Box component="footer" p="md" mt="xl" style={{ textAlign: 'center' }}>
           <Text c="dimmed" size="xs">
             world2
-            {appInfo?.current_version && ` - Version: ${appInfo.current_version}`}
+            {appInfo?.current_version && ` - ${t('footer.version')}: ${appInfo.current_version}`}
             {' | '}
             <Anchor href="#" target="_blank" c="dimmed" size="xs">
               GitHub

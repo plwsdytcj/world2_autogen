@@ -6,6 +6,7 @@ import { useCreateGlobalTemplate, useUpdateGlobalTemplate } from '../../hooks/us
 import { useDefaultGlobalTemplates } from '../../hooks/useGlobalTemplates';
 import { LazyMonacoEditorInput } from '../common/LazyMonacoEditorInput';
 import { IconRefresh } from '@tabler/icons-react';
+import { useI18n } from '../../i18n';
 
 interface GlobalTemplateModalProps {
   opened: boolean;
@@ -24,6 +25,7 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
   const createTemplateMutation = useCreateGlobalTemplate();
   const updateTemplateMutation = useUpdateGlobalTemplate();
   const { data: defaultTemplates } = useDefaultGlobalTemplates();
+  const { t } = useI18n();
 
   const form = useForm<TemplateFormValues>({
     initialValues: {
@@ -32,9 +34,9 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
       content: '',
     },
     validate: {
-      id: (value) => (/^[a-z0-9-]+$/.test(value) ? null : 'ID must be lowercase, numbers, and dashes only'),
-      name: (value) => (value.trim().length > 0 ? null : 'Name is required'),
-      content: (value) => (value.trim().length > 0 ? null : 'Content cannot be empty'),
+      id: (value) => (/^[a-z0-9-]+$/.test(value) ? null : (t('templates.validId') || 'Invalid ID')),
+      name: (value) => (value.trim().length > 0 ? null : (t('templates.nameRequired') || 'Name is required')),
+      content: (value) => (value.trim().length > 0 ? null : (t('templates.contentRequired') || 'Content cannot be empty')),
     },
   });
 
@@ -71,7 +73,7 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
       <Text component="span" size="sm" fw={500}>
         {label}
       </Text>
-      <Tooltip label="Reset to default template" withArrow position="top-end">
+      <Tooltip label={t('templates.resetDefault')} withArrow position="top-end">
         <ActionIcon onClick={handleResetContent} variant="subtle" size="xs" aria-label={`Reset ${label} to default`}>
           <IconRefresh size={16} />
         </ActionIcon>
@@ -83,7 +85,7 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<Text fw={700}>{isEditMode ? 'Edit Global Template' : 'Create New Template'}</Text>}
+      title={<Text fw={700}>{isEditMode ? t('templates.edit') : t('templates.create')}</Text>}
       size="xl"
       centered
     >
@@ -91,19 +93,19 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
         <Stack gap="md">
           <TextInput
             withAsterisk
-            label="Template ID"
+            label={t('templates.id')}
             placeholder="e.g., my-custom-entry-prompt"
             {...form.getInputProps('id')}
             disabled={isEditMode}
           />
           <TextInput
             withAsterisk
-            label="Template Name"
+            label={t('templates.name')}
             placeholder="e.g., My Custom Entry Prompt"
             {...form.getInputProps('name')}
           />
           <LazyMonacoEditorInput
-            label={hasDefaultTemplate ? renderTemplateLabel('Template Content') : 'Template Content'}
+            label={hasDefaultTemplate ? renderTemplateLabel(t('templates.content')) : t('templates.content')}
             language="handlebars"
             height={400}
             {...form.getInputProps('content')}
@@ -112,10 +114,10 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={isLoading}>
-              {isEditMode ? 'Save Changes' : 'Create Template'}
+              {isEditMode ? t('btn.save') : t('templates.create')}
             </Button>
           </Group>
         </Stack>

@@ -3,6 +3,7 @@ import { IconChevronRight, IconPencil, IconPlayerPlay, IconRefresh, IconTrash } 
 import { useDisclosure } from '@mantine/hooks';
 import { useState, useMemo, memo } from 'react';
 import { useModals } from '@mantine/modals';
+import { useI18n } from '../../i18n';
 import type { Project, ProjectSource } from '../../types';
 import {
   useProjectSources,
@@ -136,6 +137,7 @@ export function ManageSourcesStep({ project }: StepProps) {
 
   const { job: latestDiscoverJob } = useLatestJob(project.id, 'discover_and_crawl_sources');
   const { job: latestRescanJob } = useLatestJob(project.id, 'rescan_links');
+  const { t } = useI18n();
 
   const isDiscoverJobActive = latestDiscoverJob?.status === 'pending' || latestDiscoverJob?.status === 'in_progress';
   const isRescanJobActive = latestRescanJob?.status === 'pending' || latestRescanJob?.status === 'in_progress';
@@ -156,29 +158,24 @@ export function ManageSourcesStep({ project }: StepProps) {
 
   const openDeleteModal = (source: ProjectSource) =>
     modals.openConfirmModal({
-      title: 'Delete Source',
+      title: t('sources.deleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the source "<strong>{source.url}</strong>"? This is irreversible.
-        </Text>
+        <Text size="sm">{t('sources.deleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Source', cancel: 'Cancel' },
+      labels: { confirm: t('sources.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteSourceMutation.mutate({ projectId: project.id, sourceId: source.id }),
     });
 
   const openBulkDeleteModal = () =>
     modals.openConfirmModal({
-      title: 'Delete Selected Sources',
+      title: t('sources.bulkDeleteTitle'),
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the <strong>{selectedSourceIds.length}</strong> selected sources? This action
-          is irreversible.
-        </Text>
+        <Text size="sm">{t('sources.bulkDeleteConfirm')}</Text>
       ),
-      labels: { confirm: 'Delete Sources', cancel: 'Cancel' },
+      labels: { confirm: t('sources.deleteConfirmBtn'), cancel: t('common.cancel') },
       confirmProps: { color: 'red' },
       onConfirm: () => {
         deleteSourcesBulkMutation.mutate(
@@ -230,24 +227,16 @@ export function ManageSourcesStep({ project }: StepProps) {
       );
 
       modals.openConfirmModal({
-        title: 'Confirm Deep Crawl',
+        title: t('sources.deepCrawlTitle'),
         centered: true,
         children: (
           <Stack>
-            <Text size="sm">
-              One or more selected sources has a crawl depth greater than 1 (max is{' '}
-              <strong>{maxDepthSource.max_crawl_depth}</strong>).
-            </Text>
-            <Text size="sm">
-              This will recursively discover and process sub-categories, which may result in multiple API calls during
-              this discovery step and could find a very large number of links for the next step.
-            </Text>
-            <Text size="sm" fw={700}>
-              Are you sure you want to proceed?
-            </Text>
+            <Text size="sm">{t('sources.deepCrawlWarn1').replace('{max}', String(maxDepthSource.max_crawl_depth))}</Text>
+            <Text size="sm">{t('sources.deepCrawlWarn2')}</Text>
+            <Text size="sm" fw={700}>{t('sources.deepCrawlConfirm')}</Text>
           </Stack>
         ),
-        labels: { confirm: 'Start Discovery', cancel: 'Cancel' },
+        labels: { confirm: t('sources.startDiscovery'), cancel: t('common.cancel') },
         confirmProps: { color: 'blue' },
         onConfirm: executeMutation,
       });
@@ -257,7 +246,7 @@ export function ManageSourcesStep({ project }: StepProps) {
   };
 
   if (!project.search_params) {
-    return <Text c="dimmed">Complete the previous step to add and manage sources.</Text>;
+    return <Text c="dimmed">{t('sources.completePrev')}</Text>;
   }
 
   if (isLoadingSources || isLoadingHierarchy) return <Loader />;
@@ -273,8 +262,8 @@ export function ManageSourcesStep({ project }: StepProps) {
       />
       <Stack>
         <Group justify="space-between">
-          <Text>Add sources, then select them to discover sub-categories and crawl for links.</Text>
-          <Button onClick={handleOpenCreateModal}>Add New Source</Button>
+          <Text>{t('sources.tip')}</Text>
+          <Button onClick={handleOpenCreateModal}>{t('sources.add')}</Button>
         </Group>
 
         <Group>
@@ -284,7 +273,7 @@ export function ManageSourcesStep({ project }: StepProps) {
             onClick={handleDiscoverAndCrawlClick}
             loading={discoverAndCrawlMutation.isPending || isDiscoverJobActive}
           >
-            Discover & Scan ({selectedSourceIds.length})
+            {t('sources.discoverScan')} ({selectedSourceIds.length})
           </Button>
           <Button
             variant="outline"
@@ -293,7 +282,7 @@ export function ManageSourcesStep({ project }: StepProps) {
             onClick={() => rescanMutation.mutate({ project_id: project.id, source_ids: selectedSourceIds })}
             loading={rescanMutation.isPending || isRescanJobActive}
           >
-            Rescan Selected ({selectedSourceIds.length})
+            {t('sources.rescanSelected')} ({selectedSourceIds.length})
           </Button>
           <Button
             variant="outline"
@@ -303,18 +292,18 @@ export function ManageSourcesStep({ project }: StepProps) {
             onClick={openBulkDeleteModal}
             loading={deleteSourcesBulkMutation.isPending}
           >
-            Delete Selected ({selectedSourceIds.length})
+            {t('sources.deleteSelected')} ({selectedSourceIds.length})
           </Button>
         </Group>
 
-        <JobStatusIndicator job={latestDiscoverJob} title="Discover & Scan Job Status" />
-        <JobStatusIndicator job={latestRescanJob} title="Rescan Job Status" />
+        <JobStatusIndicator job={latestDiscoverJob} title={t('sources.discoverScanStatus')} />
+        <JobStatusIndicator job={latestRescanJob} title={t('sources.rescanStatus')} />
 
         <Paper withBorder p="md" mt="md">
           {sourceTree.length > 0 && (
             <Group mb="sm">
               <Checkbox
-                label="Select / Deselect All"
+                label={t('sources.selectAll')}
                 checked={allSourceIds.length > 0 && selectedSourceIds.length === allSourceIds.length}
                 indeterminate={selectedSourceIds.length > 0 && selectedSourceIds.length < allSourceIds.length}
                 onChange={(e) => setSelectedSourceIds(e.currentTarget.checked ? allSourceIds : [])}
@@ -335,9 +324,7 @@ export function ManageSourcesStep({ project }: StepProps) {
               />
             ))
           ) : (
-            <Text c="dimmed" ta="center" p="md">
-              No sources have been added yet.
-            </Text>
+            <Text c="dimmed" ta="center" p="md">{t('sources.empty')}</Text>
           )}
         </Paper>
       </Stack>

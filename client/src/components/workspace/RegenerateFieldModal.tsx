@@ -5,6 +5,7 @@ import { useRegenerateFieldJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
 import { useMemo } from 'react';
+import { useI18n } from '../../i18n';
 
 interface RegenerateFieldModalProps {
   opened: boolean;
@@ -31,6 +32,7 @@ export function RegenerateFieldModal({
 }: RegenerateFieldModalProps) {
   const regenerateFieldMutation = useRegenerateFieldJob();
   const { job: regenerateFieldJob } = useLatestJob(project.id, 'regenerate_character_field');
+  const { t } = useI18n();
 
   const form = useForm<RegenForm>({
     initialValues: {
@@ -89,36 +91,36 @@ export function RegenerateFieldModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={<Title order={4}>Regenerate '{fieldName.replace('_', ' ')}'</Title>}
+      title={<Title order={4}>{t('character.regenTitle') || 'Regenerate'} '{fieldName.replace('_', ' ')}'</Title>}
       size="xl"
       centered
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack>
           <Textarea
-            label="Custom Prompt (Optional)"
-            description="Provide a specific instruction for the regeneration."
-            placeholder="e.g., Make it more sarcastic and world-weary."
+            label={t('character.customPrompt') || 'Custom Prompt (Optional)'}
+            description={t('character.customPromptDesc') || 'Provide a specific instruction for the regeneration.'}
+            placeholder={t('character.customPromptPh') || 'e.g., Make it more sarcastic and world-weary.'}
             {...form.getInputProps('custom_prompt')}
           />
 
           <Title order={5} mt="md">
-            Context Sources
+            {t('character.contextSources') || 'Context Sources'}
           </Title>
           <Text size="sm" c="dimmed">
-            Select which sources of information to provide to the AI as context.
+            {t('character.contextSourcesDesc') || 'Select which sources of information to provide to the AI as context.'}
           </Text>
 
           <Checkbox
-            label={`Include existing character fields (~${existingFieldsTokens.toLocaleString()} tokens)`}
-            description="Uses the other generated fields as context. (Recommended, low token cost)"
+            label={`${t('character.includeExisting') || 'Include existing character fields'} (~${existingFieldsTokens.toLocaleString()} ${t('character.tokens') || 'tokens'})`}
+            description={t('character.includeExistingDesc') || 'Uses the other generated fields as context. (Recommended, low token cost)'}
             {...form.getInputProps('include_existing_fields', { type: 'checkbox' })}
           />
 
           <Paper withBorder p="md" mt="xs">
-            <Text fw={500}>Include content from fetched sources</Text>
+            <Text fw={500}>{t('character.includeFetched') || 'Include content from fetched sources'}</Text>
             <Text size="xs" c="dimmed" mb="xs">
-              Select which sources to use as context. Be mindful of the token count.
+              {t('character.includeFetchedDesc') || 'Select which sources to use as context. Be mindful of the token count.'}
             </Text>
             <ScrollArea h={200}>
               <Checkbox.Group {...form.getInputProps('source_ids_to_include')}>
@@ -131,7 +133,7 @@ export function RegenerateFieldModal({
                         <Group justify="space-between" w="100%">
                           <Text truncate>{source.url}</Text>
                           <Badge variant="light" color="gray">
-                            ~{Math.ceil((source.content_char_count || 0) / 4)} tokens
+                            ~{Math.ceil((source.content_char_count || 0) / 4)} {t('character.tokens') || 'tokens'}
                           </Badge>
                         </Group>
                       }
@@ -142,17 +144,17 @@ export function RegenerateFieldModal({
             </ScrollArea>
           </Paper>
 
-          <JobStatusIndicator job={regenerateFieldJob} title="Regeneration Job" />
+          <JobStatusIndicator job={regenerateFieldJob} title={t('character.regenJob') || 'Regeneration Job'} />
 
           <Group justify="flex-end" mt="md">
             <Text size="sm" c="dimmed">
-              Total Estimated Context Tokens: ~{totalEstimatedTokens.toLocaleString()}
+              {(t('character.totalTokens') || 'Total Estimated Context Tokens')}: ~{totalEstimatedTokens.toLocaleString()}
             </Text>
             <Button variant="default" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={regenerateFieldMutation.isPending}>
-              Regenerate
+              {t('character.regenerate') || 'Regenerate'}
             </Button>
           </Group>
         </Stack>

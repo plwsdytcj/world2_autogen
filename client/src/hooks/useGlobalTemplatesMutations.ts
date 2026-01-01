@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import type { GlobalTemplate, SingleResponse } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 // Types for mutation payloads
 interface CreateTemplatePayload {
@@ -20,23 +21,16 @@ const createGlobalTemplate = async (templateData: CreateTemplatePayload): Promis
 
 export const useCreateGlobalTemplate = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: createGlobalTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['globalTemplates'] });
-      notifications.show({
-        title: 'Template Created',
-        message: 'The new global template has been created successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('templates.createdTitle'), message: t('templates.createdMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to create template: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('templates.createFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -55,23 +49,16 @@ const updateGlobalTemplate = async ({
 
 export const useUpdateGlobalTemplate = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: updateGlobalTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['globalTemplates'] });
-      notifications.show({
-        title: 'Template Updated',
-        message: 'The template has been updated successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('templates.updatedTitle'), message: t('templates.updatedMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to update template: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('templates.updateFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -83,23 +70,16 @@ const deleteGlobalTemplate = async (templateId: string): Promise<void> => {
 
 export const useDeleteGlobalTemplate = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: deleteGlobalTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['globalTemplates'] });
-      notifications.show({
-        title: 'Template Deleted',
-        message: 'The template has been successfully deleted.',
-        color: 'green',
-      });
+      notifications.show({ title: t('templates.deletedTitle'), message: t('templates.deletedMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to delete template: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('templates.deleteFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };

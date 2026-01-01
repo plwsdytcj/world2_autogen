@@ -22,6 +22,7 @@ import type { Project } from '../../types';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
 import { useSearchParams } from 'react-router-dom';
 import { IconSearch } from '@tabler/icons-react';
+import { useI18n } from '../../i18n';
 
 interface StepProps {
   project: Project;
@@ -93,7 +94,7 @@ export function StepConfirmLinks({ project }: StepProps) {
   const showSelectionUI = newlyFoundUrls.length > 0 || existingUrlsFoundAgain.length > 0;
 
   if (project.status === 'draft' || project.status === 'search_params_generated') {
-    return <Text c="dimmed">Complete the previous steps to review links.</Text>;
+    return <Text c="dimmed">{t('confirmLinks.completePrev') || 'Complete the previous steps to review links.'}</Text>;
   }
 
   const handleSaveLinks = () => {
@@ -121,25 +122,25 @@ export function StepConfirmLinks({ project }: StepProps) {
         <Stack>
           <Text>
             {newlyFoundUrls.length > 0
-              ? `Found ${newlyFoundUrls.length} new links. Review the list and uncheck any you wish to exclude, then save them.`
-              : 'No new links found. All discovered links are already saved to the project.'}
+              ? (t('confirmLinks.found').replace('{count}', String(newlyFoundUrls.length)))
+              : (t('confirmLinks.noneFound'))}
           </Text>
           <Grid gutter="xl">
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Paper withBorder p="md">
                 <Group justify="space-between" mb="sm">
                   <Title order={5}>
-                    New Links Found ({selectedUrls.length} / {newlyFoundUrls.length} selected)
+                    {t('confirmLinks.newLinksFound').replace('{sel}', String(selectedUrls.length)).replace('{total}', String(newlyFoundUrls.length))}
                   </Title>
                   <Checkbox
-                    label="Select / Deselect All New"
+                    label={t('confirmLinks.selectAllNew')}
                     checked={selectedUrls.length === newlyFoundUrls.length && newlyFoundUrls.length > 0}
                     indeterminate={selectedUrls.length > 0 && selectedUrls.length < newlyFoundUrls.length}
                     onChange={(event) => setSelectedUrls(event.currentTarget.checked ? newlyFoundUrls : [])}
                   />
                 </Group>
                 <TextInput
-                  placeholder="Filter links..."
+                  placeholder={t('confirmLinks.filterPlaceholder')}
                   leftSection={<IconSearch size={14} />}
                   value={filterText}
                   onChange={(event) => setFilterText(event.currentTarget.value)}
@@ -161,7 +162,7 @@ export function StepConfirmLinks({ project }: StepProps) {
                                 <Text truncate>{url}</Text>
                                 {isExisting && (
                                   <Badge variant="light" color="gray" size="sm">
-                                    Saved
+                                    {t('confirmLinks.saved')}
                                   </Badge>
                                 )}
                               </Flex>
@@ -179,7 +180,7 @@ export function StepConfirmLinks({ project }: StepProps) {
                 )}
                 <Divider my="md" />
                 <Checkbox
-                  label={`Show ${existingUrlsFoundAgain.length} already saved links`}
+                  label={t('confirmLinks.showExisting').replace('{count}', String(existingUrlsFoundAgain.length))}
                   checked={showExisting}
                   onChange={(e) => setShowExisting(e.currentTarget.checked)}
                 />
@@ -188,10 +189,10 @@ export function StepConfirmLinks({ project }: StepProps) {
             <Grid.Col span={{ base: 12, md: 6 }}>
               <Paper withBorder style={{ height: '100%', minHeight: 400 }}>
                 {previewUrl ? (
-                  <iframe src={previewUrl} title="Link Preview" style={{ width: '100%', height: '100%', border: 0 }} />
+                  <iframe src={previewUrl} title={t('confirmLinks.previewTitle')} style={{ width: '100%', height: '100%', border: 0 }} />
                 ) : (
                   <Center style={{ height: '100%' }}>
-                    <Text c="dimmed">Hover over a link to preview it here</Text>
+                    <Text c="dimmed">{t('confirmLinks.hoverHint')}</Text>
                   </Center>
                 )}
               </Paper>
@@ -204,11 +205,11 @@ export function StepConfirmLinks({ project }: StepProps) {
               loading={confirmLinks.isPending || isJobActive}
               disabled={selectedUrls.length === 0 || confirmLinks.isPending || isJobActive}
             >
-              {isJobActive ? 'Saving...' : `Confirm and Save ${selectedUrls.length} New Links`}
+              {isJobActive ? t('confirmLinks.saving') : t('confirmLinks.confirmAndSave').replace('{count}', String(selectedUrls.length))}
             </Button>
           </Group>
 
-          <JobStatusIndicator job={latestConfirmLinksJob} title="Link Confirmation Job Status" />
+          <JobStatusIndicator job={latestConfirmLinksJob} title={t('confirmLinks.statusTitle')} />
         </Stack>
       </>
     );
@@ -216,6 +217,7 @@ export function StepConfirmLinks({ project }: StepProps) {
 
   // VIEW 2: If no new links are pending, show a simple message.
   return (
-    <Text c="dimmed">No new links to confirm. Proceed to the next step to manage and process your saved links.</Text>
+    <Text c="dimmed">{t('confirmLinks.nonePending')}</Text>
   );
 }
+  const { t } = useI18n();

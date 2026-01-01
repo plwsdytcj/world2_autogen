@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import type { Credential, CreateCredentialPayload, SingleResponse, UpdateCredentialPayload } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 // --- Create ---
 const createCredential = async (data: CreateCredentialPayload): Promise<SingleResponse<Credential>> => {
@@ -11,24 +12,17 @@ const createCredential = async (data: CreateCredentialPayload): Promise<SingleRe
 
 export const useCreateCredential = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: createCredential,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      notifications.show({
-        title: 'Credential Created',
-        message: 'The new credential has been created successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('creds.createdTitle'), message: t('creds.createdMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to create credential: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('creds.createFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -47,24 +41,17 @@ const updateCredential = async ({
 
 export const useUpdateCredential = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: updateCredential,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      notifications.show({
-        title: 'Credential Updated',
-        message: 'The credential has been updated successfully.',
-        color: 'green',
-      });
+      notifications.show({ title: t('creds.updatedTitle'), message: t('creds.updatedMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to update credential: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('creds.updateFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };
@@ -76,24 +63,17 @@ const deleteCredential = async (credentialId: string): Promise<void> => {
 
 export const useDeleteCredential = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: deleteCredential,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['credentials'] });
       queryClient.invalidateQueries({ queryKey: ['providers'] });
-      notifications.show({
-        title: 'Credential Deleted',
-        message: 'The credential has been successfully deleted.',
-        color: 'green',
-      });
+      notifications.show({ title: t('creds.deletedTitle'), message: t('creds.deletedMsg'), color: 'green' });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      notifications.show({
-        title: 'Error',
-        message: `Failed to delete credential: ${error.response?.data?.detail || error.message}`,
-        color: 'red',
-      });
+      notifications.show({ title: t('common.error') || 'Error', message: `${t('creds.deleteFailed')}: ${error.response?.data?.detail || error.message}`, color: 'red' });
     },
   });
 };

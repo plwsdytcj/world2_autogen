@@ -18,6 +18,7 @@ import { IconAlertCircle, IconCircleCheck, IconCircleX, IconChevronRight } from 
 import { useProjectApiRequestLogs } from '../../hooks/useProjectApiRequestLogs';
 import { formatDate } from '../../utils/formatDate';
 import type { ApiRequestLog } from '../../types';
+import { useI18n } from '../../i18n';
 
 interface ApiRequestLogModalProps {
   opened: boolean;
@@ -95,13 +96,14 @@ export function ApiRequestLogModal({ opened, onClose, projectId }: ApiRequestLog
   const logs = data?.data || [];
   const totalItems = data?.meta.total_items || 0;
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  const { t } = useI18n();
 
   return (
-    <Modal opened={opened} onClose={onClose} title="API Request Logs" size="90%">
+    <Modal opened={opened} onClose={onClose} title={t('logs.title') || 'API Request Logs'} size="90%">
       {isLoading && <Loader />}
       {isError && (
-        <Alert icon={<IconAlertCircle size="1rem" />} title="Error!" color="red">
-          Failed to load API logs: {error.message}
+        <Alert icon={<IconAlertCircle size="1rem" />} title={t('common.error') || 'Error!'} color="red">
+          {(t('logs.loadFailed') || 'Failed to load API logs')}: {error.message}
         </Alert>
       )}
       {!isLoading && !isError && (
@@ -110,13 +112,13 @@ export function ApiRequestLogModal({ opened, onClose, projectId }: ApiRequestLog
             <Table.Thead>
               <Table.Tr>
                 <Table.Th style={{ width: 40 }} />
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Timestamp</Table.Th>
-                <Table.Th>Model</Table.Th>
-                <Table.Th>Input Tokens</Table.Th>
-                <Table.Th>Output Tokens</Table.Th>
-                <Table.Th>Cost ($)</Table.Th>
-                <Table.Th>Latency (ms)</Table.Th>
+                <Table.Th>{t('common.status')}</Table.Th>
+                <Table.Th>{t('logs.timestamp')}</Table.Th>
+                <Table.Th>{t('logs.model')}</Table.Th>
+                <Table.Th>{t('logs.inputTokens')}</Table.Th>
+                <Table.Th>{t('logs.outputTokens')}</Table.Th>
+                <Table.Th>{t('logs.cost')}</Table.Th>
+                <Table.Th>{t('logs.latency')}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -127,7 +129,7 @@ export function ApiRequestLogModal({ opened, onClose, projectId }: ApiRequestLog
           </Table>
           {logs.length === 0 && (
             <Text c="dimmed" ta="center" p="md">
-              No API requests have been logged for this project.
+              {t('logs.empty')}
             </Text>
           )}
           {totalPages > 1 && (

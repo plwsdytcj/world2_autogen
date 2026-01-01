@@ -7,6 +7,7 @@ import { useForm } from '@mantine/form';
 import { useUpdateProject } from '../../hooks/useProjectMutations';
 import { useEffect } from 'react';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../../i18n';
 
 interface StepProps {
   project: Project;
@@ -21,6 +22,7 @@ export function StepGenerateSearchParams({ project }: StepProps) {
   const generateSearchParams = useGenerateSearchParamsJob();
   const updateProjectMutation = useUpdateProject();
   const { job } = useLatestJob(project.id, 'generate_search_params');
+  const { t } = useI18n();
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -48,8 +50,8 @@ export function StepGenerateSearchParams({ project }: StepProps) {
       {
         onSuccess: () => {
           notifications.show({
-            title: 'Saved',
-            message: 'Your changes have been saved successfully.',
+            title: t('common.saved') || 'Saved',
+            message: t('common.savedMsg') || 'Your changes have been saved successfully.',
             color: 'green',
           });
         },
@@ -64,13 +66,10 @@ export function StepGenerateSearchParams({ project }: StepProps) {
   return (
     <form onSubmit={form.onSubmit(handleSaveChanges)}>
       <Stack>
-        <Text>
-          First, we'll use an AI to analyze your high-level prompt and generate structured search parameters. You can
-          also edit these manually.
-        </Text>
+        <Text>{t('searchParams.tip') || 'Use AI to analyze your prompt and generate structured search parameters.'}</Text>
         <Textarea
-          label="Your high-level prompt"
-          placeholder="e.g., 'All major and minor locations in Skyrim'"
+          label={t('searchParams.promptLabel') || 'Your high-level prompt'}
+          placeholder={t('searchParams.promptPh') || "e.g., 'All major and minor locations in Skyrim'"}
           autosize
           minRows={2}
           {...form.getInputProps('prompt')}
@@ -81,36 +80,40 @@ export function StepGenerateSearchParams({ project }: StepProps) {
             onClick={handleGenerate}
             loading={generateSearchParams.isPending || isJobActive}
             disabled={!form.values.prompt || generateSearchParams.isPending || isJobActive || isDirty}
-            title={isDirty ? 'You have unsaved changes' : ''}
+            title={isDirty ? (t('common.unsaved') || 'You have unsaved changes') : ''}
           >
-            {isJobActive ? 'Generating...' : hasBeenGenerated ? 'Re-generate Parameters' : 'Generate Search Parameters'}
+            {isJobActive
+              ? (t('searchParams.generating') || 'Generating...')
+              : hasBeenGenerated
+                ? (t('searchParams.regen') || 'Re-generate Parameters')
+                : (t('searchParams.generate') || 'Generate Search Parameters')}
           </Button>
           {isDirty && (
             <Button type="submit" loading={updateProjectMutation.isPending}>
-              Save Changes
+              {t('btn.save')}
             </Button>
           )}
         </Group>
 
-        <JobStatusIndicator job={job} title="Generation Job Status" />
+        <JobStatusIndicator job={job} title={t('searchParams.statusTitle') || 'Generation Job Status'} />
 
         {hasBeenGenerated && (
           <Paper withBorder p="md" mt="md">
             <Stack>
               <Textarea
-                label="Generated Purpose"
+                label={t('searchParams.generatedPurpose') || 'Generated Purpose'}
                 autosize
                 minRows={2}
                 {...form.getInputProps('search_params.purpose')}
               />
               <Textarea
-                label="Generated Extraction Notes"
+                label={t('searchParams.generatedNotes') || 'Generated Extraction Notes'}
                 autosize
                 minRows={3}
                 {...form.getInputProps('search_params.extraction_notes')}
               />
               <Textarea
-                label="Generated Criteria"
+                label={t('searchParams.generatedCriteria') || 'Generated Criteria'}
                 autosize
                 minRows={2}
                 {...form.getInputProps('search_params.criteria')}
