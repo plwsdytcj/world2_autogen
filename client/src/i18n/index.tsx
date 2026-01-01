@@ -6,7 +6,7 @@ type Dict = Record<string, string>;
 
 const dicts: Record<Lang, Dict> = {
   en: {
-    'app.title': 'World2',
+    'app.title': 'SillyTavern Card Forge',
     'nav.projects': 'Projects',
     'nav.credentials': 'Credentials',
     'nav.templates': 'Templates',
@@ -431,7 +431,7 @@ const dicts: Record<Lang, Dict> = {
     'viewSource.empty': 'No content fetched or content is empty.',
   },
   zh: {
-    'app.title': 'World2',
+    'app.title': 'SillyTavern Card Forge',
     'nav.projects': '项目',
     'nav.credentials': '凭证',
     'nav.templates': '模板',
@@ -839,7 +839,7 @@ const dicts: Record<Lang, Dict> = {
     'viewSource.empty': '尚未抓取到内容或内容为空。',
   },
   ja: {
-    'app.title': 'World2',
+    'app.title': 'SillyTavern Card Forge',
     'nav.projects': 'プロジェクト',
     'nav.credentials': 'クレデンシャル',
     'nav.templates': 'テンプレート',

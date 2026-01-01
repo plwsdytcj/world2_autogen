@@ -1,7 +1,7 @@
-import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Badge } from '@mantine/core';
+import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconSparkles, IconExternalLink } from '@tabler/icons-react';
+import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import { notifications } from '@mantine/notifications';
@@ -108,20 +108,7 @@ export function AppLayout() {
             }}
           >
             <IconDeviceMobile size={18} />
-            <span>Try <strong>World2</strong> on iOS</span>
-            <Badge 
-              size="xs" 
-              variant="filled" 
-              color="rgba(255,255,255,0.25)"
-              style={{ 
-                color: 'white', 
-                fontWeight: 700,
-                textTransform: 'none',
-              }}
-            >
-              <IconSparkles size={10} style={{ marginRight: 2 }} />
-              Better than Tavern Forge
-            </Badge>
+            <span>Try <strong>World2</strong> (IOS's version of SillyTavern), but better</span>
             <IconExternalLink size={14} style={{ opacity: 0.8 }} />
           </Anchor>
           <Box ml="auto">

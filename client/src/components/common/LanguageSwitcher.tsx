@@ -17,7 +17,7 @@ export function LanguageSwitcher() {
       <IconLanguage size={18} style={{ opacity: 0.7 }} />
       <SegmentedControl
         size="sm"
-        value={lang}
+      value={lang}
         onChange={(v) => setLang(v as Lang)}
         data={LANG_OPTIONS}
         styles={{
@@ -34,7 +34,7 @@ export function LanguageSwitcher() {
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
           },
         }}
-      />
+    />
     </Group>
   );
 }
