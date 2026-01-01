@@ -65,35 +65,33 @@ export function AppLayout() {
 
   return (
     <AppShell
-      header={{ height: 76 }}
+      header={{ height: 60 }}
       navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
         <Group h="100%" px="md" style={{ background: 'linear-gradient(90deg, rgba(255,182,193,0.15), rgba(186,85,211,0.08))' }}>
           <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-          <Box>
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <Title order={3} style={{ letterSpacing: 0.5 }}>{t('app.title')}</Title>
-            </Link>
-            <Box mt={4}>
-              <Anchor
-                href="https://www.world2.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                size="xs"
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: 9999,
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  display: 'inline-block',
-                }}
-              >
-                https://www.world2.app/
-              </Anchor>
-            </Box>
-          </Box>
+          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Title order={3} style={{ letterSpacing: 0.5 }}>{t('app.title')}</Title>
+          </Link>
+          <Anchor
+            href="https://www.world2.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            size="xs"
+            c="sakura.4"
+            style={{
+              marginLeft: 10,
+              padding: '3px 10px',
+              borderRadius: 9999,
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              lineHeight: 1.2,
+            }}
+          >
+            https://www.world2.app/
+          </Anchor>
           <Box ml="auto">
             <LanguageSwitcher />
           </Box>
