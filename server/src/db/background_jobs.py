@@ -32,6 +32,7 @@ class TaskName(str, Enum):
     FETCH_SOURCE_CONTENT = "fetch_source_content"
     GENERATE_CHARACTER_CARD = "generate_character_card"
     REGENERATE_CHARACTER_FIELD = "regenerate_character_field"
+    IMPORT_FACEBOOK_PAGE = "import_facebook_page"
 
 
 PARALLEL_LIMITS = {
@@ -43,6 +44,7 @@ PARALLEL_LIMITS = {
     TaskName.FETCH_SOURCE_CONTENT: 1,
     TaskName.GENERATE_CHARACTER_CARD: 1,
     TaskName.REGENERATE_CHARACTER_FIELD: 1,
+    TaskName.IMPORT_FACEBOOK_PAGE: 1,
 }
 
 
@@ -82,6 +84,13 @@ class RegenerateCharacterFieldPayload(BaseModel):
     context_options: RegenerateCharacterFieldContextOptions
 
 
+class ImportFacebookPagePayload(BaseModel):
+    page_name: str
+    pages: int = 5  # Number of pages of posts to scrape
+    auto_generate_card: bool = True  # Whether to automatically generate character card after import
+    cookies: Optional[str] = None  # Optional path to cookies file
+
+
 TaskPayload = Union[
     DiscoverAndCrawlSourcesPayload,
     ConfirmLinksPayload,
@@ -90,6 +99,7 @@ TaskPayload = Union[
     FetchSourceContentPayload,
     GenerateCharacterCardPayload,
     RegenerateCharacterFieldPayload,
+    ImportFacebookPagePayload,
 ]
 
 
@@ -137,6 +147,12 @@ class RegenerateCharacterFieldResult(BaseModel):
     field_regenerated: str
 
 
+class ImportFacebookPageResult(BaseModel):
+    source_id: UUID
+    posts_scraped: int
+    card_generated: bool = False
+
+
 TaskResult = Union[
     DiscoverAndCrawlSourcesResult,
     ConfirmLinksResult,
@@ -145,6 +161,7 @@ TaskResult = Union[
     FetchSourceContentResult,
     GenerateCharacterCardResult,
     RegenerateCharacterFieldResult,
+    ImportFacebookPageResult,
 ]
 
 
@@ -198,6 +215,7 @@ def _deserialize_job(db_row: Dict[str, Any]) -> BackgroundJob:
         TaskName.FETCH_SOURCE_CONTENT: FetchSourceContentPayload,
         TaskName.GENERATE_CHARACTER_CARD: GenerateCharacterCardPayload,
         TaskName.REGENERATE_CHARACTER_FIELD: RegenerateCharacterFieldPayload,
+        TaskName.IMPORT_FACEBOOK_PAGE: ImportFacebookPagePayload,
     }
     if db_row.get("payload") is not None:
         try:
@@ -217,6 +235,7 @@ def _deserialize_job(db_row: Dict[str, Any]) -> BackgroundJob:
         TaskName.FETCH_SOURCE_CONTENT: FetchSourceContentResult,
         TaskName.GENERATE_CHARACTER_CARD: GenerateCharacterCardResult,
         TaskName.REGENERATE_CHARACTER_FIELD: RegenerateCharacterFieldResult,
+        TaskName.IMPORT_FACEBOOK_PAGE: ImportFacebookPageResult,
     }
     if db_row.get("result") is not None:
         try:

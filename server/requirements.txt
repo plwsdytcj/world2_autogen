@@ -17,3 +17,4 @@ lxml
 html-to-markdown
 cryptography
 Pillow
+facebook-scraper
