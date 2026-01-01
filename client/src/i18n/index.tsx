@@ -993,10 +993,26 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
-export function useI18n() {
-  console.log('[i18n] useI18n called, React.useContext:', React.useContext);
-  const ctx = React.useContext(I18nContext);
-  console.log('[i18n] useI18n context:', ctx);
-  if (!ctx) throw new Error('useI18n must be used within I18nProvider');
-  return ctx;
+// Default fallback for when context is not available
+const defaultI18n: I18nContextType = {
+  lang: 'en',
+  setLang: () => {},
+  t: (key: string) => dicts.en[key] ?? key,
+};
+
+export function useI18n(): I18nContextType {
+  console.log('[i18n] useI18n called');
+  
+  // Check if we're in a valid React context
+  try {
+    const ctx = React.useContext(I18nContext);
+    console.log('[i18n] useI18n context result:', ctx ? 'found' : 'null');
+    if (ctx) return ctx;
+  } catch (e) {
+    console.warn('[i18n] useI18n failed to get context:', e);
+  }
+  
+  // Return default if context is not available
+  console.warn('[i18n] useI18n returning default (no context)');
+  return defaultI18n;
 }
