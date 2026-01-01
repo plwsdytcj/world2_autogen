@@ -2,8 +2,17 @@
 html, body, #root {
   height: 100%;
 }
+
+/* Premium font rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   margin: 0;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
   background:
     radial-gradient(1200px 800px at 10% -10%, rgba(255, 182, 193, 0.18), transparent),
     radial-gradient(1000px 600px at 110% 10%, rgba(186, 85, 211, 0.12), transparent),

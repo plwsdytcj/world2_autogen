@@ -49,8 +49,8 @@ const theme = createTheme({
 
   primaryColor: 'sakura',
 
-  fontFamily: "'Nunito', system-ui, -apple-system, sans-serif",
-  fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', monospace",
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif",
+  fontFamilyMonospace: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
 
   fontSizes: {
     xs: '0.6875rem',
@@ -61,7 +61,7 @@ const theme = createTheme({
   },
 
   headings: {
-    fontFamily: "'Manrope', system-ui, sans-serif",
+    fontFamily: "'Playfair Display', 'Georgia', serif",
     fontWeight: '600',
     sizes: {
       h1: { fontSize: '2rem', lineHeight: '1.2' },
