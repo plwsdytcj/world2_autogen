@@ -1,7 +1,7 @@
-import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack } from '@mantine/core';
+import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Badge } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate } from '@tabler/icons-react';
+import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconSparkles, IconExternalLink } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../services/api';
 import { notifications } from '@mantine/notifications';
@@ -75,24 +75,54 @@ export function AppLayout() {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <Title order={3} style={{ letterSpacing: 0.5 }}>{t('app.title')}</Title>
           </Link>
+          
+          {/* Promotional Banner for World2 iOS App */}
           <Anchor
             href="https://www.world2.app/"
             target="_blank"
             rel="noopener noreferrer"
-            size="sm"
             style={{
-              marginLeft: 12,
-              padding: '6px 12px',
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, rgba(255,182,193,0.45), rgba(186,85,211,0.35))',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
+              marginLeft: 16,
+              padding: '8px 16px',
+              borderRadius: 20,
+              background: 'linear-gradient(135deg, #ff6b9d 0%, #c44dff 50%, #6366f1 100%)',
+              border: 'none',
               color: 'white',
-              fontWeight: 700,
+              fontWeight: 600,
+              fontSize: '0.85rem',
               letterSpacing: 0.3,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+              boxShadow: '0 4px 15px rgba(196, 77, 255, 0.4), 0 2px 6px rgba(0,0,0,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(196, 77, 255, 0.5), 0 4px 10px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(196, 77, 255, 0.4), 0 2px 6px rgba(0,0,0,0.2)';
             }}
           >
-            https://www.world2.app/
+            <IconDeviceMobile size={18} />
+            <span>Try <strong>World2</strong> on iOS</span>
+            <Badge 
+              size="xs" 
+              variant="filled" 
+              color="rgba(255,255,255,0.25)"
+              style={{ 
+                color: 'white', 
+                fontWeight: 700,
+                textTransform: 'none',
+              }}
+            >
+              <IconSparkles size={10} style={{ marginRight: 2 }} />
+              Better than SillyTavern
+            </Badge>
+            <IconExternalLink size={14} style={{ opacity: 0.8 }} />
           </Anchor>
           <Box ml="auto">
             <LanguageSwitcher />
