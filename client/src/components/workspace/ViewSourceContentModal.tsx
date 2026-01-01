@@ -3,6 +3,7 @@ import { useProjectSourceDetails } from '../../hooks/useProjectSources';
 import { IconAlertCircle } from '@tabler/icons-react';
 import showdown from 'showdown';
 import { useMemo } from 'react';
+import { useI18n } from '../../i18n';
 
 interface ViewSourceContentModalProps {
   opened: boolean;
@@ -15,6 +16,7 @@ export function ViewSourceContentModal({ opened, onClose, projectId, sourceId }:
   const { data, isLoading, isError, error } = useProjectSourceDetails(projectId, sourceId);
   const source = data?.data;
   const theme = useMantineTheme();
+  const { t } = useI18n();
 
   // Create a memoized showdown converter with our custom extension
   const converter = useMemo(() => {
@@ -73,7 +75,7 @@ export function ViewSourceContentModal({ opened, onClose, projectId, sourceId }:
 
   const renderedContent = useMemo(() => {
     if (!source?.raw_content) {
-      return 'No content fetched or content is empty.';
+      return t('viewSource.empty') || 'No content fetched or content is empty.';
     }
     if (source.content_type === 'markdown') {
       return converter.makeHtml(source.raw_content);
@@ -82,10 +84,10 @@ export function ViewSourceContentModal({ opened, onClose, projectId, sourceId }:
   }, [source, converter]);
 
   return (
-    <Modal opened={opened} onClose={onClose} size="80%" title={<Title order={4}>View Source Content</Title>}>
+    <Modal opened={opened} onClose={onClose} size="80%" title={<Title order={4}>{t('viewSource.title') || 'View Source Content'}</Title>}>
       {isLoading && <Loader />}
       {isError && (
-        <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red">
+        <Alert icon={<IconAlertCircle size="1rem" />} title={t('viewSource.error') || 'Error'} color="red">
           {error.message}
         </Alert>
       )}

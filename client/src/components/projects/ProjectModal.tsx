@@ -25,6 +25,7 @@ import { LazyMonacoEditorInput } from '../common/LazyMonacoEditorInput';
 import { useCredentials } from '../../hooks/useCredentials';
 import { useDisclosure } from '@mantine/hooks';
 import { IconBook, IconPlus, IconRefresh, IconUser } from '@tabler/icons-react';
+import { useI18n } from '../../i18n';
 import { CredentialModal } from '../credentials/CredentialModal';
 
 interface ProjectModalProps {
@@ -46,6 +47,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
   const isEditMode = !!project;
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
+  const { t } = useI18n();
 
   const { data: credentials, isLoading: isLoadingCredentials } = useCredentials();
   const { data: providers, isLoading: isLoadingProviders } = useProviders();
@@ -74,10 +76,10 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
       },
     },
     validate: {
-      name: (value) => (value.trim().length < 3 ? 'Name must be at least 3 characters long' : null),
-      id: (value) => (/^[a-z0-9-]+$/.test(value) ? null : 'ID must be lowercase, numbers, and dashes only'),
-      credential_id: (value) => (value ? null : 'Credential is required'),
-      model_name: (value) => (value ? null : 'Model is required'),
+      name: (value) => (value.trim().length < 3 ? (t('templates.nameRequired') || 'Name is required') : null),
+      id: (value) => (/^[a-z0-9-]+$/.test(value) ? null : (t('templates.validId') || 'ID must be lowercase, numbers, and dashes only')),
+      credential_id: (value) => (value ? null : (t('projects.selectCredential') || 'Credential is required')),
+      model_name: (value) => (value ? null : (t('projects.model') || 'Model is required')),
     },
   });
 
@@ -208,14 +210,14 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
 
   const credentialLabel = (
     <Group justify="space-between" w="100%">
-      <Text component="span">Credential</Text>
-      <Tooltip label="Add new credential" withArrow position="top-end">
+      <Text component="span">{t('projects.credential') || 'Credential'}</Text>
+      <Tooltip label={t('projects.addNewCredential') || 'Add new credential'} withArrow position="top-end">
         <ActionIcon
           onClick={openCredentialModal}
           variant="subtle"
           size="xs"
           disabled={isLoadingCredentials}
-          aria-label="Add new credential"
+          aria-label={t('aria.addCredential') || 'Add new credential'}
         >
           <IconPlus size={16} />
         </ActionIcon>
@@ -230,8 +232,8 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
       <Text component="span" size="sm" fw={500}>
         {label}
       </Text>
-      <Tooltip label="Reset to global template" withArrow position="top-end">
-        <ActionIcon onClick={onReset} variant="subtle" size="xs" aria-label={`Reset ${label} to global template`}>
+      <Tooltip label={t('projects.template.reset') || 'Reset to global template'} withArrow position="top-end">
+        <ActionIcon onClick={onReset} variant="subtle" size="xs" aria-label={(t('aria.resetTemplate') || 'Reset {label} to global template').replace('{label}', label)}>
           <IconRefresh size={16} />
         </ActionIcon>
       </Tooltip>
@@ -249,7 +251,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
       <Modal
         opened={opened}
         onClose={onClose}
-        title={<Text fw={700}>{isEditMode ? 'Edit Project' : 'Create New Project'}</Text>}
+        title={<Text fw={700}>{isEditMode ? (t('projects.edit') || 'Edit Project') : (t('projects.create') || 'Create New Project')}</Text>}
         size="xl"
         centered
       >
@@ -264,7 +266,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                     label: (
                       <Group justify="center" gap="xs">
                         <IconBook size={16} />
-                        <Text>Lorebook</Text>
+                        <Text>{t('projects.type.lorebook') || 'Lorebook'}</Text>
                       </Group>
                     ),
                   },
@@ -273,7 +275,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                     label: (
                       <Group justify="center" gap="xs">
                         <IconUser size={16} />
-                        <Text>Character</Text>
+                        <Text>{t('projects.type.character') || 'Character'}</Text>
                       </Group>
                     ),
                   },
@@ -284,29 +286,23 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
             )}
             <TextInput
               withAsterisk
-              label="Project Name"
-              placeholder={isLorebook ? 'e.g., Skyrim Locations Lorebook' : 'e.g., Lydia from Skyrim'}
+              label={t('projects.nameLabel') || 'Project Name'}
+              placeholder={isLorebook ? (t('projects.namePh.lorebook') || 'e.g., Skyrim Locations Lorebook') : (t('projects.namePh.character') || 'e.g., Lydia from Skyrim')}
               {...form.getInputProps('name')}
               onChange={handleNameChange}
             />
             <TextInput
               withAsterisk
-              label="Project ID"
-              placeholder="auto-generated-from-name"
+              label={t('projects.idLabel') || 'Project ID'}
+              placeholder={t('projects.idPh') || 'auto-generated-from-name'}
               {...form.getInputProps('id')}
               disabled={isEditMode}
             />
             <Textarea
-              label="High-level Prompt"
-              description={
-                isLorebook
-                  ? 'A general prompt describing the overall goal of the lorebook.'
-                  : 'A prompt describing the character to generate. Be specific about their personality and key traits.'
-              }
+              label={t('projects.promptLabel') || 'High-level Prompt'}
+              description={isLorebook ? (t('projects.promptDesc.lorebook') || '') : (t('projects.promptDesc.character') || '')}
               placeholder={
-                isLorebook
-                  ? "e.g., 'All major and minor locations in Skyrim'"
-                  : "e.g., 'Lydia, the loyal and sarcastic housecarl from Whiterun in Skyrim.'"
+                isLorebook ? (t('searchParams.promptPh') || "e.g., 'All major and minor locations in Skyrim'") : "e.g., 'Lydia, the loyal and sarcastic housecarl from Whiterun in Skyrim.'"
               }
               {...form.getInputProps('prompt')}
               autosize
@@ -317,7 +313,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
               <Select
                 withAsterisk
                 label={credentialLabel}
-                placeholder="Select a credential"
+                placeholder={t('projects.selectCredentialPh') || 'Select a credential'}
                 data={credentialOptions}
                 disabled={isLoadingCredentials}
                 rightSection={isLoadingCredentials ? <Loader size="xs" /> : null}
@@ -327,21 +323,21 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
               {isOaiCompatible ? (
                 <TextInput
                   withAsterisk
-                  label="Model"
-                  placeholder="Enter a custom model name..."
+                  label={t('projects.model') || 'Model'}
+                  placeholder={t('projects.modelCustomPh') || 'Enter a custom model name...'}
                   disabled={isModelSelectDisabled}
                   {...form.getInputProps('model_name')}
                 />
               ) : (
                 <Select
                   withAsterisk
-                  label="Model"
-                  placeholder="Select a model"
+                  label={t('projects.model') || 'Model'}
+                  placeholder={t('projects.selectModelPh') || 'Select a model'}
                   data={modelOptions}
                   disabled={isModelSelectDisabled || isLoadingProviders}
                   rightSection={isLoadingProviders ? <Loader size="xs" /> : null}
                   searchable
-                  nothingFoundMessage="No models found"
+                  nothingFoundMessage={t('projects.noModels') || 'No models found'}
                   {...form.getInputProps('model_name')}
                 />
               )}
@@ -349,17 +345,16 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
 
             <Stack gap={4}>
               <Text size="sm" fw={500}>
-                JSON Enforcement Mode
+                {t('projects.jsonMode') || 'JSON Enforcement Mode'}
               </Text>
               <Text size="xs" c="dimmed">
-                'API Native' uses the model's built-in JSON mode (faster, less reliable). 'Prompt Engineering' uses a
-                special prompt to ensure valid JSON (slower, more reliable with models that struggle with JSON modes).
+                {t('projects.jsonModeDesc') || "'API Native' uses the model's built-in JSON mode (faster, less reliable). 'Prompt Engineering' uses a special prompt to ensure valid JSON (slower, more reliable)."}
               </Text>
               <SegmentedControl
                 fullWidth
                 data={[
-                  { label: 'API Native', value: 'api_native' },
-                  { label: 'Prompt Engineering', value: 'prompt_engineering' },
+                  { label: t('projects.jsonMode.api') || 'API Native', value: 'api_native' },
+                  { label: t('projects.jsonMode.prompt') || 'Prompt Engineering', value: 'prompt_engineering' },
                 ]}
                 {...form.getInputProps('json_enforcement_mode')}
               />
@@ -367,7 +362,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
 
             <div>
               <Text size="sm" fw={500}>
-                Temperature
+                {t('projects.temperature') || 'Temperature'}
               </Text>
               <Slider
                 min={0}
@@ -384,8 +379,8 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
             </div>
 
             <NumberInput
-              label="Requests Per Minute"
-              description="Rate limit for AI API calls across the entire project."
+              label={t('projects.rpm') || 'Requests Per Minute'}
+              description={t('projects.rpmDesc') || 'Rate limit for AI API calls across the entire project.'}
               defaultValue={15}
               min={1}
               max={300}
@@ -395,7 +390,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
             <Accordion variant="separated">
               <Accordion.Item value="templates">
                 <Accordion.Control>
-                  <Text fw={500}>Advanced: Prompt Templates</Text>
+                  <Text fw={500}>{t('projects.advancedTemplates') || 'Advanced: Prompt Templates'}</Text>
                 </Accordion.Control>
                 <Accordion.Panel>
                   {isLoadingTemplates ? (
@@ -405,7 +400,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                       {isLorebook ? (
                         <>
                           <LazyMonacoEditorInput
-                            label={renderTemplateLabel('Search Params Generation', () =>
+                            label={renderTemplateLabel(t('projects.template.searchParams') || 'Search Params Generation', () =>
                               handleResetTemplate('search_params_generation', 'search-params-prompt')
                             )}
                             language="handlebars"
@@ -413,7 +408,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                             {...form.getInputProps('templates.search_params_generation')}
                           />
                           <LazyMonacoEditorInput
-                            label={renderTemplateLabel('Selector Generation', () =>
+                            label={renderTemplateLabel(t('projects.template.selector') || 'Selector Generation', () =>
                               handleResetTemplate('selector_generation', 'selector-prompt')
                             )}
                             language="handlebars"
@@ -421,7 +416,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                             {...form.getInputProps('templates.selector_generation')}
                           />
                           <LazyMonacoEditorInput
-                            label={renderTemplateLabel('Entry Creation', () =>
+                            label={renderTemplateLabel(t('projects.template.entry') || 'Entry Creation', () =>
                               handleResetTemplate('entry_creation', 'entry-creation-prompt')
                             )}
                             language="handlebars"
@@ -432,7 +427,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                       ) : (
                         <>
                           <LazyMonacoEditorInput
-                            label={renderTemplateLabel('Character Generation', () =>
+                            label={renderTemplateLabel(t('projects.template.characterGeneration') || 'Character Generation', () =>
                               handleResetTemplate('character_generation', 'character-generation-prompt')
                             )}
                             language="handlebars"
@@ -440,7 +435,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                             {...form.getInputProps('templates.character_generation')}
                           />
                           <LazyMonacoEditorInput
-                            label={renderTemplateLabel('Character Field Regeneration', () =>
+                            label={renderTemplateLabel(t('projects.template.characterRegen') || 'Character Field Regeneration', () =>
                               handleResetTemplate('character_field_regeneration', 'character-field-regeneration-prompt')
                             )}
                             language="handlebars"
@@ -457,10 +452,10 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
 
             <Group justify="flex-end" mt="md">
               <Button variant="default" onClick={onClose}>
-                Cancel
+                {t('common.cancel') || 'Cancel'}
               </Button>
               <Button type="submit" loading={isLoadingMutation}>
-                {isEditMode ? 'Save Changes' : 'Create Project'}
+                {isEditMode ? (t('btn.save') || 'Save Changes') : (t('projects.create') || 'Create Project')}
               </Button>
             </Group>
           </Stack>

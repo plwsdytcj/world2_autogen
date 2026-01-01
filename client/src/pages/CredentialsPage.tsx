@@ -49,14 +49,14 @@ export function CredentialsPage() {
       <Table.Td>{formatDate(cred.updated_at)}</Table.Td>
       <Table.Td>
         <Group gap="xs">
-          <ActionIcon variant="subtle" onClick={() => handleOpenEditModal(cred)} aria-label={`Edit ${cred.name}`}>
+          <ActionIcon variant="subtle" onClick={() => handleOpenEditModal(cred)} aria-label={(t('aria.editItem') || 'Edit {name}').replace('{name}', cred.name)}>
             <IconPencil size={16} />
           </ActionIcon>
           <ActionIcon
             variant="subtle"
             color="red"
             onClick={() => openDeleteModal(cred)}
-            aria-label={`Delete ${cred.name}`}
+            aria-label={(t('aria.deleteItem') || 'Delete {name}').replace('{name}', cred.name)}
           >
             <IconTrash size={16} />
           </ActionIcon>

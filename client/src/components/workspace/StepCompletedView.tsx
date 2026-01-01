@@ -24,6 +24,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useDebouncedValue, useDisclosure } from '@mantine/hooks';
 import { LorebookEntryModal } from './LorebookEntryModal';
 import { ExportToMobileModal } from '../common/ExportToMobileModal';
+import { useI18n } from '../../i18n';
 
 interface StepCompletedViewProps {
   project: Project;
@@ -33,6 +34,7 @@ const PAGE_SIZE = 50;
 const URL_PARAM_KEY = 'entries_page';
 
 export function StepCompletedView({ project }: StepCompletedViewProps) {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const pageFromUrl = parseInt(searchParams.get(URL_PARAM_KEY) || '1', 10);
   const [activePage, setPage] = useState(isNaN(pageFromUrl) ? 1 : pageFromUrl);
@@ -93,14 +95,12 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
 
   const openDeleteModal = (entryId: string, entryTitle: string) =>
     modals.openConfirmModal({
-      title: 'Delete Lorebook Entry',
+      title: t('completed.deleteTitle') || 'Delete Lorebook Entry',
       centered: true,
       children: (
-        <Text size="sm">
-          Are you sure you want to delete the entry "<strong>{entryTitle}</strong>"? This action is irreversible.
-        </Text>
+        <Text size="sm" dangerouslySetInnerHTML={{ __html: (t('completed.deleteConfirm') || 'Are you sure you want to delete the entry "{title}"? This action is irreversible.').replace('{title}', `<strong>${entryTitle}</strong>`) }} />
       ),
-      labels: { confirm: 'Delete Entry', cancel: 'Cancel' },
+      labels: { confirm: t('completed.deleteBtn') || 'Delete Entry', cancel: t('common.cancel') || 'Cancel' },
       confirmProps: { color: 'red' },
       onConfirm: () => deleteEntryMutation.mutate(entryId),
     });
@@ -123,15 +123,15 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
       window.URL.revokeObjectURL(url);
 
       notifications.show({
-        title: 'Download Started',
-        message: 'Your lorebook is being downloaded.',
+        title: (t('completed.downloadStartedTitle') || 'Download Started'),
+        message: (t('completed.downloadStartedMsg') || 'Your lorebook is being downloaded.'),
         color: 'green',
       });
     } catch (err) {
       console.error('Download failed:', err);
       notifications.show({
-        title: 'Download Failed',
-        message: 'Could not download the lorebook file.',
+        title: (t('completed.downloadFailedTitle') || 'Download Failed'),
+        message: (t('completed.downloadFailedMsg') || 'Could not download the lorebook file.'),
         color: 'red',
       });
     } finally {
@@ -163,27 +163,26 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
       <LorebookEntryModal opened={editModalOpened} onClose={closeEditModal} entry={selectedEntry} />
       <Stack mt="md">
         <Group justify="space-between">
-          <Title order={3}>Lorebook Generation Complete</Title>
+          <Title order={3}>{t('completed.title') || 'Lorebook Generation Complete'}</Title>
           <Button
             leftSection={<IconDownload size={16} />}
             onClick={handleDownload}
             loading={isDownloading}
             disabled={totalItems === 0 && !debouncedFilterText}
           >
-            Download Lorebook
+            {t('completed.downloadBtn') || 'Download Lorebook'}
           </Button>
           <Button variant="default" onClick={() => setExportMobileOpened(true)} disabled={totalItems === 0}>
-            Export to Mobile
+            {t('completed.exportMobileBtn') || 'Export to Mobile'}
           </Button>
         </Group>
 
         <Text c="dimmed">
-          {totalItems} entries have been successfully generated for this project. You can review them below or download
-          the final JSON file.
+          {(t('completed.summary') || '{n} entries have been successfully generated for this project. You can review them below or download the final JSON file.').replace('{n}', String(totalItems))}
         </Text>
 
         <TextInput
-          placeholder="Search entries by title, keyword, or content..."
+          placeholder={t('completed.searchPh') || 'Search entries by title, keyword, or content...'}
           leftSection={<IconSearch size={14} />}
           rightSection={isFetching ? <Loader size="xs" /> : null}
           value={filterText}
@@ -200,10 +199,10 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
             <Table striped highlightOnHover withTableBorder withColumnBorders>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Title</Table.Th>
-                  <Table.Th>Keywords</Table.Th>
-                  <Table.Th>Content Snippet</Table.Th>
-                  <Table.Th>Actions</Table.Th>
+                  <Table.Th>{t('completed.table.title') || 'Title'}</Table.Th>
+                  <Table.Th>{t('completed.table.keywords') || 'Keywords'}</Table.Th>
+                  <Table.Th>{t('completed.table.snippet') || 'Content Snippet'}</Table.Th>
+                  <Table.Th>{t('completed.table.actions') || 'Actions'}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -235,7 +234,7 @@ export function StepCompletedView({ project }: StepCompletedViewProps) {
             </Table>
             {totalItems === 0 && (
               <Text c="dimmed" ta="center" p="md">
-                {debouncedFilterText ? 'No entries match your search.' : 'No entries were generated.'}
+                {debouncedFilterText ? (t('completed.emptyFiltered') || 'No entries match your search.') : (t('completed.empty') || 'No entries were generated.')}
               </Text>
             )}
 

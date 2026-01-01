@@ -102,7 +102,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
               title={t('analytics.avgLatency')}
               value={
                 <Text fw={700} size="xl">
-                  {`${analytics.average_latency_ms.toFixed(0)} ms`}
+                  {analytics.average_latency_ms.toFixed(0)} {t('common.ms') || 'ms'}
                 </Text>
               }
             />
@@ -146,7 +146,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
                 .map(([status, count]) => (
                   <Tooltip
                     key={status}
-                    label={`${status.charAt(0).toUpperCase() + status.slice(1)}: ${count}`}
+                    label={`${(t(`status.${status as any}`) || status.charAt(0).toUpperCase() + status.slice(1))}: ${count}`}
                     withArrow
                   >
                     <Progress.Section
@@ -161,7 +161,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
                 <Group key={status} gap={4}>
                   <Box w={12} h={12} bg={color} style={{ borderRadius: '50%' }} />
                   <Text size="xs" c="dimmed">
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {t(`status.${status as any}`) || status.charAt(0).toUpperCase() + status.slice(1)}
                   </Text>
                 </Group>
               ))}
@@ -178,7 +178,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
                 .map(([status, count]) => (
                   <Tooltip
                     key={status}
-                    label={`${status.charAt(0).toUpperCase() + status.slice(1)}: ${count}`}
+                    label={`${(t(`status.${status as any}`) || status.charAt(0).toUpperCase() + status.slice(1))}: ${count}`}
                     withArrow
                   >
                     <Progress.Section
@@ -193,7 +193,7 @@ export function ProjectAnalyticsModal({ opened, onClose, projectId }: ProjectAna
                 <Group key={status} gap={4}>
                   <Box w={12} h={12} bg={color} style={{ borderRadius: '50%' }} />
                   <Text size="xs" c="dimmed">
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {t(`status.${status as any}`) || status.charAt(0).toUpperCase() + status.slice(1)}
                   </Text>
                 </Group>
               ))}

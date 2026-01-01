@@ -22,10 +22,8 @@ const fetchAppInfo = async (): Promise<AppInfo> => {
 };
 
 const UpdateInstructions = ({ runtimeEnv }: { runtimeEnv: 'docker' | 'source' }) => {
-  const instruction =
-    runtimeEnv === 'docker'
-      ? 'To update, please pull the latest Docker image and run your container.'
-      : 'To update, please restart the application using the start.bat script.';
+  const { t } = useI18n();
+  const instruction = runtimeEnv === 'docker' ? t('app.updateDockerInstruction') : t('app.updateSourceInstruction');
 
   return (
     <Text size="sm" mt="xs" fw={500}>
@@ -48,7 +46,7 @@ export function AppLayout() {
     if (appInfo?.current_version !== 'development' && appInfo?.update_available) {
       notifications.show({
         id: 'update-notification',
-        title: 'Update Available!',
+        title: t('app.updateAvailableTitle') || 'Update Available!',
         color: 'teal',
         icon: <IconGift size={18} />,
         autoClose: false,
@@ -113,11 +111,11 @@ export function AppLayout() {
         <Outlet />
         <Box component="footer" p="md" mt="xl" style={{ textAlign: 'center' }}>
           <Text c="dimmed" size="xs">
-            world2
+            {t('app.title')}
             {appInfo?.current_version && ` - ${t('footer.version')}: ${appInfo.current_version}`}
             {' | '}
             <Anchor href="#" target="_blank" c="dimmed" size="xs">
-              GitHub
+              {t('app.github')}
             </Anchor>
           </Text>
         </Box>

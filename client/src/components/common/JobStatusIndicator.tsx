@@ -2,6 +2,7 @@ import { Paper, Group, Badge, Text, Progress, Button, Alert, Stack } from '@mant
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useCancelJob } from '../../hooks/useJobMutations';
 import type { BackgroundJob, JobStatus } from '../../types';
+import { useI18n } from '../../i18n';
 
 interface JobStatusIndicatorProps {
   job?: BackgroundJob;
@@ -19,6 +20,7 @@ const statusColors: Record<JobStatus, string> = {
 
 export function JobStatusIndicator({ job, title }: JobStatusIndicatorProps) {
   const cancelJobMutation = useCancelJob();
+  const { t } = useI18n();
 
   if (!job) {
     return null;
@@ -35,7 +37,7 @@ export function JobStatusIndicator({ job, title }: JobStatusIndicatorProps) {
       <Stack>
         <Group justify="space-between">
           <Text fw={500}>{title}</Text>
-          <Badge color={statusColors[job.status]}>{job.status.replace('_', ' ')}</Badge>
+          <Badge color={statusColors[job.status]}>{t(`status.${job.status}`) || job.status.replace('_', ' ')}</Badge>
         </Group>
 
         {(job.status === 'in_progress' || job.progress) && (
@@ -43,14 +45,16 @@ export function JobStatusIndicator({ job, title }: JobStatusIndicatorProps) {
             <Progress value={job.progress || 0} striped animated={job.status === 'in_progress'} />
             {job.total_items && (
               <Text c="dimmed" size="xs" ta="right">
-                {job.processed_items || 0} / {job.total_items} items processed
+                {(t('jobs.itemsProcessed') || '{processed} / {total} items processed')
+                  .replace('{processed}', String(job.processed_items || 0))
+                  .replace('{total}', String(job.total_items))}
               </Text>
             )}
           </Stack>
         )}
 
         {job.status === 'failed' && job.error_message && (
-          <Alert icon={<IconAlertCircle size="1rem" />} title="Job Failed" color="red" variant="light">
+          <Alert icon={<IconAlertCircle size="1rem" />} title={t('jobs.failedTitle') || 'Job Failed'} color="red" variant="light">
             {job.error_message}
           </Alert>
         )}
@@ -64,7 +68,7 @@ export function JobStatusIndicator({ job, title }: JobStatusIndicatorProps) {
               onClick={handleCancel}
               loading={cancelJobMutation.isPending}
             >
-              Cancel Job
+              {t('jobs.cancel') || 'Cancel Job'}
             </Button>
           </Group>
         )}

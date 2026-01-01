@@ -6,6 +6,8 @@ import { ModalsProvider } from '@mantine/modals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { I18nProvider } from './i18n';
+import { useI18n } from './i18n';
+import { useEffect } from 'react';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -160,6 +162,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <MantineProvider theme={theme} defaultColorScheme="dark">
         <I18nProvider>
+          <HeadI18nSync />
           <BrowserRouter>
             <ModalsProvider>
               <App />
@@ -170,3 +173,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+function HeadI18nSync() {
+  const { lang, t } = useI18n();
+  useEffect(() => {
+    try {
+      document.documentElement.lang = lang;
+      document.title = t('app.title') || document.title;
+    } catch {}
+  }, [lang, t]);
+  return null;
+}

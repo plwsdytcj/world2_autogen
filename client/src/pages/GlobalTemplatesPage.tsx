@@ -79,7 +79,7 @@ export function GlobalTemplatesPage() {
           <ActionIcon
             variant="subtle"
             onClick={() => handleOpenEditModal(template)}
-            aria-label={`Edit ${template.name}`}
+            aria-label={(t('aria.editItem') || 'Edit {name}').replace('{name}', template.name)}
           >
             <IconPencil size={16} />
           </ActionIcon>
@@ -87,7 +87,7 @@ export function GlobalTemplatesPage() {
             variant="subtle"
             color="red"
             onClick={() => openDeleteModal(template)}
-            aria-label={`Delete ${template.name}`}
+            aria-label={(t('aria.deleteItem') || 'Delete {name}').replace('{name}', template.name)}
             disabled={[
               'selector-prompt',
               'search-params-prompt',

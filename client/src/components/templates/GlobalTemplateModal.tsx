@@ -74,7 +74,7 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
         {label}
       </Text>
       <Tooltip label={t('templates.resetDefault')} withArrow position="top-end">
-        <ActionIcon onClick={handleResetContent} variant="subtle" size="xs" aria-label={`Reset ${label} to default`}>
+        <ActionIcon onClick={handleResetContent} variant="subtle" size="xs" aria-label={t('templates.resetDefault') || 'Reset to default template'}>
           <IconRefresh size={16} />
         </ActionIcon>
       </Tooltip>

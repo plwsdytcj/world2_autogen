@@ -97,10 +97,10 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       }
       const deep = `poki://import?url=${encodeURIComponent(fullNoAvatar)}${avatar ? `&avatar=${encodeURIComponent(avatar)}` : ''}`;
       setDeepLink(deep);
-      notifications.show({ title: 'Share Link Created', message: 'Scan the QR in your iOS app to import.', color: 'green' });
+      notifications.show({ title: (t('export.shareCreatedTitle') || 'Share Link Created'), message: (t('export.shareCreatedMsg') || 'Scan the QR in your iOS app to import.'), color: 'green' });
     } catch (err) {
       console.error(err);
-      notifications.show({ title: 'Failed', message: 'Could not create a mobile share link.', color: 'red' });
+      notifications.show({ title: (t('export.failedTitle') || 'Failed'), message: (t('export.failedMsg') || 'Could not create a mobile share link.'), color: 'red' });
     } finally {
       setCreating(false);
     }
@@ -127,7 +127,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
     if (!shareLink) return;
     try {
       await navigator.clipboard.writeText(shareLink);
-      notifications.show({ title: 'Copied', message: 'Link copied to clipboard', color: 'blue' });
+      notifications.show({ title: (t('export.copiedTitle') || 'Copied'), message: (t('export.copiedMsg') || 'Link copied to clipboard'), color: 'blue' });
     } catch {}
   };
 
@@ -195,7 +195,7 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
                 )}
                 <Group>
                   <Tooltip label={t('export.downloadQr')} withArrow>
-                    <ActionIcon onClick={downloadQr} variant="subtle" aria-label="Download QR">
+                    <ActionIcon onClick={downloadQr} variant="subtle" aria-label={t('export.downloadQr') || 'Download QR'}>
                       ⤓
                     </ActionIcon>
                   </Tooltip>

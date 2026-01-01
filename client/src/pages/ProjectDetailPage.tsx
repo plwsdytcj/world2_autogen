@@ -45,6 +45,7 @@ const statusToStepIndex: Record<ProjectStatus, number> = {
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useI18n();
 
   const [logsModalOpened, { open: openLogsModal, close: closeLogsModal }] = useDisclosure(false);
   const [analyticsModalOpened, { open: openAnalyticsModal, close: closeAnalyticsModal }] = useDisclosure(false);
@@ -83,14 +84,14 @@ export function ProjectDetailPage() {
 
   if (isError) {
     return (
-      <Alert icon={<IconAlertCircle size="1rem" />} title="Error!" color="red">
-        Failed to load project: {error.message}
+      <Alert icon={<IconAlertCircle size="1rem" />} title={t('common.error') || 'Error!'} color="red">
+        {(t('project.loadFailed') || 'Failed to load project')}: {error.message}
       </Alert>
     );
   }
 
   if (!project) {
-    return <Text>Project not found.</Text>;
+    return <Text>{t('project.notFound') || 'Project not found.'}</Text>;
   }
 
   const futureStepStyle = (stepIndex: number): React.CSSProperties => ({
@@ -105,19 +106,19 @@ export function ProjectDetailPage() {
 
     return (
       <Stepper active={activeStep} onStepClick={handleStepClick}>
-        <Stepper.Step label="Step 1" description={t('searchParams.stepDesc') || 'Search Params'} style={futureStepStyle(0)}>
+        <Stepper.Step label={t('steps.step1') || 'Step 1'} description={t('searchParams.stepDesc') || 'Search Params'} style={futureStepStyle(0)}>
           <StepGenerateSearchParams project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 2" description={t('sources.tip')} style={futureStepStyle(1)}>
+        <Stepper.Step label={t('steps.step2') || 'Step 2'} description={t('sources.tip')} style={futureStepStyle(1)}>
           <ManageSourcesStep project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 3" description={t('confirmLinks.desc') || 'Confirm Links'} style={futureStepStyle(2)}>
+        <Stepper.Step label={t('steps.step3') || 'Step 3'} description={t('confirmLinks.desc') || 'Confirm Links'} style={futureStepStyle(2)}>
           <StepConfirmLinks project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Step 4" description={t('entries.stepDesc') || 'Generate Entries'} style={futureStepStyle(3)}>
+        <Stepper.Step label={t('steps.step4') || 'Step 4'} description={t('entries.stepDesc') || 'Generate Entries'} style={futureStepStyle(3)}>
           <StepProcessEntries project={project} />
         </Stepper.Step>
-        <Stepper.Step label="Completed" description={t('completed.stepDesc') || 'Review & Download'} style={futureStepStyle(4)}>
+        <Stepper.Step label={t('steps.completed') || 'Completed'} description={t('completed.stepDesc') || 'Review & Download'} style={futureStepStyle(4)}>
           <StepCompletedView project={project} />
         </Stepper.Step>
       </Stepper>
@@ -133,17 +134,17 @@ export function ProjectDetailPage() {
         <Group justify="space-between">
           <div>
             <Title order={1}>{project.name}</Title>
-            <Text c="dimmed">ID: {project.id}</Text>
+            <Text c="dimmed">{t('common.id') || 'ID'}: {project.id}</Text>
           </div>
           <Group>
             <Button variant="outline" leftSection={<IconFileText size={16} />} onClick={openLogsModal}>
-              View API Logs
+              {t('project.viewLogs') || 'View API Logs'}
             </Button>
             <Button variant="outline" leftSection={<IconChartBar size={16} />} onClick={openAnalyticsModal}>
-              View Analytics
+              {t('project.viewAnalytics') || 'View Analytics'}
             </Button>
             <Button variant="default" leftSection={<IconPencil size={16} />} onClick={openEditModal}>
-              Edit Project
+              {t('project.edit') || 'Edit Project'}
             </Button>
           </Group>
         </Group>
@@ -155,4 +156,3 @@ export function ProjectDetailPage() {
     </>
   );
 }
-  const { t } = useI18n();

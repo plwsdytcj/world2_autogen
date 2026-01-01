@@ -60,7 +60,7 @@ export function ProjectsPage() {
       </Table.Td>
       <Table.Td>
         <Badge color={statusColors[project.status]} variant="light">
-          {project.status.replace('_', ' ')}
+          {t(`status.${project.status}`) || project.status.replace('_', ' ')}
         </Badge>
       </Table.Td>
       <Table.Td>{formatDate(project.updated_at)}</Table.Td>
@@ -70,14 +70,14 @@ export function ProjectsPage() {
             component={Link}
             to={`/projects/${project.id}`}
             variant="subtle"
-            aria-label={`View project ${project.name}`}
+            aria-label={(t('aria.viewProject') || 'View project {name}').replace('{name}', project.name)}
           >
             <IconEye size={16} />
           </ActionIcon>
           <ActionIcon
             variant="subtle"
             onClick={() => handleOpenEditModal(project)}
-            aria-label={`Edit project ${project.name}`}
+            aria-label={(t('aria.editItem') || 'Edit {name}').replace('{name}', project.name)}
           >
             <IconPencil size={16} />
           </ActionIcon>
@@ -85,7 +85,7 @@ export function ProjectsPage() {
             variant="subtle"
             color="red"
             onClick={() => openDeleteModal(project)}
-            aria-label={`Delete project ${project.name}`}
+            aria-label={(t('aria.deleteItem') || 'Delete {name}').replace('{name}', project.name)}
           >
             <IconTrash size={16} />
           </ActionIcon>
