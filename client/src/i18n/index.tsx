@@ -1,9 +1,5 @@
 import * as React from 'react';
 
-console.log('[i18n] Module loading, React:', React);
-console.log('[i18n] React.createContext:', React.createContext);
-console.log('[i18n] React.useContext:', React.useContext);
-
 export type Lang = 'en' | 'zh' | 'ja';
 
 type Dict = Record<string, string>;
@@ -945,12 +941,9 @@ type I18nContextType = {
   t: (key: string) => string;
 };
 
-console.log('[i18n] Creating context...');
 const I18nContext = React.createContext<I18nContextType | null>(null);
-console.log('[i18n] Context created:', I18nContext);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  console.log('[i18n] I18nProvider rendering...');
   const [lang, setLang] = React.useState<Lang>('en');
 
   React.useEffect(() => {
@@ -993,7 +986,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
-// Default fallback for when context is not available
+// Default fallback for when context is not available (used during SSR or early initialization)
 const defaultI18n: I18nContextType = {
   lang: 'en',
   setLang: () => {},
@@ -1001,18 +994,12 @@ const defaultI18n: I18nContextType = {
 };
 
 export function useI18n(): I18nContextType {
-  console.log('[i18n] useI18n called');
-  
-  // Check if we're in a valid React context
+  // Try to get context, but return fallback if not available
   try {
     const ctx = React.useContext(I18nContext);
-    console.log('[i18n] useI18n context result:', ctx ? 'found' : 'null');
     if (ctx) return ctx;
-  } catch (e) {
-    console.warn('[i18n] useI18n failed to get context:', e);
+  } catch {
+    // Ignore - will return fallback
   }
-  
-  // Return default if context is not available
-  console.warn('[i18n] useI18n returning default (no context)');
   return defaultI18n;
 }

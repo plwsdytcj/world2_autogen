@@ -155,37 +155,18 @@ const theme = createTheme({
   },
 });
 
-console.log('[main.tsx] Starting app initialization...');
-console.log('[main.tsx] React version:', React.version);
-
-try {
-  const rootElement = document.getElementById('root');
-  console.log('[main.tsx] Root element:', rootElement);
-  
-  if (!rootElement) {
-    console.error('[main.tsx] Root element not found!');
-  } else {
-    console.log('[main.tsx] Creating React root...');
-    const root = ReactDOM.createRoot(rootElement);
-    
-    console.log('[main.tsx] Rendering app...');
-    root.render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <MantineProvider theme={theme} defaultColorScheme="dark">
-            <I18nProvider>
-              <BrowserRouter>
-                <ModalsProvider>
-                  <App />
-                </ModalsProvider>
-              </BrowserRouter>
-            </I18nProvider>
-          </MantineProvider>
-        </QueryClientProvider>
-      </React.StrictMode>
-    );
-    console.log('[main.tsx] Render called successfully');
-  }
-} catch (error) {
-  console.error('[main.tsx] Error during initialization:', error);
-}
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider theme={theme} defaultColorScheme="dark">
+        <I18nProvider>
+          <BrowserRouter>
+            <ModalsProvider>
+              <App />
+            </ModalsProvider>
+          </BrowserRouter>
+        </I18nProvider>
+      </MantineProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
