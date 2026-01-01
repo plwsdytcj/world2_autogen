@@ -1,5 +1,6 @@
 import { SegmentedControl, Tooltip } from '@mantine/core';
-import { useI18n, Lang } from '../../i18n';
+import type { Lang } from '../../i18n';
+import { useI18n } from '../../i18n';
 
 const LANG_OPTIONS: { value: Lang; label: string; tooltip: string }[] = [
   { value: 'en', label: 'EN', tooltip: 'English' },
