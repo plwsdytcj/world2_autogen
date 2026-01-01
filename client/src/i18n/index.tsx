@@ -986,20 +986,31 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
-// Default fallback for when context is not available (used during SSR or early initialization)
+// Default fallback for when context is not available
 const defaultI18n: I18nContextType = {
   lang: 'en',
   setLang: () => {},
   t: (key: string) => dicts.en[key] ?? key,
 };
 
-export function useI18n(): I18nContextType {
-  // Try to get context, but return fallback if not available
+// Check if React's dispatcher is available (we're inside a component render)
+function isReactReady(): boolean {
   try {
-    const ctx = React.useContext(I18nContext);
-    if (ctx) return ctx;
+    // Access React internals to check if dispatcher is ready
+    // This is a hack but necessary to avoid the "hooks called outside component" error
+    const internals = (React as any).__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    return internals?.ReactCurrentDispatcher?.current != null;
   } catch {
-    // Ignore - will return fallback
+    return false;
   }
-  return defaultI18n;
+}
+
+export function useI18n(): I18nContextType {
+  // If React isn't ready (called outside component), return default
+  if (!isReactReady()) {
+    return defaultI18n;
+  }
+  
+  const ctx = React.useContext(I18nContext);
+  return ctx ?? defaultI18n;
 }
