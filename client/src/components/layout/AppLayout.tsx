@@ -79,15 +79,17 @@ export function AppLayout() {
             href="https://www.world2.app/"
             target="_blank"
             rel="noopener noreferrer"
-            size="xs"
-            c="sakura.4"
+            size="sm"
             style={{
-              marginLeft: 10,
-              padding: '3px 10px',
-              borderRadius: 9999,
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              lineHeight: 1.2,
+              marginLeft: 12,
+              padding: '6px 12px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, rgba(255,182,193,0.45), rgba(186,85,211,0.35))',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
+              color: 'white',
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
             }}
           >
             https://www.world2.app/
