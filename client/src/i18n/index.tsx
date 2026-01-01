@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import * as React from 'react';
 
 export type Lang = 'en' | 'zh' | 'ja';
 
@@ -941,12 +941,12 @@ type I18nContextType = {
   t: (key: string) => string;
 };
 
-const I18nContext = createContext<I18nContextType | null>(null);
+const I18nContext = React.createContext<I18nContextType | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = React.useState<Lang>('en');
 
-  useEffect(() => {
+  React.useEffect(() => {
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved && (saved === 'en' || saved === 'zh' || saved === 'ja')) {
       setLang(saved);
@@ -969,12 +969,12 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const t = useMemo(() => {
+  const t = React.useMemo(() => {
     const table = dicts[lang] || dicts.en;
     return (key: string) => table[key] ?? key;
   }, [lang]);
 
-  const value = useMemo<I18nContextType>(() => ({
+  const value = React.useMemo<I18nContextType>(() => ({
     lang,
     setLang: (l) => {
       localStorage.setItem('lang', l);
@@ -987,7 +987,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useI18n() {
-  const ctx = useContext(I18nContext);
+  const ctx = React.useContext(I18nContext);
   if (!ctx) throw new Error('useI18n must be used within I18nProvider');
   return ctx;
 }
