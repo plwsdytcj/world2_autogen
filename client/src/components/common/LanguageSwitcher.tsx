@@ -1,40 +1,40 @@
-import { SegmentedControl, Tooltip } from '@mantine/core';
+import { SegmentedControl, Group, Text } from '@mantine/core';
+import { IconLanguage } from '@tabler/icons-react';
 import type { Lang } from '../../i18n';
 import { useI18n } from '../../i18n';
 
-const LANG_OPTIONS: { value: Lang; label: string; tooltip: string }[] = [
-  { value: 'en', label: 'EN', tooltip: 'English' },
-  { value: 'zh', label: '中', tooltip: '中文' },
-  { value: 'ja', label: '日', tooltip: '日本語' },
+const LANG_OPTIONS: { value: Lang; label: string }[] = [
+  { value: 'en', label: 'EN' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
 ];
 
 export function LanguageSwitcher() {
   const { lang, setLang } = useI18n();
 
   return (
-    <Tooltip.Group openDelay={300} closeDelay={100}>
+    <Group gap="xs">
+      <IconLanguage size={18} style={{ opacity: 0.7 }} />
       <SegmentedControl
-        size="xs"
+        size="sm"
         value={lang}
         onChange={(v) => setLang(v as Lang)}
-        data={LANG_OPTIONS.map((opt) => ({
-          value: opt.value,
-          label: (
-            <Tooltip label={opt.tooltip} withArrow>
-              <span style={{ padding: '0 4px' }}>{opt.label}</span>
-            </Tooltip>
-          ),
-        }))}
+        data={LANG_OPTIONS}
         styles={{
           root: {
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--mantine-color-dark-6)',
+            border: '1px solid var(--mantine-color-dark-4)',
+          },
+          label: {
+            fontWeight: 500,
+            padding: '4px 12px',
           },
           indicator: {
-            background: 'linear-gradient(135deg, rgba(255,182,193,0.4), rgba(186,85,211,0.3))',
+            background: 'linear-gradient(135deg, rgba(255,182,193,0.5), rgba(186,85,211,0.4))',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
           },
         }}
       />
-    </Tooltip.Group>
+    </Group>
   );
 }
