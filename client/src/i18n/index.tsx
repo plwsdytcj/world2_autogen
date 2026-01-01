@@ -1,5 +1,9 @@
 import * as React from 'react';
 
+console.log('[i18n] Module loading, React:', React);
+console.log('[i18n] React.createContext:', React.createContext);
+console.log('[i18n] React.useContext:', React.useContext);
+
 export type Lang = 'en' | 'zh' | 'ja';
 
 type Dict = Record<string, string>;
@@ -941,9 +945,12 @@ type I18nContextType = {
   t: (key: string) => string;
 };
 
+console.log('[i18n] Creating context...');
 const I18nContext = React.createContext<I18nContextType | null>(null);
+console.log('[i18n] Context created:', I18nContext);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
+  console.log('[i18n] I18nProvider rendering...');
   const [lang, setLang] = React.useState<Lang>('en');
 
   React.useEffect(() => {
@@ -987,7 +994,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useI18n() {
+  console.log('[i18n] useI18n called, React.useContext:', React.useContext);
   const ctx = React.useContext(I18nContext);
+  console.log('[i18n] useI18n context:', ctx);
   if (!ctx) throw new Error('useI18n must be used within I18nProvider');
   return ctx;
 }
