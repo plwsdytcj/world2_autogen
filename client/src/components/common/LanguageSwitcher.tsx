@@ -1,4 +1,4 @@
-import { SegmentedControl, Group, Text } from '@mantine/core';
+import { SegmentedControl, Group } from '@mantine/core';
 import { IconLanguage } from '@tabler/icons-react';
 import type { Lang } from '../../i18n';
 import { useI18n } from '../../i18n';
