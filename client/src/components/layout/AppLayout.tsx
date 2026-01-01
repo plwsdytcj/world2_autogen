@@ -120,7 +120,7 @@ export function AppLayout() {
               }}
             >
               <IconSparkles size={10} style={{ marginRight: 2 }} />
-              Better than SillyTavern
+              Better than Tavern Forge
             </Badge>
             <IconExternalLink size={14} style={{ opacity: 0.8 }} />
           </Anchor>

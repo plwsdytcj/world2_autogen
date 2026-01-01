@@ -1,0 +1,21 @@
+{
+  "name": "Tavern Forge - AI Character Card & Lorebook Generator",
+  "short_name": "Tavern Forge",
+  "description": "Create stunning AI character cards and lorebooks. The ultimate web-based tool for roleplay enthusiasts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1b1e",
+  "theme_color": "#c44dff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["entertainment", "productivity", "utilities"],
+  "lang": "en",
+  "dir": "ltr"
+}
+
