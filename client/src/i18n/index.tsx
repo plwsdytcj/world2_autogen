@@ -143,6 +143,9 @@ const dicts: Record<Lang, Dict> = {
     'projects.template.reset': 'Reset to global template',
     'aria.addCredential': 'Add new credential',
     'aria.resetTemplate': 'Reset {label} to global template',
+    'aria.viewProject': 'View project {name}',
+    'aria.editItem': 'Edit {name}',
+    'aria.deleteItem': 'Delete {name}',
 
     // Credentials page
     'credentials.create': 'Add New Credential',
@@ -560,6 +563,9 @@ const dicts: Record<Lang, Dict> = {
     'projects.template.reset': '重置为全局模板',
     'aria.addCredential': '新增凭证',
     'aria.resetTemplate': '将 {label} 重置为全局模板',
+    'aria.viewProject': '查看项目 {name}',
+    'aria.editItem': '编辑 {name}',
+    'aria.deleteItem': '删除 {name}',
 
     'credentials.create': '新增凭证',
     'credentials.loadFailed': '加载凭证失败',
@@ -965,6 +971,9 @@ const dicts: Record<Lang, Dict> = {
     'projects.template.reset': 'グローバルテンプレートにリセット',
     'aria.addCredential': '新しいクレデンシャルを追加',
     'aria.resetTemplate': '{label} をグローバルテンプレートにリセット',
+    'aria.viewProject': 'プロジェクト {name} を表示',
+    'aria.editItem': '{name} を編集',
+    'aria.deleteItem': '{name} を削除',
 
     'credentials.create': '認証情報を追加',
     'credentials.loadFailed': '認証情報の読み込みに失敗しました',
@@ -1317,13 +1326,3 @@ export function useI18n(): I18nContextType {
   const ctx = React.useContext(I18nContext);
   return ctx ?? defaultI18n;
 }
-    // ARIA helpers
-    'aria.viewProject': 'View project {name}',
-    'aria.editItem': 'Edit {name}',
-    'aria.deleteItem': 'Delete {name}',
-    'aria.viewProject': '查看项目 {name}',
-    'aria.editItem': '编辑 {name}',
-    'aria.deleteItem': '删除 {name}',
-    'aria.viewProject': 'プロジェクト {name} を表示',
-    'aria.editItem': '{name} を編集',
-    'aria.deleteItem': '{name} を削除',
