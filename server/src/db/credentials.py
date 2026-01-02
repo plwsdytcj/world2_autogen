@@ -183,3 +183,41 @@ async def delete_credential(
     db = tx or await get_db_connection()
     query = 'DELETE FROM "Credential" WHERE id = %s'
     await db.execute(query, (credential_id,))
+
+
+async def get_apify_api_token(tx: Optional[AsyncDBTransaction] = None) -> Optional[str]:
+    """
+    Get Apify API token from credentials.
+    
+    Looks for a credential with provider_type = 'apify' and returns its api_key.
+    If multiple exist, returns the first one found.
+    Falls back to APIFY_API_TOKEN environment variable if no credential exists.
+    
+    Returns:
+        Apify API token or None if not configured
+    """
+    import os
+    
+    db = tx or await get_db_connection()
+    query = 'SELECT * FROM "Credential" WHERE provider_type = %s LIMIT 1'
+    result = await db.fetch_one(query, ("apify",))
+    
+    if result and result.get("values"):
+        try:
+            from services.encryption import decrypt
+            decrypted_values = json.loads(decrypt(result["values"]))
+            api_key = decrypted_values.get("api_key")
+            if api_key:
+                logger.info("Using Apify API token from database credential")
+                return api_key
+        except Exception as e:
+            logger.error(f"Failed to decrypt Apify credential: {e}")
+    
+    # Fall back to environment variable
+    env_token = os.getenv("APIFY_API_TOKEN")
+    if env_token:
+        logger.info("Using Apify API token from environment variable")
+        return env_token
+    
+    logger.warning("No Apify API token configured (neither in credentials nor env)")
+    return None

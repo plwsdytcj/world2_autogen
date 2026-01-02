@@ -21,7 +21,7 @@ import { ProjectSourceModal } from './ProjectSourceModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconDownload, IconEye, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconBrandFacebook, IconDownload, IconEye, IconPlus, IconTrash, IconWorld } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
 import { useI18n } from '../../i18n';
@@ -44,6 +44,15 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const fetchContentMutation = useFetchContentJob();
   const { job: fetchContentJob } = useLatestJob(project.id, 'fetch_source_content');
   const { t } = useI18n();
+
+  const isFacebookUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.includes('facebook.com') || parsed.hostname.includes('fb.com');
+    } catch {
+      return false;
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setSelectedSource(null);
@@ -124,6 +133,19 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                             {source.url}
                           </Text>
                           <Group gap="xs">
+                            {isFacebookUrl(source.url) ? (
+                              <Tooltip label={t('sources.facebookSource') || 'Facebook source - uses Apify scraper'}>
+                                <Badge size="sm" variant="light" color="blue" leftSection={<IconBrandFacebook size={12} />}>
+                                  Facebook
+                                </Badge>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip label={t('sources.webSource') || 'Web source'}>
+                                <Badge size="sm" variant="light" color="gray" leftSection={<IconWorld size={12} />}>
+                                  Web
+                                </Badge>
+                              </Tooltip>
+                            )}
                             {source.last_crawled_at ? (
                               <Tooltip label={`${t('character.lastFetched') || 'Last fetched'}: ${formatDate(source.last_crawled_at)}`}>
                                 <Badge size="sm" variant="light" color="green">

@@ -57,6 +57,17 @@ class ProviderController(Controller):
 
         all_credentials = await list_credentials()
         provider_info_tasks = []
+        
+        # Add Apify as a special non-LLM provider for Facebook scraping
+        apify_credential = next(
+            (c for c in all_credentials if c.provider_type == "apify"), None
+        )
+        apify_provider = ProviderInfo(
+            id="apify",
+            name="Apify (Facebook Scraper)",
+            models=[],  # Apify doesn't have models
+            configured=apify_credential is not None,
+        )
 
         for provider_id in provider_classes.keys():
 
@@ -125,6 +136,8 @@ class ProviderController(Controller):
             provider_info_tasks.append(get_info(provider_id))
 
         results = await asyncio.gather(*provider_info_tasks)
+        # Add Apify at the end of the list
+        results.append(apify_provider)
         return results
 
     @post(path="/models")

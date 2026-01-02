@@ -137,8 +137,9 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
             placeholder={
               isLorebookProject
                 ? 'e.g., https://elderscrolls.fandom.com/wiki/Category:Skyrim:_Locations'
-                : 'e.g., https://elderscrolls.fandom.com/wiki/Lydia_(Skyrim)'
+                : 'e.g., https://facebook.com/nintendo or https://fandom.com/wiki/Character'
             }
+            description={t('sources.urlDesc')}
             {...form.getInputProps('url')}
           />
 

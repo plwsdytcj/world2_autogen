@@ -192,6 +192,8 @@ const dicts: Record<Lang, Dict> = {
     'creds.testSuccess': 'Success',
     'creds.testFailed': 'Test Failed',
     'creds.fetchModelsFailed': 'Failed to Fetch Models',
+    'creds.apifyDesc': 'Apify is used for Facebook page scraping. Get your API token from apify.com/account/integrations',
+    'creds.apifyToken': 'Apify API Token',
 
     // Templates page + modal + notifications
     'templates.title': 'Global Templates',
@@ -287,6 +289,9 @@ const dicts: Record<Lang, Dict> = {
     'sources.paginationFound': 'Pagination link found: {url}',
     'sources.paginationNotFound': 'No pagination link found.',
     'sources.firstLink': 'First link',
+    'sources.urlDesc': 'Supports Facebook pages, Wiki pages, and general web URLs.',
+    'sources.facebookSource': 'Facebook source - uses Apify scraper',
+    'sources.webSource': 'Web source',
     // notifications
     'sources.addedTitle': 'Source Added',
     'sources.addedMsg': 'The new source has been added successfully.',
@@ -611,6 +616,8 @@ const dicts: Record<Lang, Dict> = {
     'creds.testSuccess': '测试成功',
     'creds.testFailed': '测试失败',
     'creds.fetchModelsFailed': '获取模型失败',
+    'creds.apifyDesc': 'Apify 用于抓取 Facebook 页面内容。从 apify.com/account/integrations 获取你的 API Token',
+    'creds.apifyToken': 'Apify API Token',
 
     'templates.title': '全局模板',
     'templates.create': '创建新模板',
@@ -701,6 +708,9 @@ const dicts: Record<Lang, Dict> = {
     'sources.paginationFound': '找到分页链接：{url}',
     'sources.paginationNotFound': '未找到分页链接。',
     'sources.firstLink': '首条链接',
+    'sources.urlDesc': '支持 Facebook 主页、Wiki 页面和普通网页 URL。',
+    'sources.facebookSource': 'Facebook 来源 - 使用 Apify 抓取器',
+    'sources.webSource': '网页来源',
     'sources.addedTitle': '来源已添加',
     'sources.addedMsg': '新的来源已成功添加。',
     'sources.addFailed': '添加来源失败',
@@ -1018,6 +1028,8 @@ const dicts: Record<Lang, Dict> = {
     'creds.testSuccess': '成功',
     'creds.testFailed': 'テストに失敗しました',
     'creds.fetchModelsFailed': 'モデルの取得に失敗しました',
+    'creds.apifyDesc': 'ApifyはFacebookページのスクレイピングに使用されます。apify.com/account/integrationsからAPIトークンを取得してください',
+    'creds.apifyToken': 'Apify APIトークン',
 
     'templates.title': 'グローバルテンプレート',
     'templates.create': '新規テンプレート',
@@ -1108,6 +1120,9 @@ const dicts: Record<Lang, Dict> = {
     'sources.paginationFound': 'ページネーションリンク: {url}',
     'sources.paginationNotFound': 'ページネーションリンクが見つかりません。',
     'sources.firstLink': '最初のリンク',
+    'sources.urlDesc': 'Facebookページ、Wikiページ、一般的なウェブURLに対応。',
+    'sources.facebookSource': 'Facebookソース - Apifyスクレイパーを使用',
+    'sources.webSource': 'ウェブソース',
     'sources.addedTitle': 'ソースを追加しました',
     'sources.addedMsg': '新しいソースが正常に追加されました。',
     'sources.addFailed': 'ソースの追加に失敗しました',

@@ -75,6 +75,7 @@ from db.sources import (
 )
 from db.source_hierarchy import add_source_child_relationship
 from db.global_templates import list_all_global_templates
+from services.facebook_scraper import is_facebook_url, scrape_facebook_for_source
 from providers.index import (
     BaseProvider,
     ChatCompletionErrorResponse,
@@ -187,7 +188,32 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
 
             reference_image_url = None
             all_image_url: list[str] | None = None
-            if project.project_type == ProjectType.CHARACTER:
+            
+            # Check if this is a Facebook URL
+            if is_facebook_url(source.url):
+                logger.info(f"[{job.id}] Detected Facebook URL: {source.url}")
+                try:
+                    content, fb_images = await scrape_facebook_for_source(
+                        source.url, results_limit=20
+                    )
+                    content_type = "markdown"
+                    all_image_url = fb_images if fb_images else None
+                    logger.info(
+                        f"[{job.id}] Facebook scrape completed for {source.url}: "
+                        f"content_length={len(content)}, images={len(fb_images) if fb_images else 0}"
+                    )
+                except Exception as fb_error:
+                    logger.error(
+                        f"[{job.id}] Facebook scraping failed for {source.url}: {fb_error}",
+                        exc_info=True,
+                    )
+                    # Fallback: try regular scraper
+                    logger.info(f"[{job.id}] Falling back to regular scraper for {source.url}")
+                    content = await scraper.get_content(
+                        source.url, type="markdown", clean=True
+                    )
+                    content_type = "markdown"
+            elif project.project_type == ProjectType.CHARACTER:
                 # For character projects, also try to extract a reference image URL from raw HTML.
                 # 1) Get cleaned markdown for content display
                 content = await scraper.get_content(
