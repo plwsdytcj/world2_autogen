@@ -21,8 +21,6 @@ from db.background_jobs import (
     GenerateCharacterCardPayload,
     GenerateCharacterCardResult,
     GenerateSearchParamsResult,
-    ImportFacebookPagePayload,
-    ImportFacebookPageResult,
     JobStatus,
     ProcessProjectEntriesPayload,
     ProcessProjectEntriesResult,
@@ -105,10 +103,6 @@ from services.rate_limiter import (
 )
 from db.api_request_logs import create_api_request_log, CreateApiRequestLog
 from services.scraper import Scraper
-from services.facebook_scraper import (
-    scrape_facebook_page,
-    format_facebook_posts_as_content,
-)
 from logging_config import get_logger
 from services.templates import create_messages_from_template
 
@@ -495,91 +489,6 @@ async def regenerate_character_field(job: BackgroundJob, project: Project):
                 status=JobStatus.completed,
                 result=RegenerateCharacterFieldResult(
                     field_regenerated=job.payload.field_to_regenerate
-                ),
-            ),
-            tx=tx,
-        )
-
-
-async def import_facebook_page(job: BackgroundJob, project: Project):
-    """
-    Imports posts from a Facebook page, creates a source, and optionally generates a character card.
-    """
-    if not isinstance(job.payload, ImportFacebookPagePayload):
-        raise TypeError("Invalid payload for import_facebook_page job.")
-
-    # --- 1. Scrape Facebook Page ---
-    logger.info(f"[{job.id}] Scraping Facebook page: {job.payload.page_name}")
-    posts = await scrape_facebook_page(
-        job.payload.page_name,
-        pages=job.payload.pages,
-        cookies=job.payload.cookies,
-    )
-
-    if not posts:
-        raise ValueError(f"No posts found for Facebook page: {job.payload.page_name}")
-
-    # --- 2. Format content and create source ---
-    formatted_content = format_facebook_posts_as_content(posts)
-    facebook_url = f"https://www.facebook.com/{job.payload.page_name}"
-
-    async with (await get_db_connection()).transaction() as tx:
-        # Create a source with the scraped content
-        source = await create_project_source(
-            CreateProjectSource(
-                project_id=project.id,
-                url=facebook_url,
-                max_pages=1,
-                max_depth=0,
-            ),
-            tx=tx,
-        )
-
-        # Update source with the scraped content
-        updated_source = await update_project_source(
-            source.id,
-            UpdateProjectSource(raw_content=formatted_content),
-            tx=tx,
-        )
-
-        if not updated_source:
-            raise Exception("Failed to update source with Facebook content")
-
-        # --- 3. Optionally generate character card ---
-        card_generated = False
-        if job.payload.auto_generate_card:
-            logger.info(f"[{job.id}] Auto-generating character card from Facebook content")
-            try:
-                # Create a new job for character card generation
-                from db.background_jobs import create_background_job, CreateBackgroundJob
-
-                card_job = await create_background_job(
-                    CreateBackgroundJob(
-                        task_name=TaskName.GENERATE_CHARACTER_CARD,
-                        project_id=project.id,
-                        payload=GenerateCharacterCardPayload(source_ids=[source.id]),
-                    ),
-                    tx=tx,
-                )
-                # The card generation job will be processed by the worker
-                # We mark it as scheduled
-                card_generated = True
-            except Exception as e:
-                logger.warning(
-                    f"[{job.id}] Failed to create character card generation job: {e}",
-                    exc_info=True,
-                )
-                # Don't fail the whole job if card generation job creation fails
-
-        # --- 4. Update job status ---
-        await update_job_with_notification(
-            job.id,
-            UpdateBackgroundJob(
-                status=JobStatus.completed,
-                result=ImportFacebookPageResult(
-                    source_id=source.id,
-                    posts_scraped=len(posts),
-                    card_generated=card_generated,
                 ),
             ),
             tx=tx,
@@ -1521,7 +1430,6 @@ JOB_HANDLERS = {
     TaskName.FETCH_SOURCE_CONTENT: fetch_source_content,
     TaskName.GENERATE_CHARACTER_CARD: generate_character_card,
     TaskName.REGENERATE_CHARACTER_FIELD: regenerate_character_field,
-    TaskName.IMPORT_FACEBOOK_PAGE: import_facebook_page,
 }
 
 

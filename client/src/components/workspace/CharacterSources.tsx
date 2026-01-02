@@ -21,10 +21,9 @@ import { ProjectSourceModal } from './ProjectSourceModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconDownload, IconEye, IconPlus, IconTrash, IconBrandFacebook } from '@tabler/icons-react';
+import { IconDownload, IconEye, IconPlus, IconTrash } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
-import { ImportFacebookModal } from './ImportFacebookModal';
 import { useI18n } from '../../i18n';
 
 interface CharacterSourcesProps {
@@ -37,7 +36,6 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const { data: sources, isLoading: isLoadingSources } = useProjectSources(project.id);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
   const [viewModalOpened, { open: openViewModal, close: closeViewModal }] = useDisclosure(false);
-  const [facebookModalOpened, { open: openFacebookModal, close: closeFacebookModal }] = useDisclosure(false);
   const [selectedSource, setSelectedSource] = useState<ProjectSource | null>(null);
   const [sourceToViewId, setSourceToViewId] = useState<string | null>(null);
   const modals = useModals();
@@ -45,7 +43,6 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const deleteSourceMutation = useDeleteProjectSource(project.id);
   const fetchContentMutation = useFetchContentJob();
   const { job: fetchContentJob } = useLatestJob(project.id, 'fetch_source_content');
-  const { job: facebookImportJob } = useLatestJob(project.id, 'import_facebook_page');
   const { t } = useI18n();
 
   const handleOpenCreateModal = () => {
@@ -91,37 +88,16 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
         projectId={project.id}
         sourceId={sourceToViewId}
       />
-      <ImportFacebookModal
-        opened={facebookModalOpened}
-        onClose={closeFacebookModal}
-        projectId={project.id}
-        onSuccess={() => {
-          // Refresh sources list
-          // The query will automatically refetch
-        }}
-      />
       <Stack>
         <Group justify="space-between">
           <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
-          <Group gap="xs">
-            <Button
-              leftSection={<IconBrandFacebook size={16} />}
-              onClick={openFacebookModal}
-              size="xs"
-              variant="light"
-              color="blue"
-            >
-              Import Facebook
-            </Button>
-            <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreateModal} size="xs">
-              {t('sources.add')}
-            </Button>
-          </Group>
+          <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreateModal} size="xs">
+            {t('sources.add')}
+          </Button>
         </Group>
         <Text size="sm" c="dimmed">{t('character.sourcesTip') || 'Add source URLs, fetch their content, then select which ones to use for generation.'}</Text>
 
         <JobStatusIndicator job={fetchContentJob} title={t('character.contentFetching') || 'Content Fetching'} />
-        <JobStatusIndicator job={facebookImportJob} title="Facebook Import" />
 
         <Paper withBorder p="md" mt="xs">
           {isLoadingSources ? (

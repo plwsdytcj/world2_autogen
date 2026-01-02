@@ -2,12 +2,10 @@ import base64
 import io
 import json
 from uuid import UUID
-from litestar import Controller, get, patch, post
+from litestar import Controller, get, patch
 from litestar.exceptions import NotFoundException
 from litestar.params import Body
 from litestar.response import Response
-from pydantic import BaseModel
-from typing import Optional
 from PIL import Image, PngImagePlugin
 
 from db.character_cards import (
@@ -20,23 +18,9 @@ from db.character_cards import (
 )
 from db.common import SingleResponse
 from db.projects import get_project as db_get_project
-from db.background_jobs import (
-    create_background_job,
-    CreateBackgroundJob,
-    TaskName,
-    ImportFacebookPagePayload,
-    BackgroundJob,
-)
 from logging_config import get_logger
 
 logger = get_logger(__name__)
-
-
-class ImportFacebookPageRequest(BaseModel):
-    page_name: str
-    pages: int = 5
-    auto_generate_card: bool = True
-    cookies: Optional[str] = None
 
 
 class CharacterCardController(Controller):
@@ -159,41 +143,3 @@ class CharacterCardController(Controller):
                 "Content-Disposition": f'attachment; filename="{safe_filename}.png"'
             },
         )
-
-    @post("/import-facebook")
-    async def import_facebook_page(
-        self, project_id: str, data: ImportFacebookPageRequest = Body()
-    ) -> SingleResponse[BackgroundJob]:
-        """
-        Import posts from a Facebook page and optionally generate a character card.
-        
-        Args:
-            project_id: The project ID
-            data: Request body containing:
-                - page_name: Facebook page name or ID (e.g., "zuck" or "meta")
-                - pages: Number of pages of posts to scrape (default: 5)
-                - auto_generate_card: Whether to automatically generate character card (default: True)
-                - cookies: Optional path to cookies file for authenticated requests
-        """
-        project = await db_get_project(project_id)
-        if not project:
-            raise NotFoundException(f"Project '{project_id}' not found.")
-
-        # Create background job for Facebook import
-        job = await create_background_job(
-            CreateBackgroundJob(
-                task_name=TaskName.IMPORT_FACEBOOK_PAGE,
-                project_id=project_id,
-                payload=ImportFacebookPagePayload(
-                    page_name=data.page_name,
-                    pages=data.pages,
-                    auto_generate_card=data.auto_generate_card,
-                    cookies=data.cookies,
-                ),
-            )
-        )
-
-        logger.info(
-            f"Created Facebook import job {job.id} for project {project_id}, page: {data.page_name}"
-        )
-        return SingleResponse(data=job)
