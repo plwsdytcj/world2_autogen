@@ -193,37 +193,13 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
             if is_facebook_url(source.url):
                 logger.info(f"[{job.id}] Detected Facebook URL: {source.url}")
                 try:
+                    # scrape_facebook_for_source now downloads images immediately after scraping
+                    # while URLs are still valid from Apify
                     content, fb_images = await scrape_facebook_for_source(
                         source.url, results_limit=20
                     )
                     content_type = "markdown"
-                    
-                    # Download Facebook images to local storage (they have expiring signatures)
-                    downloaded_images = []
-                    if fb_images:
-                        try:
-                            from services.image_downloader import download_images, get_image_url
-                            logger.info(f"[{job.id}] Downloading {len(fb_images)} Facebook images to local storage...")
-                            download_results = await download_images(fb_images, max_concurrent=3)
-                            
-                            # Convert to local URLs for successfully downloaded images
-                            for original_url, local_file in download_results.items():
-                                if local_file:
-                                    downloaded_images.append(get_image_url(local_file))
-                                else:
-                                    # Keep original URL if download failed (user can try proxy)
-                                    downloaded_images.append(original_url)
-                            
-                            logger.info(
-                                f"[{job.id}] Downloaded {sum(1 for r in download_results.values() if r)}/{len(fb_images)} images successfully"
-                            )
-                        except Exception as download_error:
-                            logger.warning(
-                                f"[{job.id}] Image download failed, using original URLs: {download_error}"
-                            )
-                            downloaded_images = fb_images
-                    
-                    all_image_url = downloaded_images if downloaded_images else fb_images
+                    all_image_url = fb_images if fb_images else None
                     logger.info(
                         f"[{job.id}] Facebook scrape completed for {source.url}: "
                         f"content_length={len(content)}, images={len(all_image_url) if all_image_url else 0}"

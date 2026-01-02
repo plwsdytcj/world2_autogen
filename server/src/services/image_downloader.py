@@ -70,19 +70,50 @@ async def download_image(url: str, timeout: float = 10.0) -> Optional[str]:
         # Download the image
         is_facebook_cdn = "fbcdn.net" in parsed.netloc or "facebook.com" in parsed.netloc
         
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36",
-            "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
-        }
-        
-        # For Facebook CDN, use Facebook referer
+        # Try multiple header combinations for Facebook CDN
+        header_combinations = []
         if is_facebook_cdn:
-            headers["Referer"] = "https://www.facebook.com/"
+            # Facebook CDN often requires specific referers
+            header_combinations = [
+                {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
+                    "Referer": "https://www.facebook.com/",
+                    "Accept-Language": "en-US,en;q=0.9",
+                },
+                {
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36",
+                    "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
+                    "Referer": "https://m.facebook.com/",
+                },
+                {
+                    "User-Agent": "facebookexternalhit/1.1",
+                    "Accept": "image/*",
+                    "Referer": "https://www.facebook.com/",
+                },
+            ]
         else:
-            headers["Referer"] = f"{parsed.scheme}://{parsed.netloc}/"
+            header_combinations = [{
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36",
+                "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
+                "Referer": f"{parsed.scheme}://{parsed.netloc}/",
+            }]
         
         async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
-            response = await client.get(url, headers=headers)
+            last_error = None
+            for headers in header_combinations:
+                try:
+                    response = await client.get(url, headers=headers)
+                    if response.status_code == 200:
+                        break
+                    last_error = httpx.HTTPStatusError(f"HTTP {response.status_code}", request=response.request, response=response)
+                except httpx.HTTPStatusError as e:
+                    last_error = e
+                    continue
+            
+            if last_error and (not hasattr(last_error, 'response') or last_error.response.status_code != 200):
+                raise last_error
+            
             response.raise_for_status()
             
             # Verify it's an image

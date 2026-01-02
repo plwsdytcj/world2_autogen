@@ -21,9 +21,10 @@ import { ProjectSourceModal } from './ProjectSourceModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconBrandFacebook, IconDownload, IconEye, IconPlus, IconTrash, IconWorld } from '@tabler/icons-react';
+import { IconBrandFacebook, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
+import { DebugSourceModal } from './DebugSourceModal';
 import { useI18n } from '../../i18n';
 
 interface CharacterSourcesProps {
@@ -36,8 +37,10 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const { data: sources, isLoading: isLoadingSources } = useProjectSources(project.id);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
   const [viewModalOpened, { open: openViewModal, close: closeViewModal }] = useDisclosure(false);
+  const [debugModalOpened, { open: openDebugModal, close: closeDebugModal }] = useDisclosure(false);
   const [selectedSource, setSelectedSource] = useState<ProjectSource | null>(null);
   const [sourceToViewId, setSourceToViewId] = useState<string | null>(null);
+  const [sourceToDebugId, setSourceToDebugId] = useState<string | null>(null);
   const modals = useModals();
 
   const deleteSourceMutation = useDeleteProjectSource(project.id);
@@ -62,6 +65,11 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
   const handleOpenViewModal = (sourceId: string) => {
     setSourceToViewId(sourceId);
     openViewModal();
+  };
+
+  const handleOpenDebugModal = (sourceId: string) => {
+    setSourceToDebugId(sourceId);
+    openDebugModal();
   };
 
   const openDeleteModal = (source: ProjectSource) =>
@@ -96,6 +104,12 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
         onClose={closeViewModal}
         projectId={project.id}
         sourceId={sourceToViewId}
+      />
+      <DebugSourceModal
+        opened={debugModalOpened}
+        onClose={closeDebugModal}
+        projectId={project.id}
+        sourceId={sourceToDebugId}
       />
       <Stack>
         <Group justify="space-between">
@@ -173,6 +187,15 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                             disabled={!source.last_crawled_at}
                           >
                             <IconEye size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label={t('sources.debugTitle') || 'Debug: View raw data'}>
+                          <ActionIcon
+                            onClick={() => handleOpenDebugModal(source.id)}
+                            variant="default"
+                            disabled={!source.last_crawled_at}
+                          >
+                            <IconBug size={16} />
                           </ActionIcon>
                         </Tooltip>
                         <Tooltip label={t('character.fetchContent') || 'Fetch/Re-fetch Content'}>

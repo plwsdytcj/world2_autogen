@@ -595,4 +595,30 @@ async def scrape_facebook_for_source(
     formatted = format_facebook_content_for_llm(content)
     images = extract_images_from_facebook_content(content)
     
-    return formatted, images
+    # Immediately download images while URLs are still valid (from Apify)
+    # This is critical: Facebook CDN URLs have expiring signatures
+    downloaded_image_urls = []
+    if images:
+        try:
+            from services.image_downloader import download_images, get_image_url
+            logger.info(f"Downloading {len(images)} Facebook images immediately after Apify scraping (URLs should still be valid)...")
+            download_results = await download_images(images, max_concurrent=3)
+            
+            # Use local URLs for successfully downloaded images, keep original for failures
+            success_count = 0
+            for original_url, local_file in download_results.items():
+                if local_file:
+                    downloaded_image_urls.append(get_image_url(local_file))
+                    success_count += 1
+                    logger.debug(f"✅ Downloaded: {original_url[:60]}... -> {local_file}")
+                else:
+                    downloaded_image_urls.append(original_url)
+                    logger.warning(f"⚠️ Download failed (signature may have expired): {original_url[:60]}...")
+            
+            logger.info(f"Downloaded {success_count}/{len(images)} images successfully. {len(images) - success_count} failed (will use original URLs with proxy fallback).")
+        except Exception as download_error:
+            logger.error(f"Image download process failed: {download_error}", exc_info=True)
+            logger.warning("Using original URLs - images may not display if signatures expired")
+            downloaded_image_urls = images
+    
+    return formatted, downloaded_image_urls if downloaded_image_urls else images
