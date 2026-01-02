@@ -27,18 +27,43 @@ class ProxyController(Controller):
         if parsed.scheme not in ("http", "https"):
             raise HTTPException(status_code=400, detail="Invalid scheme")
 
+        # Special handling for Facebook CDN
+        is_facebook_cdn = "fbcdn.net" in parsed.netloc or "facebook.com" in parsed.netloc
+        
         base_headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36 Lorecard/2.5",
             "Accept": "image/avif,image/webp,image/*,*/*;q=0.8",
-            # Default referer: origin of the target URL.
-            "Referer": f"{parsed.scheme}://{parsed.netloc}/",
         }
+        
+        # For Facebook CDN, use Facebook referer to avoid signature mismatch
+        if is_facebook_cdn:
+            base_headers["Referer"] = "https://www.facebook.com/"
+        else:
+            # Default referer: origin of the target URL.
+            base_headers["Referer"] = f"{parsed.scheme}://{parsed.netloc}/"
 
         max_bytes = 5 * 1024 * 1024  # 5MB
         try:
             async with httpx.AsyncClient(follow_redirects=True) as client:
-                # Attempt 1: origin referer
+                # Attempt 1: with configured referer
                 r = await client.get(url, timeout=10.0, headers=base_headers)
+                
+                # Special retry for Facebook CDN if signature mismatch
+                if r.status_code in (403, 404) and is_facebook_cdn:
+                    # Try with different referer patterns
+                    for fb_referer in [
+                        "https://www.facebook.com/",
+                        "https://m.facebook.com/",
+                        "https://www.facebook.com/profile.php",
+                    ]:
+                        headers_retry = dict(base_headers)
+                        headers_retry["Referer"] = fb_referer
+                        logger.debug(f"Facebook CDN retry with referer {fb_referer} for {url}")
+                        r_retry = await client.get(url, timeout=10.0, headers=headers_retry)
+                        if r_retry.status_code == 200:
+                            r = r_retry
+                            break
+                
                 # If blocked by fandom/static.wikia, retry with fandom referer derived from path
                 if r.status_code in (401, 403) and parsed.netloc.endswith("nocookie.net"):
                     segs = [s for s in parsed.path.split("/") if s]

@@ -315,6 +315,7 @@ def create_app():
             GlobalTemplateController,
             ShareController,
             ProxyController,
+            ImagesController,
         ],
     )
 

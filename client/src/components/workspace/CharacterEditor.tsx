@@ -47,7 +47,15 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
   });
 
   const apiBase = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : '/api';
-  const toProxy = (url?: string) => (url ? `${apiBase}/proxy/image?url=${encodeURIComponent(url)}` : undefined);
+  const toProxy = (url?: string) => {
+    if (!url) return undefined;
+    // If URL is already a local image path (starts with /api/images), use it directly
+    if (url.startsWith('/api/images')) {
+      return url;
+    }
+    // Otherwise, use proxy for external URLs
+    return `${apiBase}/proxy/image?url=${encodeURIComponent(url)}`;
+  };
 
   useEffect(() => {
     if (characterCardResponse?.data) {
