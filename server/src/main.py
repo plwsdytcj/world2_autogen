@@ -43,6 +43,7 @@ from controllers.shares import ShareController  # noqa: E402
 from controllers.credentials import CredentialsController  # noqa: E402
 from controllers.health import HealthController  # noqa: E402
 from controllers.proxy import ProxyController  # noqa: E402
+from controllers.images import ImagesController  # noqa: E402
 from exceptions import (  # noqa: E402
     generic_exception_handler,
     validation_exception_handler,
