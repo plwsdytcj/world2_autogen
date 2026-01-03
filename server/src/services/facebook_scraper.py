@@ -229,21 +229,32 @@ class FacebookScraperService:
                     page_id = items[0].get("pageId") or items[0].get("facebookId")
                     page_name = items[0].get("pageName") or (user_info.get("name") if user_info else None)
                     
-                    # Use Graph API URL for profile picture - this is a permanent redirect URL
-                    # that doesn't expire (unlike CDN URLs with signatures)
-                    profile_pic = None
+                    # Try to get profile picture from multiple sources:
+                    # 1. user.profilePic from Apify (real profile pic, but CDN URL with expiring signature)
+                    # 2. Graph API URL as fallback (permanent redirect, but may show default avatar)
+                    profile_pic_cdn = None
+                    profile_pic_graph = None
+                    
+                    # Get real profile pic from Apify response
+                    if user_info and isinstance(user_info, dict):
+                        profile_pic_cdn = user_info.get("profilePic")
+                        # Try to get larger version
+                        if profile_pic_cdn:
+                            profile_pic_cdn = self._get_larger_profile_pic(profile_pic_cdn)
+                    
+                    # Generate Graph API URL as fallback
                     if page_id:
-                        # Graph API provides a permanent redirect to the current profile picture
-                        profile_pic = f"https://graph.facebook.com/{page_id}/picture?type=large"
+                        profile_pic_graph = f"https://graph.facebook.com/{page_id}/picture?type=large"
                     elif page_name:
-                        # Fallback to page name if no ID
-                        profile_pic = f"https://graph.facebook.com/{page_name}/picture?type=large"
+                        profile_pic_graph = f"https://graph.facebook.com/{page_name}/picture?type=large"
                     
                     result.page_info = {
                         "name": page_name,
                         "url": items[0].get("facebookUrl") or items[0].get("pageUrl"),
                         "id": page_id,
-                        "profile_picture": profile_pic,
+                        # Store both: CDN URL (needs download) and Graph API URL (fallback)
+                        "profile_picture": profile_pic_cdn,  # Primary: real pic from Apify
+                        "profile_picture_graph": profile_pic_graph,  # Fallback: Graph API
                     }
 
             result.scraped_at = datetime.now()
@@ -291,8 +302,25 @@ class FacebookScraperService:
         elif isinstance(timestamp, str):
             timestamp = timestamp
 
-        # Extract images
+        # Extract images from multiple possible fields
         images = []
+        
+        # 1. Check 'media' field (most common in Apify response)
+        media_items = item.get("media", [])
+        if isinstance(media_items, list):
+            for media in media_items:
+                if isinstance(media, dict):
+                    # Get the best quality image URL
+                    # Priority: photo_image.uri > thumbnail > first_frame_thumbnail (for videos)
+                    photo_image = media.get("photo_image", {})
+                    if isinstance(photo_image, dict) and photo_image.get("uri"):
+                        images.append(photo_image["uri"])
+                    elif media.get("thumbnail"):
+                        images.append(media["thumbnail"])
+                    elif media.get("first_frame_thumbnail"):  # Video thumbnail
+                        images.append(media["first_frame_thumbnail"])
+        
+        # 2. Check legacy 'thumb' and 'images' fields
         if item.get("thumb"):
             images.append(item["thumb"])
         if item.get("images"):
@@ -505,7 +533,7 @@ def get_facebook_url_type(url: str) -> Optional[FacebookScraperType]:
         return "posts"
 
 
-def extract_images_from_facebook_content(content: FacebookScrapedContent, include_profile_pic: bool = True) -> List[str]:
+def extract_images_from_facebook_content(content: FacebookScrapedContent, include_profile_pic: bool = True) -> tuple[List[str], Optional[str]]:
     """
     Extract all image URLs from Facebook scraped content.
     
@@ -516,15 +544,21 @@ def extract_images_from_facebook_content(content: FacebookScrapedContent, includ
         include_profile_pic: Whether to include profile picture as first image
         
     Returns:
-        List of image URLs (profile picture first, then post images)
+        Tuple of (list of CDN image URLs, Graph API profile pic URL as fallback)
+        CDN URLs need to be downloaded immediately, Graph API URL is permanent
     """
     images = []
+    graph_api_fallback = None
     
     # Add profile picture first (best for avatar)
     if include_profile_pic and content.page_info:
-        profile_pic = content.page_info.get("profile_picture")
-        if profile_pic:
-            images.append(profile_pic)
+        # Primary: CDN URL from Apify (real profile pic, but expires)
+        profile_pic_cdn = content.page_info.get("profile_picture")
+        if profile_pic_cdn:
+            images.append(profile_pic_cdn)
+        
+        # Fallback: Graph API URL (permanent redirect, may be default avatar)
+        graph_api_fallback = content.page_info.get("profile_picture_graph")
     
     # Then add post images
     for post in content.posts:
@@ -539,10 +573,10 @@ def extract_images_from_facebook_content(content: FacebookScrapedContent, includ
             seen.add(img)
             unique_images.append(img)
     
-    return unique_images
+    return unique_images, graph_api_fallback
 
 
-def get_facebook_avatar(content: FacebookScrapedContent) -> Optional[str]:
+def get_facebook_avatar(content: FacebookScrapedContent) -> tuple[Optional[str], Optional[str]]:
     """
     Get the profile picture URL from Facebook scraped content.
     
@@ -553,11 +587,15 @@ def get_facebook_avatar(content: FacebookScrapedContent) -> Optional[str]:
         content: Scraped Facebook content
         
     Returns:
-        Profile picture URL or None
+        Tuple of (CDN profile pic URL, Graph API fallback URL)
+        CDN URL is the real profile pic but expires; Graph API is permanent but may be default
     """
     if content.page_info:
-        return content.page_info.get("profile_picture")
-    return None
+        return (
+            content.page_info.get("profile_picture"),
+            content.page_info.get("profile_picture_graph")
+        )
+    return None, None
 
 
 async def scrape_facebook_for_source(
@@ -598,44 +636,42 @@ async def scrape_facebook_for_source(
         raise ValueError(f"Failed to scrape Facebook: {content.error}")
     
     formatted = format_facebook_content_for_llm(content)
-    images = extract_images_from_facebook_content(content)
+    cdn_images, graph_api_url = extract_images_from_facebook_content(content)
     
-    # Process images:
-    # - Graph API URLs (profile pictures) are permanent redirect URLs - keep them as-is
-    # - CDN URLs (post images) have expiring signatures - try to download them
+    # Strategy for images:
+    # 1. Graph API URL for avatar (first position) - permanent, always works
+    # 2. Try to download CDN images (post images) - may fail due to expiring signatures
     final_image_urls = []
-    cdn_images_to_download = []
     
-    for img_url in images:
-        if "graph.facebook.com" in img_url:
-            # Graph API URLs are permanent redirects - no need to download
-            final_image_urls.append(img_url)
-            logger.debug(f"✅ Using Graph API URL (permanent): {img_url}")
-        else:
-            # CDN URLs need to be downloaded before signatures expire
-            cdn_images_to_download.append(img_url)
+    # Always use Graph API URL as the primary avatar (position 0)
+    # This is a permanent redirect URL that always works
+    if graph_api_url:
+        final_image_urls.append(graph_api_url)
+        logger.info(f"Using Graph API URL for avatar: {graph_api_url}")
     
-    # Download CDN images
-    if cdn_images_to_download:
+    # Try to download additional CDN images (skip first one if it's the profile pic)
+    other_cdn_images = cdn_images[1:] if cdn_images else []  # Skip profile pic
+    
+    if other_cdn_images:
         try:
             from services.image_downloader import download_images, get_image_url
-            logger.info(f"Downloading {len(cdn_images_to_download)} Facebook CDN images (signatures may expire)...")
-            download_results = await download_images(cdn_images_to_download, max_concurrent=3)
+            logger.info(f"Attempting to download {len(other_cdn_images)} additional CDN images...")
+            download_results = await download_images(other_cdn_images, max_concurrent=3)
             
             success_count = 0
-            for original_url, local_file in download_results.items():
+            for original_url in other_cdn_images:
+                local_file = download_results.get(original_url)
                 if local_file:
                     final_image_urls.append(get_image_url(local_file))
                     success_count += 1
                     logger.debug(f"✅ Downloaded: {original_url[:60]}... -> {local_file}")
-                else:
-                    # Keep original URL as fallback (may not work if signature expired)
-                    final_image_urls.append(original_url)
-                    logger.warning(f"⚠️ Download failed (signature may have expired): {original_url[:60]}...")
+                # Skip failed downloads - CDN signatures expire quickly
             
-            logger.info(f"Downloaded {success_count}/{len(cdn_images_to_download)} CDN images successfully.")
+            if success_count > 0:
+                logger.info(f"Downloaded {success_count}/{len(other_cdn_images)} additional images.")
+            else:
+                logger.warning("All CDN image downloads failed (signatures likely expired)")
         except Exception as download_error:
-            logger.error(f"Image download process failed: {download_error}", exc_info=True)
-            final_image_urls.extend(cdn_images_to_download)
+            logger.warning(f"Image download failed: {download_error}")
     
     return formatted, final_image_urls
