@@ -100,6 +100,33 @@ class ShareController(Controller):
             card = await get_character_card_by_project(share.project_id)
             if card and card.avatar_url:
                 avatar_url = card.avatar_url
+                
+                # If avatar is a local/relative URL (e.g., /api/images/xxx.jpg), 
+                # external apps can't download it. We need a full public URL.
+                if avatar_url.startswith("/api/images/") or avatar_url.startswith("/api/"):
+                    import os
+                    from db.sources import list_sources_by_project
+                    
+                    # First, try to find a Graph API URL (public and permanent)
+                    graph_api_url = None
+                    sources = await list_sources_by_project(share.project_id)
+                    for source in sources:
+                        if source.all_image_url:
+                            for img_url in source.all_image_url:
+                                if "graph.facebook.com" in img_url:
+                                    graph_api_url = img_url
+                                    break
+                        if graph_api_url:
+                            break
+                    
+                    if graph_api_url:
+                        # Use Graph API URL (best option - public and permanent)
+                        avatar_url = graph_api_url
+                    else:
+                        # Fallback: convert relative path to full URL using BASE_URL
+                        base_url = os.environ.get("BASE_URL", "https://world2-autogen.onrender.com")
+                        avatar_url = f"{base_url.rstrip('/')}{avatar_url}"
+                
                 base_params_with_avatar = {**base_params, "avatar": avatar_url}
             else:
                 base_params_with_avatar = base_params
