@@ -154,6 +154,20 @@ const theme = createTheme({
         },
       },
     },
+    Modal: {
+      styles: {
+        content: {
+          background: 'linear-gradient(180deg, #1e1f24 0%, #171820 100%)',
+          border: '1px solid rgba(255, 192, 203, 0.15)',
+        },
+        header: {
+          background: 'transparent',
+        },
+        body: {
+          background: 'transparent',
+        },
+      },
+    },
   },
 });
 
