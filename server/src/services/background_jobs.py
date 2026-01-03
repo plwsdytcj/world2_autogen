@@ -302,6 +302,27 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                     tx=tx,
                 )
 
+    # Auto-update avatar_url for character projects after fetching
+    if project.project_type == ProjectType.CHARACTER:
+        try:
+            # Get all fetched sources and find the first available image
+            all_sources = await list_sources_by_project(project.id)
+            first_image_url = None
+            for source in all_sources:
+                if source.all_image_url and len(source.all_image_url) > 0:
+                    first_image_url = source.all_image_url[0]
+                    break
+            
+            if first_image_url:
+                # Update CharacterCard's avatar_url
+                from db.character_cards import get_character_card_by_project, update_character_card, UpdateCharacterCard
+                card = await get_character_card_by_project(project.id)
+                if card:
+                    await update_character_card(card.id, UpdateCharacterCard(avatar_url=first_image_url))
+                    logger.info(f"[{job.id}] Auto-updated avatar_url to: {first_image_url}")
+        except Exception as avatar_err:
+            logger.warning(f"[{job.id}] Failed to auto-update avatar_url: {avatar_err}")
+
     async with (await get_db_connection()).transaction() as tx:
         await update_job_with_notification(
             job.id,
