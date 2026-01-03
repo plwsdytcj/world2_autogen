@@ -66,24 +66,39 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
       const full = universalPath.startsWith('http') ? universalPath : `${base}${universalPath}`;
       setShareLink(full);
       setSchemeLink(scheme || null);
-      // Prefer avatar from card; fallback to "avatar" query in scheme returned by backend
-      let avatar = cardResp?.data?.avatar_url || undefined;
-      if (!avatar && scheme) {
+      
+      // Get avatar URL - prefer backend's processed avatar (which handles local→public conversion)
+      let avatar: string | undefined = undefined;
+      
+      // First try to get avatar from backend response (already processed)
+      if (scheme) {
         try {
           const qm = scheme.indexOf('?');
           if (qm >= 0) {
-          const qs = scheme.slice(qm + 1);
-          const p = new URLSearchParams(qs);
-          const v = p.get('avatar');
-          if (v) {
-            try {
-              avatar = decodeURIComponent(v);
-            } catch {
-              avatar = v;
+            const qs = scheme.slice(qm + 1);
+            const p = new URLSearchParams(qs);
+            const v = p.get('avatar');
+            if (v) {
+              try {
+                avatar = decodeURIComponent(v);
+              } catch {
+                avatar = v;
+              }
             }
           }
-          }
         } catch {}
+      }
+      
+      // Fallback to card's avatar_url if backend didn't provide one
+      if (!avatar && cardResp?.data?.avatar_url) {
+        avatar = cardResp.data.avatar_url;
+      }
+      
+      // If avatar is a relative path, convert to full URL
+      if (avatar && avatar.startsWith('/')) {
+        // Use production URL for external app access
+        const prodBase = 'https://world2-autogen.onrender.com';
+        avatar = `${prodBase}${avatar}`;
       }
       // Avoid double-encoding avatar by removing it from Universal Link used inside deep link
       let fullNoAvatar = full;
