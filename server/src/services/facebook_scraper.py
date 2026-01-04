@@ -639,22 +639,41 @@ async def scrape_facebook_for_source(
     cdn_images, graph_api_url = extract_images_from_facebook_content(content)
     
     # Strategy for images:
-    # 1. Graph API URL for avatar (first position) - permanent, always works
-    # 2. Try to download CDN images (post images) - may fail due to expiring signatures
+    # 1. Try to download the REAL profile pic from CDN (from Apify) - best quality
+    # 2. If CDN download fails, fallback to Graph API URL (may show default avatar)
+    # 3. Download other post images
     final_image_urls = []
     
-    # Always use Graph API URL as the primary avatar (position 0)
-    # This is a permanent redirect URL that always works
-    if graph_api_url:
-        final_image_urls.append(graph_api_url)
-        logger.info(f"Using Graph API URL for avatar: {graph_api_url}")
+    from services.image_downloader import download_images, get_image_url
     
-    # Try to download additional CDN images (skip first one if it's the profile pic)
-    other_cdn_images = cdn_images[1:] if cdn_images else []  # Skip profile pic
+    # First: Try to download the real profile picture from CDN
+    profile_pic_cdn = cdn_images[0] if cdn_images else None
+    avatar_url = None
+    
+    if profile_pic_cdn:
+        try:
+            logger.info(f"Attempting to download real profile pic from CDN...")
+            download_results = await download_images([profile_pic_cdn], max_concurrent=1)
+            local_file = download_results.get(profile_pic_cdn)
+            if local_file:
+                avatar_url = get_image_url(local_file)
+                logger.info(f"✅ Downloaded real profile pic: {local_file}")
+        except Exception as e:
+            logger.warning(f"Failed to download CDN profile pic: {e}")
+    
+    # Fallback: Use Graph API URL if CDN download failed
+    if not avatar_url and graph_api_url:
+        avatar_url = graph_api_url
+        logger.info(f"Using Graph API URL as fallback avatar: {graph_api_url}")
+    
+    if avatar_url:
+        final_image_urls.append(avatar_url)
+    
+    # Then: Try to download additional CDN images (post images)
+    other_cdn_images = cdn_images[1:] if cdn_images else []
     
     if other_cdn_images:
         try:
-            from services.image_downloader import download_images, get_image_url
             logger.info(f"Attempting to download {len(other_cdn_images)} additional CDN images...")
             download_results = await download_images(other_cdn_images, max_concurrent=3)
             

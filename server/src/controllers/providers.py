@@ -57,7 +57,7 @@ class ProviderController(Controller):
 
         all_credentials = await list_credentials()
         provider_info_tasks = []
-        
+
         # Add Apify as a special non-LLM provider for Facebook scraping
         apify_credential = next(
             (c for c in all_credentials if c.provider_type == "apify"), None

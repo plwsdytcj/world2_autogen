@@ -19,6 +19,7 @@ class ProjectSource(BaseModel):
     url_exclusion_patterns: Optional[List[str]] = None
     max_pages_to_crawl: int = 20
     max_crawl_depth: int = 1
+    facebook_results_limit: int = 20  # Number of Facebook posts to scrape
     last_crawled_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -33,6 +34,7 @@ class CreateProjectSource(BaseModel):
     url: str
     max_pages_to_crawl: int = 20
     max_crawl_depth: int = 1
+    facebook_results_limit: int = 20
     url_exclusion_patterns: Optional[List[str]] = None
 
 
@@ -43,6 +45,7 @@ class UpdateProjectSource(BaseModel):
     url_exclusion_patterns: Optional[List[str]] = None
     max_pages_to_crawl: Optional[int] = None
     max_crawl_depth: Optional[int] = None
+    facebook_results_limit: Optional[int] = None
     last_crawled_at: Optional[datetime] = None
     raw_content: Optional[str] = None
     content_type: Optional[ContentType] = None
@@ -56,8 +59,8 @@ async def create_project_source(
     db = tx or await get_db_connection()
     source_id = uuid4()
     query = """
-        INSERT INTO "ProjectSource" (id, project_id, url, max_pages_to_crawl, max_crawl_depth, url_exclusion_patterns)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO "ProjectSource" (id, project_id, url, max_pages_to_crawl, max_crawl_depth, facebook_results_limit, url_exclusion_patterns)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         RETURNING *
     """
     params = (
@@ -66,6 +69,7 @@ async def create_project_source(
         source.url,
         source.max_pages_to_crawl,
         source.max_crawl_depth,
+        source.facebook_results_limit,
         source.url_exclusion_patterns,
     )
     result = await db.execute_and_fetch_one(query, params)

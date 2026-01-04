@@ -107,6 +107,7 @@ export interface ProjectSource {
   url_exclusion_patterns?: string[];
   max_pages_to_crawl: number;
   max_crawl_depth: number;
+  facebook_results_limit: number; // Number of Facebook posts to scrape
   last_crawled_at?: string;
   created_at: string;
   updated_at: string;

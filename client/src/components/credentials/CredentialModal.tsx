@@ -245,55 +245,55 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
               {/* Hide model selection and testing for Apify */}
               {!isApify && (
                 <>
-                  <Group justify="space-between" align="flex-end" wrap="nowrap">
-                    {isOaiCompatible ? (
-                      <TextInput
-                        label={t('creds.testModel')}
-                        description={t('creds.testModelDesc')}
-                        placeholder="e.g., llama3"
-                        value={testModelName}
-                        onChange={(e) => setTestModelName(e.currentTarget.value)}
-                        style={{ flexGrow: 1 }}
-                      />
-                    ) : (
-                      <Select
-                        label={t('creds.testModel')}
-                        description={t('creds.testModelDesc')}
-                        placeholder={t('creds.selectModel')}
-                        data={modelOptions}
-                        value={testModelName}
-                        onChange={(value) => setTestModelName(value || '')}
-                        searchable
-                        comboboxProps={{ zIndex: 1002 }}
-                        rightSection={isLoadingProviders || fetchModelsMutation.isPending ? <Loader size="xs" /> : null}
-                        style={{ flexGrow: 1 }}
-                      />
-                    )}
-                    <Tooltip label={t('creds.refreshModels')} withArrow zIndex={1002}>
-                      <ActionIcon
-                        variant="default"
-                        size="input-sm"
-                        onClick={handleRefreshModels}
-                        loading={fetchModelsMutation.isPending}
-                        disabled={!canRefresh}
-                      >
-                        <IconRefresh size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
+              <Group justify="space-between" align="flex-end" wrap="nowrap">
+                {isOaiCompatible ? (
+                  <TextInput
+                    label={t('creds.testModel')}
+                    description={t('creds.testModelDesc')}
+                    placeholder="e.g., llama3"
+                    value={testModelName}
+                    onChange={(e) => setTestModelName(e.currentTarget.value)}
+                    style={{ flexGrow: 1 }}
+                  />
+                ) : (
+                  <Select
+                    label={t('creds.testModel')}
+                    description={t('creds.testModelDesc')}
+                    placeholder={t('creds.selectModel')}
+                    data={modelOptions}
+                    value={testModelName}
+                    onChange={(value) => setTestModelName(value || '')}
+                    searchable
+                    comboboxProps={{ zIndex: 1002 }}
+                    rightSection={isLoadingProviders || fetchModelsMutation.isPending ? <Loader size="xs" /> : null}
+                    style={{ flexGrow: 1 }}
+                  />
+                )}
+                <Tooltip label={t('creds.refreshModels')} withArrow zIndex={1002}>
+                  <ActionIcon
+                    variant="default"
+                    size="input-sm"
+                    onClick={handleRefreshModels}
+                    loading={fetchModelsMutation.isPending}
+                    disabled={!canRefresh}
+                  >
+                    <IconRefresh size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
 
-                  <Stack gap="xs" mt="sm">
-                    <Text size="sm" fw={500}>{t('creds.jsonTestMode')}</Text>
-                    <SegmentedControl
-                      fullWidth
-                      value={jsonMode}
-                      onChange={(value) => setJsonMode(value as 'api_native' | 'prompt_engineering')}
-                      data={[
-                        { label: t('creds.apiNative'), value: 'api_native' },
-                        { label: t('creds.promptEng'), value: 'prompt_engineering' },
-                      ]}
-                    />
-                  </Stack>
+              <Stack gap="xs" mt="sm">
+                <Text size="sm" fw={500}>{t('creds.jsonTestMode')}</Text>
+                <SegmentedControl
+                  fullWidth
+                  value={jsonMode}
+                  onChange={(value) => setJsonMode(value as 'api_native' | 'prompt_engineering')}
+                  data={[
+                    { label: t('creds.apiNative'), value: 'api_native' },
+                    { label: t('creds.promptEng'), value: 'prompt_engineering' },
+                  ]}
+                />
+              </Stack>
                 </>
               )}
             </>
@@ -302,14 +302,14 @@ export function CredentialModal({ opened, onClose, credential, onSuccess }: Cred
           <Group justify="flex-end" mt="md">
             {/* Hide test button for Apify (not an LLM provider) */}
             {!isApify && (
-              <Button
-                variant="outline"
-                onClick={handleTest}
-                loading={testCredentialMutation.isPending}
-                disabled={!isTestable}
-              >
-                {t('creds.test')}
-              </Button>
+            <Button
+              variant="outline"
+              onClick={handleTest}
+              loading={testCredentialMutation.isPending}
+              disabled={!isTestable}
+            >
+              {t('creds.test')}
+            </Button>
             )}
             <Button variant="default" onClick={onClose}>
               {t('common.cancel')}

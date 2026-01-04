@@ -75,16 +75,16 @@ export function ExportToMobileModal({ opened, onClose, projectId, contentType, d
         try {
           const qm = scheme.indexOf('?');
           if (qm >= 0) {
-            const qs = scheme.slice(qm + 1);
-            const p = new URLSearchParams(qs);
-            const v = p.get('avatar');
-            if (v) {
-              try {
-                avatar = decodeURIComponent(v);
-              } catch {
-                avatar = v;
-              }
+          const qs = scheme.slice(qm + 1);
+          const p = new URLSearchParams(qs);
+          const v = p.get('avatar');
+          if (v) {
+            try {
+              avatar = decodeURIComponent(v);
+            } catch {
+              avatar = v;
             }
+          }
           }
         } catch {}
       }

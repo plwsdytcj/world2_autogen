@@ -23,6 +23,7 @@ interface SourceFormValues {
   url: string;
   max_pages_to_crawl: number;
   max_crawl_depth: number;
+  facebook_results_limit: number;
   link_extraction_selector: string;
   link_extraction_pagination_selector: string;
   url_exclusion_patterns: string;
@@ -42,6 +43,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
       url: '',
       max_pages_to_crawl: 20,
       max_crawl_depth: 1,
+      facebook_results_limit: 20,
       link_extraction_selector: '',
       link_extraction_pagination_selector: '',
       url_exclusion_patterns: '',
@@ -66,6 +68,7 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
         url: source.url,
         max_pages_to_crawl: source.max_pages_to_crawl,
         max_crawl_depth: source.max_crawl_depth,
+        facebook_results_limit: source.facebook_results_limit || 20,
         link_extraction_selector: (source.link_extraction_selector || []).join('\n'),
         link_extraction_pagination_selector: source.link_extraction_pagination_selector || '',
         url_exclusion_patterns: (source.url_exclusion_patterns || []).join('\n'),
@@ -121,6 +124,17 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
   const isLoading = createSourceMutation.isPending || updateSourceMutation.isPending;
   const isLorebookProject = projectType === 'lorebook';
 
+  // Check if the URL is a Facebook URL
+  const isFacebookUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.includes('facebook.com') || parsed.hostname.includes('fb.com');
+    } catch {
+      return false;
+    }
+  };
+  const showFacebookOptions = isFacebookUrl(form.values.url);
+
   return (
     <Modal
       opened={opened}
@@ -142,6 +156,16 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
             description={t('sources.urlDesc')}
             {...form.getInputProps('url')}
           />
+
+          {showFacebookOptions && (
+            <NumberInput
+              label={t('sources.facebookPostsLimit') || 'Facebook Posts Limit'}
+              description={t('sources.facebookPostsLimitDesc') || 'Number of posts to scrape from the Facebook page (1-100)'}
+              min={1}
+              max={100}
+              {...form.getInputProps('facebook_results_limit')}
+            />
+          )}
 
           {isLorebookProject && (
             <>

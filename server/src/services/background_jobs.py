@@ -196,8 +196,10 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                 try:
                     # scrape_facebook_for_source now downloads images immediately after scraping
                     # while URLs are still valid from Apify
+                    # Use the user-configured results_limit from source settings
+                    fb_results_limit = source.facebook_results_limit if source.facebook_results_limit else 20
                     content, fb_images = await scrape_facebook_for_source(
-                        source.url, results_limit=20
+                        source.url, results_limit=fb_results_limit
                     )
                     content_type = "markdown"
                     all_image_url = fb_images if fb_images else None
@@ -424,7 +426,14 @@ async def generate_character_card(job: BackgroundJob, project: Project):
 
     # For CHARACTER_LOREBOOK projects, also generate lorebook entries
     if project.project_type == ProjectType.CHARACTER_LOREBOOK:
-        await _generate_lorebook_from_character_content(job, project, all_content, provider)
+        logger.info(f"[{job.id}] Project type is CHARACTER_LOREBOOK, generating lorebook entries...")
+        try:
+            await _generate_lorebook_from_character_content(job, project, all_content, provider)
+        except Exception as lorebook_error:
+            logger.error(f"[{job.id}] Failed to generate lorebook entries: {lorebook_error}", exc_info=True)
+            # Don't fail the whole job, but log the error
+    else:
+        logger.info(f"[{job.id}] Project type is {project.project_type}, skipping lorebook generation")
 
     async with (await get_db_connection()).transaction() as tx:
         await update_project(

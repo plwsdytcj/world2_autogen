@@ -25,7 +25,7 @@ export function CharacterWorkspace({ project }: CharacterWorkspaceProps) {
         </Grid.Col>
         <Grid.Col span={{ base: 12, lg: 7 }}>
           <Stack>
-            <CharacterEditor project={project} selectedSourceIds={selectedSourceIds} />
+          <CharacterEditor project={project} selectedSourceIds={selectedSourceIds} />
             {isCharacterLorebook && <CharacterLorebookEntries project={project} />}
           </Stack>
         </Grid.Col>
