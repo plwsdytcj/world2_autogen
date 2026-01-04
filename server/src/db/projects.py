@@ -13,6 +13,7 @@ from db.database import AsyncDBTransaction
 class ProjectType(str, Enum):
     LOREBOOK = "lorebook"
     CHARACTER = "character"
+    CHARACTER_LOREBOOK = "character_lorebook"  # Combined: generates both character card and lorebook
 
 
 class SearchParams(BaseModel):
@@ -46,6 +47,12 @@ class ProjectTemplates(BaseModel):
     character_field_regeneration: Optional[str] = Field(
         None,
         description="The prompt used to regenerate a single field of a character card.",
+    )
+
+    # Character + Lorebook combined templates
+    character_lorebook_generation: Optional[str] = Field(
+        None,
+        description="The prompt used to generate lorebook entries from character source material.",
     )
 
 

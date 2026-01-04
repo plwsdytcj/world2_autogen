@@ -94,3 +94,17 @@ class RegeneratedFieldResponse(BaseModel):
     new_content: str = Field(
         ..., description="The newly generated text for the requested field."
     )
+
+
+class CharacterLorebookEntriesResponse(BaseModel):
+    """
+    Represents the response when generating lorebook entries from character source content.
+    Used for CHARACTER_LOREBOOK project type.
+    """
+
+    entries: List[LorebookEntryData] = Field(
+        ...,
+        description="A list of lorebook entries generated from the character's source content. "
+                    "Should include entries for: background/history, personality traits, "
+                    "relationships, locations, events, and other relevant lore.",
+    )

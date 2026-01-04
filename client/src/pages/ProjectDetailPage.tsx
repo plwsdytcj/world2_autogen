@@ -100,7 +100,8 @@ export function ProjectDetailPage() {
   });
 
   const renderWorkspace = () => {
-    if (project.project_type === 'character') {
+    // CHARACTER_LOREBOOK uses the same workspace as CHARACTER but generates lorebook entries as well
+    if (project.project_type === 'character' || project.project_type === 'character_lorebook') {
       return <CharacterWorkspace project={project} />;
     }
 

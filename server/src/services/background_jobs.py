@@ -87,6 +87,7 @@ from providers.index import (
 )
 from schemas import (
     CharacterCardData,
+    CharacterLorebookEntriesResponse,
     LorebookEntryResponse,
     RegeneratedFieldResponse,
     SearchParamsResponse,
@@ -215,7 +216,7 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                         source.url, type="markdown", clean=True
                     )
                     content_type = "markdown"
-            elif project.project_type == ProjectType.CHARACTER:
+            elif project.project_type in (ProjectType.CHARACTER, ProjectType.CHARACTER_LOREBOOK):
                 # For character projects, also try to extract a reference image URL from raw HTML.
                 # 1) Get cleaned markdown for content display
                 content = await scraper.get_content(
@@ -421,6 +422,11 @@ async def generate_character_card(job: BackgroundJob, project: Project):
         )
         await send_character_card_update_notification(project.id, updated_card)
 
+    # For CHARACTER_LOREBOOK projects, also generate lorebook entries
+    if project.project_type == ProjectType.CHARACTER_LOREBOOK:
+        await _generate_lorebook_from_character_content(job, project, all_content, provider)
+
+    async with (await get_db_connection()).transaction() as tx:
         await update_project(
             project.id, UpdateProject(status=ProjectStatus.completed), tx=tx
         )
@@ -431,6 +437,113 @@ async def generate_character_card(job: BackgroundJob, project: Project):
             ),
             tx=tx,
         )
+
+
+async def _generate_lorebook_from_character_content(
+    job: BackgroundJob, project: Project, content: str, provider
+):
+    """
+    Generate lorebook entries from character source content.
+    Used for CHARACTER_LOREBOOK project type.
+    """
+    logger.info(f"[{job.id}] Generating lorebook entries for CHARACTER_LOREBOOK project")
+    
+    global_templates = await list_all_global_templates()
+    globals_dict = {gt.name: gt.content for gt in global_templates}
+    
+    # Use character_lorebook_generation template if available, otherwise use a default prompt
+    template = project.templates.character_lorebook_generation
+    if not template:
+        # Default template for generating lorebook entries from character content
+        template = """You are a creative writer helping to build a lorebook for a roleplay character.
+
+Based on the following source content about a character, generate a list of lorebook entries.
+Each entry should capture important information that would be useful during roleplay.
+
+Generate entries for:
+- Character background/history
+- Key personality traits
+- Important relationships
+- Significant locations
+- Notable events or memories
+- Any other relevant lore
+
+Source Content:
+{{ content }}
+
+Generate 5-10 relevant lorebook entries. Each entry should have:
+- A clear title
+- Detailed content (2-4 sentences)
+- 3-5 keywords that would trigger this entry in conversation
+
+Respond with a JSON object containing an "entries" array."""
+
+    context = {
+        "project": project.model_dump(),
+        "content": content,
+        "globals": globals_dict,
+    }
+    
+    try:
+        response = await provider.generate(
+            ChatCompletionRequest(
+                model=project.model_name,
+                messages=create_messages_from_template(template, context),
+                response_format=ResponseSchema(
+                    name="character_lorebook_entries",
+                    schema_value=CharacterLorebookEntriesResponse.model_json_schema(),
+                ),
+                json_mode=JsonMode.prompt_engineering
+                if project.json_enforcement_mode == JsonEnforcementMode.prompt_engineering
+                else JsonMode.api_native,
+                **project.model_parameters,
+            )
+        )
+        
+        is_error = isinstance(response, ChatCompletionErrorResponse)
+        usage = response.usage if isinstance(response, ChatCompletionResponse) else None
+        
+        await create_api_request_log(
+            CreateApiRequestLog(
+                project_id=project.id,
+                job_id=job.id,
+                api_provider=provider.__class__.__name__,
+                model_used=project.model_name,
+                request=response.raw_request,
+                response=response.raw_response,
+                latency_ms=response.latency_ms,
+                error=is_error,
+                input_tokens=usage.prompt_tokens if usage else None,
+                output_tokens=usage.completion_tokens if usage else None,
+                calculated_cost=usage.cost if usage else None,
+            ),
+        )
+        
+        if is_error:
+            logger.error(f"[{job.id}] Failed to generate lorebook entries: {response.raw_response}")
+            return
+        
+        entries_response = CharacterLorebookEntriesResponse.model_validate(response.content)
+        
+        # Create lorebook entries
+        async with (await get_db_connection()).transaction() as tx:
+            for entry_data in entries_response.entries:
+                entry = await create_lorebook_entry(
+                    CreateLorebookEntry(
+                        project_id=project.id,
+                        title=entry_data.title,
+                        content=entry_data.content,
+                        keywords=entry_data.keywords,
+                        source_url=None,  # Generated from character content, not a specific URL
+                    ),
+                    tx=tx,
+                )
+                await send_entry_created_notification(job, entry)
+        
+        logger.info(f"[{job.id}] Created {len(entries_response.entries)} lorebook entries")
+        
+    except Exception as e:
+        logger.error(f"[{job.id}] Error generating lorebook entries: {e}", exc_info=True)
 
 
 async def regenerate_character_field(job: BackgroundJob, project: Project):

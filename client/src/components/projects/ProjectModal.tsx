@@ -24,7 +24,7 @@ import { useGlobalTemplates } from '../../hooks/useGlobalTemplates';
 import { LazyMonacoEditorInput } from '../common/LazyMonacoEditorInput';
 import { useCredentials } from '../../hooks/useCredentials';
 import { useDisclosure } from '@mantine/hooks';
-import { IconBook, IconPlus, IconRefresh, IconUser } from '@tabler/icons-react';
+import { IconBook, IconPlus, IconRefresh, IconUser, IconUserPlus } from '@tabler/icons-react';
 import { useI18n } from '../../i18n';
 import { CredentialModal } from '../credentials/CredentialModal';
 
@@ -73,6 +73,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
         entry_creation: '',
         character_generation: '',
         character_field_regeneration: '',
+        character_lorebook_generation: '',
       },
     },
     validate: {
@@ -96,6 +97,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
           entry_creation: project.templates.entry_creation || '',
           character_generation: project.templates.character_generation || '',
           character_field_regeneration: project.templates.character_field_regeneration || '',
+          character_lorebook_generation: project.templates.character_lorebook_generation || '',
         },
       });
       setSelectedCredentialId(project.credential_id || null);
@@ -130,6 +132,19 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
         form.setFieldValue('templates.search_params_generation', '');
         form.setFieldValue('templates.selector_generation', '');
         form.setFieldValue('templates.entry_creation', '');
+        form.setFieldValue('templates.character_lorebook_generation', '');
+      } else if (projectType === 'character_lorebook') {
+        // Character + Lorebook: needs both character templates and lorebook generation
+        form.setFieldValue('templates.character_generation', getTemplate('character-generation-prompt'));
+        form.setFieldValue(
+          'templates.character_field_regeneration',
+          getTemplate('character-field-regeneration-prompt')
+        );
+        form.setFieldValue('templates.character_lorebook_generation', getTemplate('character-lorebook-generation-prompt'));
+        // Clear traditional lorebook templates
+        form.setFieldValue('templates.search_params_generation', '');
+        form.setFieldValue('templates.selector_generation', '');
+        form.setFieldValue('templates.entry_creation', '');
       } else {
         form.setFieldValue('templates.search_params_generation', getTemplate('search-params-prompt'));
         form.setFieldValue('templates.selector_generation', getTemplate('selector-prompt'));
@@ -137,6 +152,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
         // Clear character-specific templates
         form.setFieldValue('templates.character_generation', '');
         form.setFieldValue('templates.character_field_regeneration', '');
+        form.setFieldValue('templates.character_lorebook_generation', '');
       }
     }
   };
@@ -226,6 +242,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
   );
 
   const isLorebook = form.values.project_type === 'lorebook';
+  const isCharacterLorebook = form.values.project_type === 'character_lorebook';
 
   const renderTemplateLabel = (label: string, onReset: () => void) => (
     <Group justify="space-between" w="100%">
@@ -276,6 +293,15 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                       <Group justify="center" gap="xs">
                         <IconUser size={16} />
                         <Text>{t('projects.type.character') || 'Character'}</Text>
+                      </Group>
+                    ),
+                  },
+                  {
+                    value: 'character_lorebook',
+                    label: (
+                      <Group justify="center" gap="xs">
+                        <IconUserPlus size={16} />
+                        <Text>{t('projects.type.characterLorebook') || 'Character + Lorebook'}</Text>
                       </Group>
                     ),
                   },
@@ -442,6 +468,16 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
                             height={200}
                             {...form.getInputProps('templates.character_field_regeneration')}
                           />
+                          {isCharacterLorebook && (
+                            <LazyMonacoEditorInput
+                              label={renderTemplateLabel(t('projects.template.characterLorebook') || 'Character Lorebook Generation', () =>
+                                handleResetTemplate('character_lorebook_generation', 'character-lorebook-generation-prompt')
+                              )}
+                              language="handlebars"
+                              height={200}
+                              {...form.getInputProps('templates.character_lorebook_generation')}
+                            />
+                          )}
                         </>
                       )}
                     </Stack>

@@ -9,6 +9,7 @@ export interface ProjectTemplates {
   search_params_generation?: string;
   character_generation?: string;
   character_field_regeneration?: string;
+  character_lorebook_generation?: string;
 }
 
 export interface SearchParams {
@@ -17,7 +18,7 @@ export interface SearchParams {
   criteria: string;
 }
 
-export type ProjectType = 'lorebook' | 'character';
+export type ProjectType = 'lorebook' | 'character' | 'character_lorebook';
 
 export type ProjectStatus =
   | 'draft'
