@@ -209,6 +209,7 @@ def _deserialize_job(db_row: Dict[str, Any]) -> BackgroundJob:
         TaskName.FETCH_SOURCE_CONTENT: FetchSourceContentPayload,
         TaskName.GENERATE_CHARACTER_CARD: GenerateCharacterCardPayload,
         TaskName.REGENERATE_CHARACTER_FIELD: RegenerateCharacterFieldPayload,
+        TaskName.GENERATE_LOREBOOK_ENTRIES: GenerateLorebookEntriesPayload,
     }
     if db_row.get("payload") is not None:
         try:
@@ -228,6 +229,7 @@ def _deserialize_job(db_row: Dict[str, Any]) -> BackgroundJob:
         TaskName.FETCH_SOURCE_CONTENT: FetchSourceContentResult,
         TaskName.GENERATE_CHARACTER_CARD: GenerateCharacterCardResult,
         TaskName.REGENERATE_CHARACTER_FIELD: RegenerateCharacterFieldResult,
+        TaskName.GENERATE_LOREBOOK_ENTRIES: GenerateLorebookEntriesResult,
     }
     if db_row.get("result") is not None:
         try:
