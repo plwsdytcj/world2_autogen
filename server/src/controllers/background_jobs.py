@@ -13,6 +13,7 @@ from db.background_jobs import (
     DiscoverAndCrawlSourcesPayload,
     FetchSourceContentPayload,
     GenerateCharacterCardPayload,
+    GenerateLorebookEntriesPayload,
     GenerateSearchParamsPayload,
     JobStatus,
     ProcessProjectEntriesPayload,
@@ -55,6 +56,11 @@ class ProcessEntriesJobPayload(BaseModel):
 
 
 class CreateGenerateCharacterJobPayload(BaseModel):
+    project_id: str
+    source_ids: Optional[List[UUID]] = None
+
+
+class CreateGenerateLorebookEntriesJobPayload(BaseModel):
     project_id: str
     source_ids: Optional[List[UUID]] = None
 
@@ -298,6 +304,23 @@ class BackgroundJobController(Controller):
                 task_name=TaskName.REGENERATE_CHARACTER_FIELD,
                 project_id=data.project_id,
                 payload=data,
+            )
+        )
+        return SingleResponse(data=job)
+
+    @post("/generate-lorebook-entries")
+    async def create_generate_lorebook_entries_job(
+        self, data: CreateGenerateLorebookEntriesJobPayload = Body()
+    ) -> SingleResponse[BackgroundJob]:
+        """Create a job to generate lorebook entries from source content."""
+        logger.debug(
+            f"Creating generate_lorebook_entries job for project {data.project_id}"
+        )
+        job = await db_create_background_job(
+            CreateBackgroundJob(
+                task_name=TaskName.GENERATE_LOREBOOK_ENTRIES,
+                project_id=data.project_id,
+                payload=GenerateLorebookEntriesPayload(source_ids=data.source_ids),
             )
         )
         return SingleResponse(data=job)

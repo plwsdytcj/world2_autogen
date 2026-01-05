@@ -111,6 +111,8 @@ export const useGenerateCharacterJob = () =>
   useJobMutation<GenerateCharacterCardPayload>('generate-character', 'Character Generation Started');
 export const useRegenerateFieldJob = () =>
   useJobMutation<RegenerateCharacterFieldPayload>('regenerate-field', 'Field Regeneration Started');
+export const useGenerateLorebookEntriesJob = () =>
+  useJobMutation<GenerateCharacterCardPayload>('generate-lorebook-entries', 'Lorebook Generation Started');
 
 // The confirm-links job for the confirmation step.
 interface ConfirmLinksPayload {

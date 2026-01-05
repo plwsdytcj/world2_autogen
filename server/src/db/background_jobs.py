@@ -32,6 +32,7 @@ class TaskName(str, Enum):
     FETCH_SOURCE_CONTENT = "fetch_source_content"
     GENERATE_CHARACTER_CARD = "generate_character_card"
     REGENERATE_CHARACTER_FIELD = "regenerate_character_field"
+    GENERATE_LOREBOOK_ENTRIES = "generate_lorebook_entries"
 
 
 PARALLEL_LIMITS = {
@@ -90,6 +91,7 @@ TaskPayload = Union[
     FetchSourceContentPayload,
     GenerateCharacterCardPayload,
     RegenerateCharacterFieldPayload,
+    GenerateLorebookEntriesPayload,
 ]
 
 
@@ -137,6 +139,14 @@ class RegenerateCharacterFieldResult(BaseModel):
     field_regenerated: str
 
 
+class GenerateLorebookEntriesPayload(BaseModel):
+    source_ids: Optional[List[UUID]] = None
+
+
+class GenerateLorebookEntriesResult(BaseModel):
+    entries_created: int
+
+
 TaskResult = Union[
     DiscoverAndCrawlSourcesResult,
     ConfirmLinksResult,
@@ -145,6 +155,7 @@ TaskResult = Union[
     FetchSourceContentResult,
     GenerateCharacterCardResult,
     RegenerateCharacterFieldResult,
+    GenerateLorebookEntriesResult,
 ]
 
 

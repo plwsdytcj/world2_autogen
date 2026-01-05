@@ -186,7 +186,8 @@ export type TaskName =
   | 'rescan_links'
   | 'fetch_source_content'
   | 'generate_character_card'
-  | 'regenerate_character_field';
+  | 'regenerate_character_field'
+  | 'generate_lorebook_entries';
 
 export interface ProcessProjectEntriesPayload {
   project_id: string;

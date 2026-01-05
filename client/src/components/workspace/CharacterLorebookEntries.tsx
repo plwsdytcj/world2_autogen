@@ -15,7 +15,7 @@ import {
   Badge,
   Title,
 } from '@mantine/core';
-import { IconAlertCircle, IconDownload, IconPencil, IconTrash, IconSearch, IconDeviceMobile } from '@tabler/icons-react';
+import { IconAlertCircle, IconDownload, IconPencil, IconTrash, IconSearch, IconDeviceMobile, IconSparkles } from '@tabler/icons-react';
 import { useProjectEntries } from '../../hooks/useProjectEntries';
 import type { LorebookEntry, Project } from '../../types';
 import apiClient from '../../services/api';
@@ -25,6 +25,9 @@ import { useDeleteLorebookEntry } from '../../hooks/useLorebookEntryMutations';
 import { useDebouncedValue, useDisclosure } from '@mantine/hooks';
 import { LorebookEntryModal } from './LorebookEntryModal';
 import { ExportToMobileModal } from '../common/ExportToMobileModal';
+import { useGenerateLorebookEntriesJob } from '../../hooks/useJobMutations';
+import { useLatestJob } from '../../hooks/useProjectJobs';
+import { JobStatusIndicator } from '../common/JobStatusIndicator';
 import { useI18n } from '../../i18n';
 
 interface CharacterLorebookEntriesProps {
@@ -63,6 +66,14 @@ export function CharacterLorebookEntries({ project }: CharacterLorebookEntriesPr
   const [isDownloading, setIsDownloading] = useState(false);
   const modals = useModals();
   const deleteEntryMutation = useDeleteLorebookEntry(project.id);
+  
+  const generateLorebookMutation = useGenerateLorebookEntriesJob();
+  const { job: generateLorebookJob } = useLatestJob(project.id, 'generate_lorebook_entries');
+  const isGeneratingLorebook = generateLorebookJob?.status === 'pending' || generateLorebookJob?.status === 'in_progress';
+  
+  const handleGenerateLorebook = () => {
+    generateLorebookMutation.mutate({ project_id: project.id });
+  };
 
   const openDeleteModal = (entryId: string, entryTitle: string) =>
     modals.openConfirmModal({
@@ -171,14 +182,29 @@ export function CharacterLorebookEntries({ project }: CharacterLorebookEntriesPr
             size="xs"
           />
 
+          {generateLorebookJob && (
+            <JobStatusIndicator job={generateLorebookJob} title={t('characterLorebook.jobStatus') || 'Lorebook Generation Status'} />
+          )}
+
           {isLoading ? (
             <Center p="xl">
               <Loader />
             </Center>
           ) : totalItems === 0 ? (
-            <Text c="dimmed" ta="center" p="md" size="sm">
-              {t('characterLorebook.empty') || 'No lorebook entries yet. Generate a character card to auto-generate entries.'}
-            </Text>
+            <Stack align="center" p="md" gap="sm">
+              <Text c="dimmed" size="sm">
+                {t('characterLorebook.emptyDesc') || 'No lorebook entries yet.'}
+              </Text>
+              <Button
+                leftSection={<IconSparkles size={16} />}
+                onClick={handleGenerateLorebook}
+                loading={isGeneratingLorebook}
+                disabled={isGeneratingLorebook}
+                variant="light"
+              >
+                {t('characterLorebook.generate') || 'Generate Lorebook Entries'}
+              </Button>
+            </Stack>
           ) : (
             <>
               <Table striped highlightOnHover withTableBorder withColumnBorders>

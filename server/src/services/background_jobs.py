@@ -20,6 +20,8 @@ from db.background_jobs import (
     FetchSourceContentResult,
     GenerateCharacterCardPayload,
     GenerateCharacterCardResult,
+    GenerateLorebookEntriesPayload,
+    GenerateLorebookEntriesResult,
     GenerateSearchParamsResult,
     JobStatus,
     ProcessProjectEntriesPayload,
@@ -550,9 +552,68 @@ Respond with a JSON object containing an "entries" array."""
                 await send_entry_created_notification(job, entry)
         
         logger.info(f"[{job.id}] Created {len(entries_response.entries)} lorebook entries")
+        return len(entries_response.entries)
         
     except Exception as e:
         logger.error(f"[{job.id}] Error generating lorebook entries: {e}", exc_info=True)
+        raise
+
+
+async def generate_lorebook_entries(job: BackgroundJob, project: Project):
+    """
+    Standalone job to generate lorebook entries from source content.
+    Can be used for CHARACTER_LOREBOOK projects to regenerate entries.
+    """
+    if not isinstance(job.payload, GenerateLorebookEntriesPayload):
+        raise TypeError("Invalid payload for generate_lorebook_entries job.")
+
+    # Get sources
+    if job.payload.source_ids:
+        source_futures = [get_project_source(sid) for sid in job.payload.source_ids]
+        sources = await asyncio.gather(*source_futures)
+        sources = [s for s in sources if s]
+    else:
+        sources = await list_sources_by_project(project.id, include_content=True)
+    
+    fetched_sources = [s for s in sources if s.raw_content]
+
+    if not fetched_sources:
+        raise ValueError(
+            "No fetched content available. Please fetch content from sources first."
+        )
+
+    all_content = "\n\n---\n\n".join(
+        [f"Source: {s.url}\n\n{s.raw_content}" for s in fetched_sources]
+    )
+
+    provider = await _get_provider_for_project(project)
+    
+    try:
+        entries_count = await _generate_lorebook_from_character_content(
+            job, project, all_content, provider
+        )
+        
+        async with (await get_db_connection()).transaction() as tx:
+            await update_job_with_notification(
+                job.id,
+                UpdateBackgroundJob(
+                    status=JobStatus.completed,
+                    result=GenerateLorebookEntriesResult(entries_created=entries_count or 0),
+                ),
+                tx=tx,
+            )
+    except Exception as e:
+        logger.error(f"[{job.id}] Failed to generate lorebook entries: {e}", exc_info=True)
+        async with (await get_db_connection()).transaction() as tx:
+            await update_job_with_notification(
+                job.id,
+                UpdateBackgroundJob(
+                    status=JobStatus.failed,
+                    result=GenerateLorebookEntriesResult(entries_created=0),
+                ),
+                tx=tx,
+            )
+        raise
 
 
 async def regenerate_character_field(job: BackgroundJob, project: Project):
@@ -1601,6 +1662,7 @@ JOB_HANDLERS = {
     TaskName.FETCH_SOURCE_CONTENT: fetch_source_content,
     TaskName.GENERATE_CHARACTER_CARD: generate_character_card,
     TaskName.REGENERATE_CHARACTER_FIELD: regenerate_character_field,
+    TaskName.GENERATE_LOREBOOK_ENTRIES: generate_lorebook_entries,
 }
 
 
