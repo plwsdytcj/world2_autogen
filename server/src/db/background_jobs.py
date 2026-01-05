@@ -83,6 +83,10 @@ class RegenerateCharacterFieldPayload(BaseModel):
     context_options: RegenerateCharacterFieldContextOptions
 
 
+class GenerateLorebookEntriesPayload(BaseModel):
+    source_ids: Optional[List[UUID]] = None
+
+
 TaskPayload = Union[
     DiscoverAndCrawlSourcesPayload,
     ConfirmLinksPayload,
@@ -137,10 +141,6 @@ class GenerateCharacterCardResult(BaseModel):
 
 class RegenerateCharacterFieldResult(BaseModel):
     field_regenerated: str
-
-
-class GenerateLorebookEntriesPayload(BaseModel):
-    source_ids: Optional[List[UUID]] = None
 
 
 class GenerateLorebookEntriesResult(BaseModel):
