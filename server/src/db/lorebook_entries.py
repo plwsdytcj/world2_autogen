@@ -16,7 +16,7 @@ class CreateLorebookEntry(BaseModel):
     title: str
     content: str
     keywords: List[str]
-    source_url: str
+    source_url: Optional[str] = None
 
 
 class UpdateLorebookEntry(BaseModel):
