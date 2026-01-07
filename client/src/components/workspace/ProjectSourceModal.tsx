@@ -133,7 +133,20 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
       return false;
     }
   };
+
+  // Check if the URL is a Twitter/X URL
+  const isTwitterUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.includes('twitter.com') || parsed.hostname.includes('x.com');
+    } catch {
+      return false;
+    }
+  };
+
   const showFacebookOptions = isFacebookUrl(form.values.url);
+  const showTwitterOptions = isTwitterUrl(form.values.url);
+  const showSocialMediaOptions = showFacebookOptions || showTwitterOptions;
 
   return (
     <Modal
@@ -151,16 +164,22 @@ export function ProjectSourceModal({ opened, onClose, projectId, source, project
             placeholder={
               isLorebookProject
                 ? 'e.g., https://elderscrolls.fandom.com/wiki/Category:Skyrim:_Locations'
-                : 'e.g., https://facebook.com/nintendo or https://fandom.com/wiki/Character'
+                : 'e.g., https://facebook.com/nintendo, https://x.com/elonmusk, or https://fandom.com/wiki/Character'
             }
             description={t('sources.urlDesc')}
             {...form.getInputProps('url')}
           />
 
-          {showFacebookOptions && (
+          {showSocialMediaOptions && (
             <NumberInput
-              label={t('sources.facebookPostsLimit') || 'Facebook Posts Limit'}
-              description={t('sources.facebookPostsLimitDesc') || 'Number of posts to scrape from the Facebook page (1-100)'}
+              label={showTwitterOptions 
+                ? (t('sources.twitterPostsLimit') || 'Twitter/X Posts Limit')
+                : (t('sources.facebookPostsLimit') || 'Facebook Posts Limit')
+              }
+              description={showTwitterOptions
+                ? (t('sources.twitterPostsLimitDesc') || 'Number of tweets to scrape from the Twitter/X profile (1-100)')
+                : (t('sources.facebookPostsLimitDesc') || 'Number of posts to scrape from the Facebook page (1-100)')
+              }
               min={1}
               max={100}
               {...form.getInputProps('facebook_results_limit')}

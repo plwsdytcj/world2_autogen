@@ -21,7 +21,7 @@ import { ProjectSourceModal } from './ProjectSourceModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconBrandFacebook, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug } from '@tabler/icons-react';
+import { IconBrandFacebook, IconBrandX, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
 import { DebugSourceModal } from './DebugSourceModal';
@@ -52,6 +52,15 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
     try {
       const parsed = new URL(url);
       return parsed.hostname.includes('facebook.com') || parsed.hostname.includes('fb.com');
+    } catch {
+      return false;
+    }
+  };
+
+  const isTwitterUrl = (url: string) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.includes('twitter.com') || parsed.hostname.includes('x.com');
     } catch {
       return false;
     }
@@ -151,6 +160,12 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                               <Tooltip label={t('sources.facebookSource') || 'Facebook source - uses Apify scraper'}>
                                 <Badge size="sm" variant="light" color="blue" leftSection={<IconBrandFacebook size={12} />}>
                                   Facebook
+                                </Badge>
+                              </Tooltip>
+                            ) : isTwitterUrl(source.url) ? (
+                              <Tooltip label={t('sources.twitterSource') || 'Twitter/X source - uses Apify scraper'}>
+                                <Badge size="sm" variant="light" color="dark" leftSection={<IconBrandX size={12} />}>
+                                  Twitter/X
                                 </Badge>
                               </Tooltip>
                             ) : (

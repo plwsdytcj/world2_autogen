@@ -78,6 +78,7 @@ from db.sources import (
 from db.source_hierarchy import add_source_child_relationship
 from db.global_templates import list_all_global_templates
 from services.facebook_scraper import is_facebook_url, scrape_facebook_for_source
+from services.twitter_scraper import is_twitter_url, scrape_twitter_for_source
 from providers.index import (
     BaseProvider,
     ChatCompletionErrorResponse,
@@ -212,6 +213,32 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                 except Exception as fb_error:
                     logger.error(
                         f"[{job.id}] Facebook scraping failed for {source.url}: {fb_error}",
+                        exc_info=True,
+                    )
+                    # Fallback: try regular scraper
+                    logger.info(f"[{job.id}] Falling back to regular scraper for {source.url}")
+                    content = await scraper.get_content(
+                        source.url, type="markdown", clean=True
+                    )
+                    content_type = "markdown"
+            # Check if this is a Twitter/X URL
+            elif is_twitter_url(source.url):
+                logger.info(f"[{job.id}] Detected Twitter/X URL: {source.url}")
+                try:
+                    # Use the same results_limit as Facebook (stored in facebook_results_limit field)
+                    twitter_results_limit = source.facebook_results_limit if source.facebook_results_limit else 20
+                    content, twitter_images = await scrape_twitter_for_source(
+                        source.url, results_limit=twitter_results_limit
+                    )
+                    content_type = "markdown"
+                    all_image_url = twitter_images if twitter_images else None
+                    logger.info(
+                        f"[{job.id}] Twitter scrape completed for {source.url}: "
+                        f"content_length={len(content)}, images={len(all_image_url) if all_image_url else 0}"
+                    )
+                except Exception as twitter_error:
+                    logger.error(
+                        f"[{job.id}] Twitter scraping failed for {source.url}: {twitter_error}",
                         exc_info=True,
                     )
                     # Fallback: try regular scraper
