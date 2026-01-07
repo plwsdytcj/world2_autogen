@@ -482,7 +482,7 @@ Generate entries for:
 Source Content:
 {{ content }}
 
-Generate 5-10 relevant lorebook entries. Each entry should have:
+Generate 5-15 relevant lorebook entries. Each entry should have:
 - A clear title
 - Detailed content (2-4 sentences)
 - 3-5 keywords that would trigger this entry in conversation
