@@ -539,6 +539,7 @@ async def scrape_twitter_for_source(
     url: str,
     results_limit: int = 20,
     api_token: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> tuple[str, List[str]]:
     """
     Scrape Twitter profile and return content formatted for character card generation.
@@ -550,6 +551,7 @@ async def scrape_twitter_for_source(
         url: Twitter/X profile URL
         results_limit: Number of tweets to fetch
         api_token: Optional Apify API token (if not provided, fetched from credentials/env)
+        user_id: Optional user ID to filter credentials by user
         
     Returns:
         Tuple of (formatted_content, image_urls)
@@ -557,7 +559,7 @@ async def scrape_twitter_for_source(
     # Get Apify token from credentials if not provided
     if not api_token:
         from db.credentials import get_apify_api_token
-        api_token = await get_apify_api_token()
+        api_token = await get_apify_api_token(user_id=user_id)
     
     if not api_token:
         raise ValueError(

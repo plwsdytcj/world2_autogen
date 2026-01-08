@@ -100,21 +100,35 @@ async def create_credential(
 
 
 async def get_credential(
-    credential_id: UUID, tx: Optional[AsyncDBTransaction] = None
+    credential_id: UUID, 
+    tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> Optional[Credential]:
     db = tx or await get_db_connection()
-    query = 'SELECT * FROM "Credential" WHERE id = %s'
-    result = await db.fetch_one(query, (credential_id,))
+    if user_id:
+        # Only return credential if owned by user or is global (user_id is NULL)
+        query = 'SELECT * FROM "Credential" WHERE id = %s AND (user_id = %s OR user_id IS NULL)'
+        result = await db.fetch_one(query, (credential_id, user_id))
+    else:
+        query = 'SELECT * FROM "Credential" WHERE id = %s'
+        result = await db.fetch_one(query, (credential_id,))
     return _process_db_row_to_credential(result) if result else None
 
 
 async def get_credential_with_values(
-    credential_id: UUID, tx: Optional[AsyncDBTransaction] = None
+    credential_id: UUID, 
+    tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """Internal use only: Fetches a credential and decrypts its values."""
     db = tx or await get_db_connection()
-    query = 'SELECT * FROM "Credential" WHERE id = %s'
-    result = await db.fetch_one(query, (credential_id,))
+    if user_id:
+        # Only return credential if owned by user or is global (user_id is NULL)
+        query = 'SELECT * FROM "Credential" WHERE id = %s AND (user_id = %s OR user_id IS NULL)'
+        result = await db.fetch_one(query, (credential_id, user_id))
+    else:
+        query = 'SELECT * FROM "Credential" WHERE id = %s'
+        result = await db.fetch_one(query, (credential_id,))
     if not result:
         return None
 
@@ -143,13 +157,14 @@ async def update_credential(
     credential_id: UUID,
     update_data: UpdateCredential,
     tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> Optional[Credential]:
     db = tx or await get_db_connection()
     update_dict = update_data.model_dump(exclude_unset=True)
     if not update_dict:
-        return await get_credential(credential_id, tx=tx)
+        return await get_credential(credential_id, tx=tx, user_id=user_id)
 
-    existing_full_credential = await get_credential_with_values(credential_id, tx=tx)
+    existing_full_credential = await get_credential_with_values(credential_id, tx=tx, user_id=user_id)
     if not existing_full_credential:
         return None
 
@@ -177,7 +192,7 @@ async def update_credential(
     params.append(encrypted_values)
 
     if not set_parts:
-        return await get_credential(credential_id, tx=tx)
+        return await get_credential(credential_id, tx=tx, user_id=user_id)
 
     set_clause = ", ".join(set_parts)
     query = f'UPDATE "Credential" SET {set_clause} WHERE id = %s RETURNING *'
@@ -202,11 +217,15 @@ async def delete_credential(
         await db.execute(query, (credential_id,))
 
 
-async def get_apify_api_token(tx: Optional[AsyncDBTransaction] = None) -> Optional[str]:
+async def get_apify_api_token(
+    tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
+) -> Optional[str]:
     """
     Get Apify API token from credentials.
     
     Looks for a credential with provider_type = 'apify' and returns its api_key.
+    If user_id is provided, prioritizes user's credential, then global credentials.
     If multiple exist, returns the first one found.
     Falls back to APIFY_API_TOKEN environment variable if no credential exists.
     
@@ -216,8 +235,13 @@ async def get_apify_api_token(tx: Optional[AsyncDBTransaction] = None) -> Option
     import os
     
     db = tx or await get_db_connection()
-    query = 'SELECT * FROM "Credential" WHERE provider_type = %s LIMIT 1'
-    result = await db.fetch_one(query, ("apify",))
+    if user_id:
+        # First try to get user's credential, then global credential
+        query = 'SELECT * FROM "Credential" WHERE provider_type = %s AND (user_id = %s OR user_id IS NULL) ORDER BY CASE WHEN user_id = %s THEN 0 ELSE 1 END LIMIT 1'
+        result = await db.fetch_one(query, ("apify", user_id, user_id))
+    else:
+        query = 'SELECT * FROM "Credential" WHERE provider_type = %s LIMIT 1'
+        result = await db.fetch_one(query, ("apify",))
     
     if result and result.get("values"):
         try:

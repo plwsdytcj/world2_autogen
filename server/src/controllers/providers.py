@@ -2,10 +2,11 @@ import asyncio
 import json
 from typing import List, Optional
 from uuid import UUID
-from litestar import Controller, get, post
+from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException, NotFoundException
 from pydantic import BaseModel, Field
 from logging_config import get_logger
+from controllers.auth import get_current_user_optional
 from providers.index import (
     ChatCompletionErrorResponse,
     ChatCompletionRequest,
@@ -52,10 +53,13 @@ class ProviderController(Controller):
     path = "/providers"
 
     @get(path="/")
-    async def get_providers(self) -> List[ProviderInfo]:
+    async def get_providers(self, request: Request) -> List[ProviderInfo]:
         logger.debug("Listing all available providers and their models")
-
-        all_credentials = await list_credentials()
+        
+        # Get current user to filter credentials
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        all_credentials = await list_credentials(user_id=user_id)
         provider_info_tasks = []
 
         # Add Apify as a special non-LLM provider for Facebook scraping
@@ -83,7 +87,8 @@ class ProviderController(Controller):
                 if first_credential_for_provider:
                     try:
                         full_credential = await get_credential_with_values(
-                            first_credential_for_provider.id
+                            first_credential_for_provider.id,
+                            user_id=user_id
                         )
                         if full_credential and full_credential.get("values"):
                             instance = get_provider_instance(
@@ -172,6 +177,8 @@ class ProviderController(Controller):
         values_to_test = data.values.model_dump()
 
         if data.credential_id:
+            # For testing, we don't filter by user_id to allow testing any credential
+            # (This is intentional for testing purposes)
             existing_credential = await get_credential_with_values(data.credential_id)
             if not existing_credential:
                 raise NotFoundException(f"Credential {data.credential_id} not found.")

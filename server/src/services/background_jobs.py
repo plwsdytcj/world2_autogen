@@ -150,7 +150,11 @@ async def _get_provider_for_project(project: Project) -> BaseProvider:
     """Helper to get a provider instance for a project."""
     if not project.credential_id:
         raise ValueError("Project does not have a credential ID.")
-    credential = await get_credential_with_values(project.credential_id)
+    # Use project.user_id to ensure we only access credentials owned by the project's user
+    credential = await get_credential_with_values(
+        project.credential_id,
+        user_id=project.user_id
+    )
     if not credential:
         raise ValueError(f"Credential {project.credential_id} not found.")
     credential_dict = credential["values"].model_dump(exclude_unset=True)
@@ -202,7 +206,7 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                     # Use the user-configured results_limit from source settings
                     fb_results_limit = source.facebook_results_limit if source.facebook_results_limit else 20
                     content, fb_images = await scrape_facebook_for_source(
-                        source.url, results_limit=fb_results_limit
+                        source.url, results_limit=fb_results_limit, user_id=project.user_id
                     )
                     content_type = "markdown"
                     all_image_url = fb_images if fb_images else None
@@ -228,7 +232,7 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
                     # Use the same results_limit as Facebook (stored in facebook_results_limit field)
                     twitter_results_limit = source.facebook_results_limit if source.facebook_results_limit else 20
                     content, twitter_images = await scrape_twitter_for_source(
-                        source.url, results_limit=twitter_results_limit
+                        source.url, results_limit=twitter_results_limit, user_id=project.user_id
                     )
                     content_type = "markdown"
                     all_image_url = twitter_images if twitter_images else None
@@ -395,7 +399,7 @@ async def generate_character_card(job: BackgroundJob, project: Project):
     )
 
     provider = await _get_provider_for_project(project)
-    global_templates = await list_all_global_templates()
+    global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
     context = {
         "project": project.model_dump(),
@@ -466,7 +470,7 @@ async def generate_character_card(job: BackgroundJob, project: Project):
 
     async with (await get_db_connection()).transaction() as tx:
         await update_project(
-            project.id, UpdateProject(status=ProjectStatus.completed), tx=tx
+            project.id, UpdateProject(status=ProjectStatus.completed), tx=tx, user_id=project.user_id
         )
         await update_job_with_notification(
             job.id,
@@ -486,7 +490,7 @@ async def _generate_lorebook_from_character_content(
     """
     logger.info(f"[{job.id}] Generating lorebook entries for CHARACTER_LOREBOOK project")
     
-    global_templates = await list_all_global_templates()
+    global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
     
     # Use character_lorebook_generation template if available, otherwise use a default prompt
@@ -674,7 +678,7 @@ async def regenerate_character_field(job: BackgroundJob, project: Project):
 
     # --- 2. LLM Call ---
     provider = await _get_provider_for_project(project)
-    global_templates = await list_all_global_templates()
+    global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
     context = {
         "project": project.model_dump(),
@@ -949,7 +953,7 @@ async def discover_and_crawl_sources(job: BackgroundJob, project: Project):
 
     scraper = Scraper()
     provider = await _get_provider_for_project(project)
-    global_templates = await list_all_global_templates()
+    global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
 
     while queue:
@@ -1096,6 +1100,7 @@ async def discover_and_crawl_sources(job: BackgroundJob, project: Project):
                 project.id,
                 UpdateProject(status=ProjectStatus.selector_generated),
                 tx=tx,
+                user_id=project.user_id,
             )
 
         await update_job_with_notification(
@@ -1260,7 +1265,7 @@ async def generate_search_params(job: BackgroundJob, project: Project):
             f"[{job.id}] Generating search params with {provider.__class__.__name__}"
         )
 
-        global_templates = await list_all_global_templates(tx=tx)
+        global_templates = await list_all_global_templates(tx=tx, user_id=project.user_id)
         globals_dict = {gt.name: gt.content for gt in global_templates}
         context = {"project": project.model_dump(), "globals": globals_dict}
 
@@ -1330,7 +1335,7 @@ async def generate_search_params(job: BackgroundJob, project: Project):
         )
         if project.status == ProjectStatus.draft:
             update_payload.status = ProjectStatus.search_params_generated
-        await update_project(project.id, update_payload, tx=tx)
+        await update_project(project.id, update_payload, tx=tx, user_id=project.user_id)
         await update_job_with_notification(
             job.id,
             UpdateBackgroundJob(
@@ -1366,7 +1371,7 @@ async def confirm_links(job: BackgroundJob, project: Project):
         await send_links_created_notification(job, links)
         if project.status == ProjectStatus.selector_generated:
             await update_project(
-                project.id, UpdateProject(status=ProjectStatus.links_extracted), tx=tx
+                project.id, UpdateProject(status=ProjectStatus.links_extracted), tx=tx, user_id=project.user_id
             )
         await update_job_with_notification(
             job.id,
@@ -1393,7 +1398,7 @@ async def _process_single_link_io(
         )
         provider = await _get_provider_for_project(project)
 
-        global_templates = await list_all_global_templates()
+        global_templates = await list_all_global_templates(user_id=project.user_id)
         globals_dict = {gt.name: gt.content for gt in global_templates}
         context = {
             "project": project.model_dump(),
@@ -1544,7 +1549,7 @@ async def process_project_entries(job: BackgroundJob, project: Project):
         # Handle case with no links to process
         async with (await get_db_connection()).transaction() as tx:
             await update_project(
-                project.id, UpdateProject(status=ProjectStatus.completed), tx=tx
+                project.id, UpdateProject(status=ProjectStatus.completed), tx=tx, user_id=project.user_id
             )
             await update_job_with_notification(
                 job.id,
@@ -1562,7 +1567,7 @@ async def process_project_entries(job: BackgroundJob, project: Project):
     # Initial job and project status updates
     async with (await get_db_connection()).transaction() as tx:
         await update_project(
-            project.id, UpdateProject(status=ProjectStatus.processing), tx=tx
+            project.id, UpdateProject(status=ProjectStatus.processing), tx=tx, user_id=project.user_id
         )
         await update_job_with_notification(
             job.id,
@@ -1660,7 +1665,7 @@ async def process_project_entries(job: BackgroundJob, project: Project):
                 ProjectStatus.completed if total_failed == 0 else ProjectStatus.failed
             )
             await update_project(
-                project.id, UpdateProject(status=final_project_status), tx=tx
+                project.id, UpdateProject(status=final_project_status), tx=tx, user_id=project.user_id
             )
             await update_job_with_notification(
                 job.id,

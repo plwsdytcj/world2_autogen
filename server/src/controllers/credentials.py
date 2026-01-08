@@ -45,20 +45,24 @@ class CredentialsController(Controller):
 
     @get("/{credential_id:uuid}")
     async def get_credential_details(
-        self, credential_id: UUID
+        self, request: Request, credential_id: UUID
     ) -> SingleResponse[Credential]:
-        logger.debug(f"Retrieving credential {credential_id}")
-        credential = await get_credential(credential_id)
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Retrieving credential {credential_id} for user {user_id}")
+        credential = await get_credential(credential_id, user_id=user_id)
         if not credential:
             raise NotFoundException(f"Credential '{credential_id}' not found.")
         return SingleResponse(data=credential)
 
     @patch("/{credential_id:uuid}")
     async def update_existing_credential(
-        self, credential_id: UUID, data: UpdateCredential = Body()
+        self, request: Request, credential_id: UUID, data: UpdateCredential = Body()
     ) -> SingleResponse[Credential]:
-        logger.debug(f"Updating credential {credential_id}")
-        credential = await update_credential(credential_id, data)
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Updating credential {credential_id} for user {user_id}")
+        credential = await update_credential(credential_id, data, user_id=user_id)
         if not credential:
             raise NotFoundException(f"Credential '{credential_id}' not found.")
         return SingleResponse(data=credential)

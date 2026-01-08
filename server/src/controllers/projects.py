@@ -116,11 +116,13 @@ class ProjectController(Controller):
 
     @patch("/{project_id:str}")
     async def update_project(
-        self, project_id: str, data: UpdateProject = Body()
+        self, request: Request, project_id: str, data: UpdateProject = Body()
     ) -> SingleResponse[Project]:
-        """Update a project."""
-        logger.debug(f"Updating project {project_id}")
-        project = await db_update_project(project_id, data)
+        """Update a project, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Updating project {project_id} for user {user_id}")
+        project = await db_update_project(project_id, data, user_id=user_id)
         if not project:
             raise NotFoundException(f"Project '{project_id}' not found.")
         return SingleResponse(data=project)

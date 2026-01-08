@@ -1,9 +1,10 @@
-from litestar import Controller, get, post, patch, delete
+from litestar import Controller, Request, get, post, patch, delete
 from litestar.exceptions import NotFoundException
 from typing import Dict
 from litestar.params import Body
 
 from logging_config import get_logger
+from controllers.auth import get_current_user_optional
 from db.global_templates import (
     GlobalTemplate,
     CreateGlobalTemplate,
@@ -44,45 +45,55 @@ class GlobalTemplateController(Controller):
 
     @post("/")
     async def create_global_template(
-        self, data: CreateGlobalTemplate = Body()
+        self, request: Request, data: CreateGlobalTemplate = Body()
     ) -> SingleResponse[GlobalTemplate]:
         """Create a new global template."""
-        logger.debug(f"Creating global template {data.id}")
-        template = await db_create_global_template(data)
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Creating global template {data.id} for user {user_id}")
+        template = await db_create_global_template(data, user_id=user_id)
         return SingleResponse(data=template)
 
     @get("/")
     async def list_global_templates(
-        self, limit: int = 50, offset: int = 0
+        self, request: Request, limit: int = 50, offset: int = 0
     ) -> PaginatedResponse[GlobalTemplate]:
-        """List all global templates with pagination."""
-        logger.debug("Listing all global templates")
-        return await db_list_global_templates_paginated(limit, offset)
+        """List all global templates with pagination, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Listing global templates for user {user_id}")
+        return await db_list_global_templates_paginated(limit, offset, user_id=user_id)
 
     @get("/{template_id:str}")
     async def get_global_template(
-        self, template_id: str
+        self, request: Request, template_id: str
     ) -> SingleResponse[GlobalTemplate]:
-        """Retrieve a single global template by its ID."""
-        logger.debug(f"Retrieving global template {template_id}")
-        template = await db_get_global_template(template_id)
+        """Retrieve a single global template by its ID, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Retrieving global template {template_id} for user {user_id}")
+        template = await db_get_global_template(template_id, user_id=user_id)
         if not template:
             raise NotFoundException(f"Global template '{template_id}' not found.")
         return SingleResponse(data=template)
 
     @patch("/{template_id:str}")
     async def update_global_template(
-        self, template_id: str, data: UpdateGlobalTemplate = Body()
+        self, request: Request, template_id: str, data: UpdateGlobalTemplate = Body()
     ) -> SingleResponse[GlobalTemplate]:
-        """Update a global template."""
-        logger.debug(f"Updating global template {template_id}")
-        template = await db_update_global_template(template_id, data)
+        """Update a global template, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Updating global template {template_id} for user {user_id}")
+        template = await db_update_global_template(template_id, data, user_id=user_id)
         if not template:
             raise NotFoundException(f"Global template '{template_id}' not found.")
         return SingleResponse(data=template)
 
     @delete("/{template_id:str}")
-    async def delete_global_template(self, template_id: str) -> None:
-        """Delete a global template."""
-        logger.debug(f"Deleting global template {template_id}")
-        await db_delete_global_template(template_id)
+    async def delete_global_template(self, request: Request, template_id: str) -> None:
+        """Delete a global template, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Deleting global template {template_id} for user {user_id}")
+        await db_delete_global_template(template_id, user_id=user_id)

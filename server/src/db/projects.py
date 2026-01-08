@@ -224,11 +224,13 @@ async def update_project(
     project_id: str,
     project_update: UpdateProject,
     tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> Project | None:
+    """Update a project, optionally filtered by user_id."""
     db = tx or await get_db_connection()
     update_data = project_update.model_dump(exclude_unset=True)
     if not update_data:
-        return await get_project(project_id, tx=tx)
+        return await get_project(project_id, tx=tx, user_id=user_id)
 
     set_clause_parts = []
     params: List[Any] = []
@@ -245,11 +247,16 @@ async def update_project(
             params.append(value)
 
     if not set_clause_parts:
-        return await get_project(project_id, tx=tx)
+        return await get_project(project_id, tx=tx, user_id=user_id)
 
-    params.append(project_id)
     set_clause = ", ".join(set_clause_parts)
-    query = f'UPDATE "Project" SET {set_clause} WHERE id = %s RETURNING *'
+    if user_id:
+        params.append(project_id)
+        params.append(user_id)
+        query = f'UPDATE "Project" SET {set_clause} WHERE id = %s AND user_id = %s RETURNING *'
+    else:
+        params.append(project_id)
+        query = f'UPDATE "Project" SET {set_clause} WHERE id = %s RETURNING *'
 
     result = await db.execute_and_fetch_one(query, tuple(params))
     return _deserialize_project(result)
