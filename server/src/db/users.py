@@ -40,7 +40,9 @@ async def get_user_by_id(
     db = tx or await get_db_connection()
     query = 'SELECT * FROM "User" WHERE id = %s'
     result = await db.fetch_one(query, (user_id,))
-    return User(**result) if result else None
+    if not result:
+        return None
+    return User(**result)
 
 
 async def get_user_by_google_id(
@@ -51,7 +53,9 @@ async def get_user_by_google_id(
     db = tx or await get_db_connection()
     query = 'SELECT * FROM "User" WHERE google_id = %s'
     result = await db.fetch_one(query, (google_id,))
-    return User(**result) if result else None
+    if not result:
+        return None
+    return User(**result)
 
 
 async def get_user_by_email(
@@ -62,7 +66,9 @@ async def get_user_by_email(
     db = tx or await get_db_connection()
     query = 'SELECT * FROM "User" WHERE email = %s'
     result = await db.fetch_one(query, (email,))
-    return User(**result) if result else None
+    if not result:
+        return None
+    return User(**result)
 
 
 async def create_user(
@@ -118,7 +124,9 @@ async def update_user(
     
     query = f'UPDATE "User" SET {set_clause} WHERE id = %s RETURNING *'
     result = await db.execute_and_fetch_one(query, tuple(params))
-    return User(**result) if result else None
+    if not result:
+        return None
+    return User(**result)
 
 
 async def get_or_create_user_by_google(
@@ -149,7 +157,9 @@ async def get_or_create_user_by_google(
         db = tx or await get_db_connection()
         query = 'UPDATE "User" SET google_id = %s, name = %s, avatar_url = %s WHERE id = %s RETURNING *'
         result = await db.execute_and_fetch_one(query, (google_id, name, avatar_url, user.id))
-        return User(**result) if result else user
+        if result:
+            return User(**result)
+        return user
     
     # Create new user
     return await create_user(

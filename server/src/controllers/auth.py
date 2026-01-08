@@ -184,7 +184,7 @@ class AuthController(Controller):
         
         return {"success": True, "message": "Logged out successfully"}
     
-    async def _get_user_from_request(self, request: Request) -> User:
+    async def _get_user_from_request(self, request: Request):
         """Extract and verify user from request Authorization header."""
         auth_header = request.headers.get("Authorization")
         
@@ -216,7 +216,7 @@ class AuthController(Controller):
 # Auth Guard Utility
 # ============================================================================
 
-async def get_current_user_optional(request: Request) -> Optional[User]:
+async def get_current_user_optional(request: Request) -> Optional["User"]:
     """
     Get current user from request, returning None if not authenticated.
     Useful for endpoints that work for both authenticated and anonymous users.
@@ -230,7 +230,7 @@ async def get_current_user_optional(request: Request) -> Optional[User]:
     return await verify_access_token(token)
 
 
-async def require_auth(request: Request) -> User:
+async def require_auth(request: Request):
     """
     Require authentication for an endpoint.
     Raises HTTPException if not authenticated.
