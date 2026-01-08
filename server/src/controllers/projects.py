@@ -1,5 +1,5 @@
 from litestar import Controller, Request, get, post, patch, delete
-from litestar.exceptions import NotFoundException
+from litestar.exceptions import NotFoundException, HTTPException
 from litestar.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -50,9 +50,63 @@ class ProjectController(Controller):
         user = await get_current_user_optional(request)
         if user:
             data.user_id = user.id
+        
+        # Check if project ID already exists for this user
+        # Note: Different users can have projects with the same ID
+        if data.user_id:
+            existing_project = await db_get_project(data.id, user_id=data.user_id)
+            if existing_project:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
+                )
+        
         logger.debug(f"Creating project {data.id} of type {data.project_type} for user {data.user_id}")
-        project = await db_create_project(data)
-        return SingleResponse(data=project)
+        
+        # If project ID already exists globally, try to make it unique by appending user_id suffix
+        original_id = data.id
+        existing_project = await db_get_project(data.id)
+        if existing_project:
+            if existing_project.user_id == data.user_id:
+                # Same user, same ID - this is an error
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
+                )
+            else:
+                # Different user has this ID - make it unique by appending user_id hash
+                # Use first 8 chars of user_id to keep ID readable
+                user_suffix = data.user_id[:8] if data.user_id else "user"
+                data.id = f"{original_id}-{user_suffix}"
+                logger.info(f"Project ID '{original_id}' already exists for another user. Using '{data.id}' instead.")
+        
+        try:
+            project = await db_create_project(data)
+            return SingleResponse(data=project)
+        except Exception as e:
+            # Catch database unique constraint violations (race condition fallback)
+            error_str = str(e).lower()
+            if "duplicate key" in error_str or "unique constraint" in error_str or "uniqueviolation" in error_str:
+                # If we already modified the ID and it still conflicts, try with timestamp
+                if data.id == original_id:
+                    # This shouldn't happen if our check worked, but handle it anyway
+                    import time
+                    data.id = f"{original_id}-{int(time.time())}"
+                    try:
+                        project = await db_create_project(data)
+                        return SingleResponse(data=project)
+                    except:
+                        raise HTTPException(
+                            status_code=409,
+                            detail=f"Project with ID '{original_id}' already exists. Please choose a different ID."
+                        )
+                else:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
+                    )
+            # Re-raise other exceptions
+            raise
 
     @get("/")
     async def list_projects(
