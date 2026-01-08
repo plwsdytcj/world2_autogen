@@ -48,12 +48,11 @@ async def get_global_template(
     template_id: str,
     user_id: Optional[str] = None,
 ) -> GlobalTemplate | None:
-    """Retrieve a global template by its ID, optionally filtered by user_id.
-    If user_id is provided, returns template owned by user OR global template (user_id IS NULL)."""
+    """Retrieve a global template by its ID, only if owned by the user."""
     db = await get_db_connection()
     if user_id:
-        # Return template if owned by user OR is global (user_id is NULL)
-        query = 'SELECT * FROM "GlobalTemplate" WHERE id = %s AND (user_id = %s OR user_id IS NULL)'
+        # Only return template if owned by the user
+        query = 'SELECT * FROM "GlobalTemplate" WHERE id = %s AND user_id = %s'
         result = await db.fetch_one(query, (template_id, user_id))
     else:
         query = 'SELECT * FROM "GlobalTemplate" WHERE id = %s'
@@ -78,25 +77,17 @@ async def list_global_templates_paginated(
     offset: int = 0,
     user_id: Optional[str] = None,
 ) -> PaginatedResponse[GlobalTemplate]:
-    """List all global templates with pagination, optionally filtered by user_id.
-    If user_id is provided, returns templates owned by user OR global templates (user_id IS NULL)."""
+    """List all global templates with pagination, only returns templates owned by the user."""
     db = await get_db_connection()
     if user_id:
-        # Return templates owned by user OR global templates (user_id IS NULL)
-        query = 'SELECT * FROM "GlobalTemplate" WHERE user_id = %s OR user_id IS NULL ORDER BY created_at DESC LIMIT %s OFFSET %s'
+        # Only return templates owned by the user
+        query = 'SELECT * FROM "GlobalTemplate" WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s'
         results = await db.fetch_all(query, (user_id, limit, offset))
     else:
         query = 'SELECT * FROM "GlobalTemplate" ORDER BY created_at DESC LIMIT %s OFFSET %s'
         results = await db.fetch_all(query, (limit, offset))
     templates = [GlobalTemplate(**row) for row in results] if results else []
-    # For count, we need to count user templates + global templates
-    if user_id:
-        count_query = 'SELECT COUNT(*) as count FROM "GlobalTemplate" WHERE user_id = %s OR user_id IS NULL'
-        count_result = await db.fetch_one(count_query, (user_id,))
-    else:
-        count_result = await count_global_templates()
-        count_result = {"count": count_result} if isinstance(count_result, int) else count_result
-    total_items = count_result["count"] if count_result and "count" in count_result else 0
+    total_items = await count_global_templates(user_id=user_id)
     current_page = offset // limit + 1
 
     return PaginatedResponse(
@@ -113,12 +104,11 @@ async def list_all_global_templates(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> list[GlobalTemplate]:
-    """List all global templates, optionally filtered by user_id.
-    If user_id is provided, returns templates owned by user OR global templates (user_id IS NULL)."""
+    """List all global templates, only returns templates owned by the user."""
     db = tx or await get_db_connection()
     if user_id:
-        # Return templates owned by user OR global templates (user_id IS NULL)
-        query = 'SELECT * FROM "GlobalTemplate" WHERE user_id = %s OR user_id IS NULL ORDER BY created_at DESC'
+        # Only return templates owned by the user
+        query = 'SELECT * FROM "GlobalTemplate" WHERE user_id = %s ORDER BY created_at DESC'
         results = await db.fetch_all(query, (user_id,))
     else:
         query = 'SELECT * FROM "GlobalTemplate" ORDER BY created_at DESC'

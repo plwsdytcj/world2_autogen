@@ -104,10 +104,11 @@ async def get_credential(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> Optional[Credential]:
+    """Get a credential by ID, only if owned by the user."""
     db = tx or await get_db_connection()
     if user_id:
-        # Only return credential if owned by user or is global (user_id is NULL)
-        query = 'SELECT * FROM "Credential" WHERE id = %s AND (user_id = %s OR user_id IS NULL)'
+        # Only return credential if owned by the user
+        query = 'SELECT * FROM "Credential" WHERE id = %s AND user_id = %s'
         result = await db.fetch_one(query, (credential_id, user_id))
     else:
         query = 'SELECT * FROM "Credential" WHERE id = %s'
@@ -120,11 +121,11 @@ async def get_credential_with_values(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    """Internal use only: Fetches a credential and decrypts its values."""
+    """Internal use only: Fetches a credential and decrypts its values. Only returns if owned by user."""
     db = tx or await get_db_connection()
     if user_id:
-        # Only return credential if owned by user or is global (user_id is NULL)
-        query = 'SELECT * FROM "Credential" WHERE id = %s AND (user_id = %s OR user_id IS NULL)'
+        # Only return credential if owned by the user
+        query = 'SELECT * FROM "Credential" WHERE id = %s AND user_id = %s'
         result = await db.fetch_one(query, (credential_id, user_id))
     else:
         query = 'SELECT * FROM "Credential" WHERE id = %s'
@@ -142,12 +143,14 @@ async def list_credentials(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> List[Credential]:
+    """List credentials, filtered by user_id. Only returns credentials owned by the user."""
     db = tx or await get_db_connection()
     if user_id:
-        # Return credentials owned by user OR global credentials (user_id is NULL)
-        query = 'SELECT * FROM "Credential" WHERE user_id = %s OR user_id IS NULL ORDER BY name ASC'
+        # Only return credentials owned by the user (exclude global credentials)
+        query = 'SELECT * FROM "Credential" WHERE user_id = %s ORDER BY name ASC'
         results = await db.fetch_all(query, (user_id,))
     else:
+        # If no user_id, return all credentials (for admin/system use)
         query = 'SELECT * FROM "Credential" ORDER BY name ASC'
         results = await db.fetch_all(query)
     return [_process_db_row_to_credential(row) for row in results] if results else []
