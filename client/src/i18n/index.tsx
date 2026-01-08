@@ -12,6 +12,12 @@ const dicts: Record<Lang, Dict> = {
     'nav.templates': 'Templates',
     'footer.version': 'Version',
 
+    // Auth
+    'auth.loginDescription': 'Sign in to create and manage your character cards',
+    'auth.signInWithGoogle': 'Sign in with Google',
+    'auth.termsNotice': 'By signing in, you agree to our Terms of Service',
+    'auth.logout': 'Logout',
+
     // Character editor
     'character.title': 'Character Card',
     'character.avatar': 'Avatar',
@@ -472,6 +478,12 @@ const dicts: Record<Lang, Dict> = {
     'nav.templates': '模板',
     'footer.version': '版本',
 
+    // Auth
+    'auth.loginDescription': '登录以创建和管理你的角色卡',
+    'auth.signInWithGoogle': '使用 Google 登录',
+    'auth.termsNotice': '登录即表示您同意我们的服务条款',
+    'auth.logout': '退出登录',
+
     'character.title': '角色卡',
     'character.avatar': '头像',
     'character.suggestions': '来源建议',
@@ -914,6 +926,12 @@ const dicts: Record<Lang, Dict> = {
     'nav.credentials': 'クレデンシャル',
     'nav.templates': 'テンプレート',
     'footer.version': 'バージョン',
+
+    // Auth
+    'auth.loginDescription': 'サインインしてキャラクターカードを作成・管理',
+    'auth.signInWithGoogle': 'Googleでサインイン',
+    'auth.termsNotice': 'サインインすると利用規約に同意したことになります',
+    'auth.logout': 'ログアウト',
 
     'character.title': 'キャラクターカード',
     'character.avatar': 'アバター',

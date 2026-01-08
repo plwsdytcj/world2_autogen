@@ -1,10 +1,11 @@
-from litestar import Controller, get, post, patch, delete
+from litestar import Controller, Request, get, post, patch, delete
 from litestar.exceptions import NotFoundException
 from litestar.params import Body
 from pydantic import BaseModel
 from typing import Optional
 
 from logging_config import get_logger
+from controllers.auth import get_current_user_optional
 from db.projects import (
     Project,
     CreateProject,
@@ -43,20 +44,25 @@ class ProjectController(Controller):
 
     @post("/")
     async def create_project(
-        self, data: CreateProject = Body()
+        self, request: Request, data: CreateProject = Body()
     ) -> SingleResponse[Project]:
         """Create a new project."""
-        logger.debug(f"Creating project {data.id} of type {data.project_type}")
+        user = await get_current_user_optional(request)
+        if user:
+            data.user_id = user.id
+        logger.debug(f"Creating project {data.id} of type {data.project_type} for user {data.user_id}")
         project = await db_create_project(data)
         return SingleResponse(data=project)
 
     @get("/")
     async def list_projects(
-        self, limit: int = 50, offset: int = 0
+        self, request: Request, limit: int = 50, offset: int = 0
     ) -> PaginatedResponse[Project]:
-        """List all projects with pagination."""
-        logger.debug("Listing all projects")
-        return await db_list_projects_paginated(limit, offset)
+        """List all projects with pagination, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Listing projects for user {user_id}")
+        return await db_list_projects_paginated(limit, offset, user_id=user_id)
 
     @get("/{project_id:str}/links")
     async def list_project_links(
@@ -98,10 +104,12 @@ class ProjectController(Controller):
         return await db_list_logs_by_project_paginated(project_id, limit, offset)
 
     @get("/{project_id:str}")
-    async def get_project(self, project_id: str) -> SingleResponse[Project]:
-        """Retrieve a single project by its ID."""
-        logger.debug(f"Retrieving project {project_id}")
-        project = await db_get_project(project_id)
+    async def get_project(self, request: Request, project_id: str) -> SingleResponse[Project]:
+        """Retrieve a single project by its ID, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Retrieving project {project_id} for user {user_id}")
+        project = await db_get_project(project_id, user_id=user_id)
         if not project:
             raise NotFoundException(f"Project '{project_id}' not found.")
         return SingleResponse(data=project)
@@ -118,18 +126,23 @@ class ProjectController(Controller):
         return SingleResponse(data=project)
 
     @delete("/{project_id:str}")
-    async def delete_project(self, project_id: str) -> None:
-        """Delete a project."""
-        logger.debug(f"Deleting project {project_id}")
-        await db_delete_project(project_id)
+    async def delete_project(self, request: Request, project_id: str) -> None:
+        """Delete a project, filtered by current user."""
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Deleting project {project_id} for user {user_id}")
+        await db_delete_project(project_id, user_id=user_id)
 
     @get("/{project_id:str}/lorebook/download")
     async def download_project_lorebook(
         self,
+        request: Request,
         project_id: str,
     ) -> dict:
         """Get the lorebook in downloadable format with numbered entries."""
-        project = await db_get_project(project_id)
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        project = await db_get_project(project_id, user_id=user_id)
         if not project:
             raise NotFoundException(detail="Project not found")
 

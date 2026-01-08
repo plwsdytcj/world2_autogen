@@ -1,13 +1,14 @@
-import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack } from '@mantine/core';
+import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink } from '@tabler/icons-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import apiClient from '../../services/api';
+import apiClient, { authApi } from '../../services/api';
 import { notifications } from '@mantine/notifications';
 import { useEffect } from 'react';
 import { useI18n } from '../../i18n';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { useAuthStore } from '../../stores/authStore';
 
 interface AppInfo {
   current_version: string;
@@ -35,12 +36,24 @@ const UpdateInstructions = ({ runtimeEnv }: { runtimeEnv: 'docker' | 'source' })
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { t } = useI18n();
+  const { user, refreshToken, logout } = useAuthStore();
   const { data: appInfo } = useQuery({
     queryKey: ['appInfo'],
     queryFn: fetchAppInfo,
     staleTime: 1000 * 60 * 30,
   });
+  
+  const handleLogout = async () => {
+    try {
+      await authApi.logout(refreshToken || undefined);
+    } catch (e) {
+      // Ignore logout API errors
+    }
+    logout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     if (appInfo?.current_version !== 'development' && appInfo?.update_available) {
@@ -112,7 +125,42 @@ export function AppLayout() {
             <IconExternalLink size={14} style={{ opacity: 0.8 }} />
           </Anchor>
           <Box ml="auto">
-            <LanguageSwitcher />
+            <Group gap="md">
+              <LanguageSwitcher />
+              
+              {user && (
+                <Menu shadow="md" width={200} position="bottom-end">
+                  <Menu.Target>
+                    <UnstyledButton>
+                      <Group gap="xs">
+                        <Avatar
+                          src={user.avatar_url}
+                          alt={user.name || user.email}
+                          radius="xl"
+                          size="sm"
+                        />
+                        <Text size="sm" fw={500} visibleFrom="sm">
+                          {user.name || user.email}
+                        </Text>
+                        <IconChevronDown size={14} />
+                      </Group>
+                    </UnstyledButton>
+                  </Menu.Target>
+                  
+                  <Menu.Dropdown>
+                    <Menu.Label>{user.email}</Menu.Label>
+                    <Menu.Divider />
+                    <Menu.Item
+                      leftSection={<IconLogout size={14} />}
+                      onClick={handleLogout}
+                      color="red"
+                    >
+                      {t('auth.logout') || 'Logout'}
+                    </Menu.Item>
+                  </Menu.Dropdown>
+                </Menu>
+              )}
+            </Group>
           </Box>
         </Group>
       </AppShell.Header>

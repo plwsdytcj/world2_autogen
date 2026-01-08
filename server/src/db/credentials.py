@@ -24,6 +24,7 @@ class CreateCredential(BaseModel):
     name: str
     provider_type: str
     values: CredentialValues
+    user_id: Optional[str] = None  # Owner of the credential
 
 
 class UpdateCredential(BaseModel):
@@ -40,6 +41,7 @@ class Credential(BaseModel):
     public_values: Dict[str, Any] = Field(
         default_factory=dict
     )  # Generic dict for non-secrets
+    user_id: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -64,6 +66,7 @@ def _process_db_row_to_credential(row: Dict[str, Any]) -> Credential:
         name=row["name"],
         provider_type=row["provider_type"],
         public_values=public_values,
+        user_id=row.get("user_id"),
         created_at=row["created_at"],
         updated_at=row["updated_at"],
     )
@@ -79,8 +82,8 @@ async def create_credential(
     )
 
     query = """
-        INSERT INTO "Credential" (id, name, provider_type, "values")
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO "Credential" (id, name, provider_type, "values", user_id)
+        VALUES (%s, %s, %s, %s, %s)
         RETURNING *
     """
     params = (
@@ -88,6 +91,7 @@ async def create_credential(
         credential_data.name,
         credential_data.provider_type,
         encrypted_values,
+        credential_data.user_id,
     )
     result = await db.execute_and_fetch_one(query, params)
     if not result:
@@ -122,10 +126,16 @@ async def get_credential_with_values(
 
 async def list_credentials(
     tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> List[Credential]:
     db = tx or await get_db_connection()
-    query = 'SELECT * FROM "Credential" ORDER BY name ASC'
-    results = await db.fetch_all(query)
+    if user_id:
+        # Return credentials owned by user OR global credentials (user_id is NULL)
+        query = 'SELECT * FROM "Credential" WHERE user_id = %s OR user_id IS NULL ORDER BY name ASC'
+        results = await db.fetch_all(query, (user_id,))
+    else:
+        query = 'SELECT * FROM "Credential" ORDER BY name ASC'
+        results = await db.fetch_all(query)
     return [_process_db_row_to_credential(row) for row in results] if results else []
 
 
@@ -178,11 +188,18 @@ async def update_credential(
 
 
 async def delete_credential(
-    credential_id: UUID, tx: Optional[AsyncDBTransaction] = None
+    credential_id: UUID, 
+    tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> None:
     db = tx or await get_db_connection()
-    query = 'DELETE FROM "Credential" WHERE id = %s'
-    await db.execute(query, (credential_id,))
+    if user_id:
+        # Only allow deleting own credentials (not global ones)
+        query = 'DELETE FROM "Credential" WHERE id = %s AND user_id = %s'
+        await db.execute(query, (credential_id, user_id))
+    else:
+        query = 'DELETE FROM "Credential" WHERE id = %s'
+        await db.execute(query, (credential_id,))
 
 
 async def get_apify_api_token(tx: Optional[AsyncDBTransaction] = None) -> Optional[str]:

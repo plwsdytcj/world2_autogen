@@ -12,10 +12,11 @@ from db.credentials import (
     list_credentials,
     update_credential,
 )
-from litestar import Controller, get, post, patch, delete
+from litestar import Controller, Request, get, post, patch, delete
 from litestar.exceptions import NotFoundException
 from litestar.params import Body
 
+from controllers.auth import get_current_user_optional
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -26,16 +27,21 @@ class CredentialsController(Controller):
 
     @post("/")
     async def create_new_credential(
-        self, data: CreateCredential = Body()
+        self, request: Request, data: CreateCredential = Body()
     ) -> SingleResponse[Credential]:
-        logger.debug(f"Creating credential {data.name}")
+        user = await get_current_user_optional(request)
+        if user:
+            data.user_id = user.id
+        logger.debug(f"Creating credential {data.name} for user {data.user_id}")
         credential = await create_credential(data)
         return SingleResponse(data=credential)
 
     @get("/")
-    async def list_all_credentials(self) -> List[Credential]:
-        logger.debug("Listing all credentials")
-        return await list_credentials()
+    async def list_all_credentials(self, request: Request) -> List[Credential]:
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Listing credentials for user {user_id}")
+        return await list_credentials(user_id=user_id)
 
     @get("/{credential_id:uuid}")
     async def get_credential_details(
@@ -58,6 +64,8 @@ class CredentialsController(Controller):
         return SingleResponse(data=credential)
 
     @delete("/{credential_id:uuid}")
-    async def delete_existing_credential(self, credential_id: UUID) -> None:
-        logger.debug(f"Deleting credential {credential_id}")
-        await delete_credential(credential_id)
+    async def delete_existing_credential(self, request: Request, credential_id: UUID) -> None:
+        user = await get_current_user_optional(request)
+        user_id = user.id if user else None
+        logger.debug(f"Deleting credential {credential_id} for user {user_id}")
+        await delete_credential(credential_id, user_id=user_id)

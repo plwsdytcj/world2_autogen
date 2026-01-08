@@ -82,6 +82,7 @@ class CreateProject(BaseModel):
     model_name: str
     model_parameters: Dict[str, Any]
     json_enforcement_mode: JsonEnforcementMode = JsonEnforcementMode.API_NATIVE
+    user_id: Optional[str] = None  # Owner of the project
 
     @field_serializer("credential_id")
     def serialize_credential_id(self, value: UUID) -> str:
@@ -137,8 +138,8 @@ def _deserialize_project(row: Optional[Dict[str, Any]]) -> Optional[Project]:
 async def create_project(project: CreateProject) -> Project:
     db = await get_db_connection()
     query = """
-        INSERT INTO "Project" (id, name, project_type, prompt, templates, credential_id, model_name, model_parameters, requests_per_minute)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO "Project" (id, name, project_type, prompt, templates, credential_id, model_name, model_parameters, requests_per_minute, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING *
     """
     params = (
@@ -151,6 +152,7 @@ async def create_project(project: CreateProject) -> Project:
         project.model_name,
         json.dumps(project.model_parameters),
         project.requests_per_minute,
+        project.user_id,
     )
     result = await db.execute_and_fetch_one(query, params)
     if not result:
@@ -163,33 +165,49 @@ async def create_project(project: CreateProject) -> Project:
 
 
 async def get_project(
-    project_id: str, tx: Optional[AsyncDBTransaction] = None
+    project_id: str, 
+    tx: Optional[AsyncDBTransaction] = None,
+    user_id: Optional[str] = None,
 ) -> Project | None:
-    """Retrieve a project by its ID."""
+    """Retrieve a project by its ID, optionally filtered by user_id."""
     db = tx or await get_db_connection()
-    query = 'SELECT * FROM "Project" WHERE id = %s'
-    result = await db.fetch_one(query, (project_id,))
+    if user_id:
+        query = 'SELECT * FROM "Project" WHERE id = %s AND user_id = %s'
+        result = await db.fetch_one(query, (project_id, user_id))
+    else:
+        query = 'SELECT * FROM "Project" WHERE id = %s'
+        result = await db.fetch_one(query, (project_id,))
     return _deserialize_project(result)
 
 
-async def count_projects() -> int:
-    """Count all projects."""
+async def count_projects(user_id: Optional[str] = None) -> int:
+    """Count all projects, optionally filtered by user_id."""
     db = await get_db_connection()
-    query = 'SELECT COUNT(*) as count FROM "Project"'
-    result = await db.fetch_one(query)
+    if user_id:
+        query = 'SELECT COUNT(*) as count FROM "Project" WHERE user_id = %s'
+        result = await db.fetch_one(query, (user_id,))
+    else:
+        query = 'SELECT COUNT(*) as count FROM "Project"'
+        result = await db.fetch_one(query)
     return result["count"] if result and "count" in result else 0
 
 
 async def list_projects_paginated(
-    limit: int = 50, offset: int = 0
+    limit: int = 50, 
+    offset: int = 0,
+    user_id: Optional[str] = None,
 ) -> PaginatedResponse[Project]:
-    """List all projects with pagination."""
+    """List all projects with pagination, optionally filtered by user_id."""
     db = await get_db_connection()
-    query = 'SELECT * FROM "Project" ORDER BY created_at DESC LIMIT %s OFFSET %s'
-    results = await db.fetch_all(query, (limit, offset))
+    if user_id:
+        query = 'SELECT * FROM "Project" WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s'
+        results = await db.fetch_all(query, (user_id, limit, offset))
+    else:
+        query = 'SELECT * FROM "Project" ORDER BY created_at DESC LIMIT %s OFFSET %s'
+        results = await db.fetch_all(query, (limit, offset))
     projects = [_deserialize_project(row) for row in results if row]
     projects = [p for p in projects if p]
-    total_items = await count_projects()
+    total_items = await count_projects(user_id=user_id)
     current_page = offset // limit + 1
 
     return PaginatedResponse(
@@ -237,8 +255,12 @@ async def update_project(
     return _deserialize_project(result)
 
 
-async def delete_project(project_id: str):
-    """Delete a project from the database."""
+async def delete_project(project_id: str, user_id: Optional[str] = None):
+    """Delete a project from the database, optionally filtered by user_id."""
     db = await get_db_connection()
-    query = 'DELETE FROM "Project" WHERE id = %s'
-    await db.execute(query, (project_id,))
+    if user_id:
+        query = 'DELETE FROM "Project" WHERE id = %s AND user_id = %s'
+        await db.execute(query, (project_id, user_id))
+    else:
+        query = 'DELETE FROM "Project" WHERE id = %s'
+        await db.execute(query, (project_id,))
