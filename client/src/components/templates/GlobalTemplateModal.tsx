@@ -22,6 +22,7 @@ interface TemplateFormValues {
 
 export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplateModalProps) {
   const isEditMode = !!template;
+  const isGlobalTemplate = template?.user_id === null || template?.user_id === undefined;
   const createTemplateMutation = useCreateGlobalTemplate();
   const updateTemplateMutation = useUpdateGlobalTemplate();
   const { data: defaultTemplates } = useDefaultGlobalTemplates();
@@ -50,6 +51,11 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
   }, [template, opened]);
 
   const handleSubmit = (values: TemplateFormValues) => {
+    // Prevent editing global templates
+    if (isEditMode && isGlobalTemplate) {
+      return;
+    }
+    
     if (isEditMode && template) {
       const { name, content } = values;
       updateTemplateMutation.mutate({ templateId: template.id, data: { name, content } }, { onSuccess: onClose });
@@ -103,6 +109,7 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
             label={t('templates.name')}
             placeholder="e.g., My Custom Entry Prompt"
             {...form.getInputProps('name')}
+            disabled={isGlobalTemplate}
           />
           <LazyMonacoEditorInput
             label={hasDefaultTemplate ? renderTemplateLabel(t('templates.content')) : t('templates.content')}
@@ -110,15 +117,25 @@ export function GlobalTemplateModal({ opened, onClose, template }: GlobalTemplat
             height={400}
             {...form.getInputProps('content')}
             error={form.errors.content}
+            options={{
+              readOnly: isGlobalTemplate,
+            }}
           />
+          {isGlobalTemplate && (
+            <Text size="sm" c="dimmed">
+              {t('templates.globalTemplateReadOnly') || 'Global templates are read-only and cannot be modified.'}
+            </Text>
+          )}
 
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={onClose}>
               {t('common.cancel')}
             </Button>
-            <Button type="submit" loading={isLoading}>
-              {isEditMode ? t('btn.save') : t('templates.create')}
-            </Button>
+            {!isGlobalTemplate && (
+              <Button type="submit" loading={isLoading}>
+                {isEditMode ? t('btn.save') : t('templates.create')}
+              </Button>
+            )}
           </Group>
         </Stack>
       </form>

@@ -65,46 +65,50 @@ export function GlobalTemplatesPage() {
     openModal();
   };
 
-  const rows = templates.map((template) => (
-    <Table.Tr key={template.id}>
-      <Table.Td>
-        <Text fw={500}>{template.name}</Text>
-        <Text size="xs" c="dimmed">
-          {template.id}
-        </Text>
-      </Table.Td>
-      <Table.Td>{formatDate(template.updated_at)}</Table.Td>
-      <Table.Td>
-        <Group gap="xs">
-          <ActionIcon
-            variant="subtle"
-            onClick={() => handleOpenEditModal(template)}
-            aria-label={(t('aria.editItem') || 'Edit {name}').replace('{name}', template.name)}
-          >
-            <IconPencil size={16} />
-          </ActionIcon>
-          <ActionIcon
-            variant="subtle"
-            color="red"
-            onClick={() => openDeleteModal(template)}
-            aria-label={(t('aria.deleteItem') || 'Delete {name}').replace('{name}', template.name)}
-            disabled={[
-              'selector-prompt',
-              'search-params-prompt',
-              'entry-creation-prompt',
-              'lorebook-definition',
-              'character-field-regeneration-prompt',
-              'character-generation-prompt',
-              'character-card-definition',
-              'json-formatter-prompt',
-            ].includes(template.id)}
-          >
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Group>
-      </Table.Td>
-    </Table.Tr>
-  ));
+  const rows = templates.map((template) => {
+    // Global templates (user_id is null) are read-only
+    const isGlobalTemplate = template.user_id === null || template.user_id === undefined;
+    
+    return (
+      <Table.Tr key={template.id}>
+        <Table.Td>
+          <Text fw={500}>{template.name}</Text>
+          <Text size="xs" c="dimmed">
+            {template.id}
+            {isGlobalTemplate && (
+              <Text component="span" size="xs" c="dimmed" ml="xs">
+                (Global)
+              </Text>
+            )}
+          </Text>
+        </Table.Td>
+        <Table.Td>{formatDate(template.updated_at)}</Table.Td>
+        <Table.Td>
+          <Group gap="xs">
+            <ActionIcon
+              variant="subtle"
+              onClick={() => handleOpenEditModal(template)}
+              aria-label={(t('aria.editItem') || 'Edit {name}').replace('{name}', template.name)}
+              disabled={isGlobalTemplate}
+              title={isGlobalTemplate ? (t('templates.globalTemplateReadOnly') || 'Global templates are read-only') : undefined}
+            >
+              <IconPencil size={16} />
+            </ActionIcon>
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              onClick={() => openDeleteModal(template)}
+              aria-label={(t('aria.deleteItem') || 'Delete {name}').replace('{name}', template.name)}
+              disabled={isGlobalTemplate}
+              title={isGlobalTemplate ? (t('templates.globalTemplateReadOnly') || 'Global templates are read-only') : undefined}
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Group>
+        </Table.Td>
+      </Table.Tr>
+    );
+  });
 
   const loadingRows = Array.from({ length: 5 }).map((_, index) => (
     <Table.Tr key={index}>

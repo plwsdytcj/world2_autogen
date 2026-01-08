@@ -250,6 +250,7 @@ export interface GlobalTemplate {
   id: string;
   name: string;
   content: string;
+  user_id?: string | null; // null means global template (read-only)
   created_at: string;
   updated_at: string;
 }
