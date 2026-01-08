@@ -4,7 +4,7 @@ Authentication controller for Google OAuth endpoints.
 
 import os
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 
 from litestar import Controller, Request, Response, get, post
 from litestar.exceptions import HTTPException
@@ -116,18 +116,20 @@ class AuthController(Controller):
             
             # Redirect to frontend with tokens in URL hash (client-side only)
             # The frontend will extract tokens and store them
-            params = {
+            # Build URL-encoded query string for hash
+            auth_params = urlencode({
                 "access_token": tokens.access_token,
                 "refresh_token": tokens.refresh_token,
                 "expires_in": str(tokens.expires_in),
-            }
+            })
             
             # Get state from query parameters if provided
             state = request.query_params.get("state")
             redirect_path = state if state and state.startswith("/") else "/"
-            redirect_url = f"{FRONTEND_URL}{redirect_path}#auth={urlencode(params)}"
+            redirect_url = f"{FRONTEND_URL}{redirect_path}#auth={auth_params}"
             
             logger.info(f"User logged in: {user.email}")
+            logger.info(f"Redirecting to: {redirect_url}")
             
             return Response(
                 content=None,

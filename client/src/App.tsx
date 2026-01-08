@@ -22,7 +22,12 @@ function AuthCallback() {
       const hash = window.location.hash;
       if (hash.includes('auth=')) {
         try {
-          const authParams = new URLSearchParams(hash.split('auth=')[1]);
+          // Extract everything after 'auth='
+          const authIndex = hash.indexOf('auth=');
+          const authValue = hash.substring(authIndex + 5); // 'auth=' is 5 chars
+          
+          // Parse the URL-encoded auth parameters
+          const authParams = new URLSearchParams(authValue);
           const accessToken = authParams.get('access_token');
           const refreshToken = authParams.get('refresh_token');
           
@@ -40,9 +45,14 @@ function AuthCallback() {
             const cleanPath = location.pathname || '/';
             window.history.replaceState(null, '', cleanPath);
             navigate(cleanPath, { replace: true });
+          } else {
+            console.error('Missing tokens in auth callback');
+            setLoading(false);
+            navigate('/login?error=no_tokens', { replace: true });
           }
         } catch (error) {
           console.error('Auth callback error:', error);
+          setLoading(false);
           useAuthStore.getState().logout();
           navigate('/login?error=callback_failed', { replace: true });
         }
@@ -52,7 +62,7 @@ function AuthCallback() {
     };
     
     handleAuthCallback();
-  }, []);
+  }, [navigate, location, setAuth, setLoading]);
   
   return null;
 }
