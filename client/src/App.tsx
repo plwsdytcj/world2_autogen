@@ -6,7 +6,6 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { GlobalTemplatesPage } from './pages/GlobalTemplatesPage';
 import { CredentialsPage } from './pages/CredentialsPage';
-import { LoginPage } from './pages/LoginPage';
 import { useAuthStore } from './stores/authStore';
 import { authApi } from './services/api';
 
@@ -48,13 +47,11 @@ function AuthCallback() {
           } else {
             console.error('Missing tokens in auth callback');
             setLoading(false);
-            navigate('/login?error=no_tokens', { replace: true });
           }
         } catch (error) {
           console.error('Auth callback error:', error);
           setLoading(false);
           useAuthStore.getState().logout();
-          navigate('/login?error=callback_failed', { replace: true });
         }
       } else {
         setLoading(false);
@@ -92,17 +89,12 @@ export default function App() {
       <AuthCallback />
       <Notifications zIndex={9999} />
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        {isAuthenticated ? (
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<ProjectsPage />} />
-            <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-            <Route path="/templates" element={<GlobalTemplatesPage />} />
-            <Route path="/credentials" element={<CredentialsPage />} />
-          </Route>
-        ) : (
-          <Route path="*" element={<LoginPage />} />
-        )}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<ProjectsPage />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+          <Route path="/templates" element={<GlobalTemplatesPage />} />
+          <Route path="/credentials" element={<CredentialsPage />} />
+        </Route>
       </Routes>
     </>
   );

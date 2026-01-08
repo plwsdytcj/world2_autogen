@@ -1,7 +1,7 @@
-import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton } from '@mantine/core';
+import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown } from '@tabler/icons-react';
+import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient, { authApi } from '../../services/api';
 import { notifications } from '@mantine/notifications';
@@ -52,7 +52,11 @@ export function AppLayout() {
       // Ignore logout API errors
     }
     logout();
-    navigate('/login');
+    navigate('/');
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = authApi.getGoogleLoginUrl();
   };
 
   useEffect(() => {
@@ -128,7 +132,7 @@ export function AppLayout() {
             <Group gap="md">
               <LanguageSwitcher />
               
-              {user && (
+              {user ? (
                 <Menu shadow="md" width={200} position="bottom-end">
                   <Menu.Target>
                     <UnstyledButton>
@@ -159,6 +163,15 @@ export function AppLayout() {
                     </Menu.Item>
                   </Menu.Dropdown>
                 </Menu>
+              ) : (
+                <Button
+                  variant="outline"
+                  leftSection={<IconBrandGoogle size={18} />}
+                  onClick={handleGoogleLogin}
+                  size="sm"
+                >
+                  {t('auth.signInWithGoogle') || 'Sign in with Google'}
+                </Button>
               )}
             </Group>
           </Box>
