@@ -82,8 +82,8 @@ class AuthController(Controller):
     @get("/callback/google")
     async def google_callback(
         self,
+        request: Request,
         code: Optional[str] = None,
-        state: Optional[str] = None,
         error: Optional[str] = None,
     ) -> Response:
         """
@@ -122,7 +122,8 @@ class AuthController(Controller):
                 "expires_in": str(tokens.expires_in),
             }
             
-            # Use state as redirect path if provided
+            # Get state from query parameters if provided
+            state = request.query_params.get("state")
             redirect_path = state if state and state.startswith("/") else "/"
             redirect_url = f"{FRONTEND_URL}{redirect_path}#auth={urlencode(params)}"
             
