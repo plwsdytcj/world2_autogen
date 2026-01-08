@@ -1,4 +1,4 @@
-import { Button, Card, Center, Stack, Text, Title, Box } from '@mantine/core';
+import { Button, Card, Stack, Text, Title, Box } from '@mantine/core';
 import { IconBrandGoogle } from '@tabler/icons-react';
 import { useSearchParams } from 'react-router-dom';
 import { useI18n } from '../i18n';
