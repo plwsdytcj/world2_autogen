@@ -18,3 +18,4 @@ html-to-markdown
 cryptography
 Pillow
 apify-client
+python-jose[cryptography]
