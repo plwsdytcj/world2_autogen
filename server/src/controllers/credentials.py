@@ -16,7 +16,7 @@ from litestar import Controller, Request, get, post, patch, delete
 from litestar.exceptions import NotFoundException
 from litestar.params import Body
 
-from controllers.auth import get_current_user_optional
+from controllers.auth import get_current_user_optional, require_auth
 from logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -29,9 +29,9 @@ class CredentialsController(Controller):
     async def create_new_credential(
         self, request: Request, data: CreateCredential = Body()
     ) -> SingleResponse[Credential]:
-        user = await get_current_user_optional(request)
-        if user:
-            data.user_id = user.id
+        """Create a new credential. Requires authentication."""
+        user = await require_auth(request)
+        data.user_id = user.id
         logger.debug(f"Creating credential {data.name} for user {data.user_id}")
         credential = await create_credential(data)
         return SingleResponse(data=credential)

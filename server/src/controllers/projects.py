@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 from logging_config import get_logger
-from controllers.auth import get_current_user_optional
+from controllers.auth import get_current_user_optional, require_auth
+from db.connection import get_db_connection
 from db.projects import (
     Project,
     CreateProject,
@@ -46,39 +47,35 @@ class ProjectController(Controller):
     async def create_project(
         self, request: Request, data: CreateProject = Body()
     ) -> SingleResponse[Project]:
-        """Create a new project."""
-        user = await get_current_user_optional(request)
-        if user:
-            data.user_id = user.id
+        """Create a new project. Requires authentication."""
+        user = await require_auth(request)
+        data.user_id = user.id
         
         # Check if project ID already exists for this user
         # Note: Different users can have projects with the same ID
-        if data.user_id:
-            existing_project = await db_get_project(data.id, user_id=data.user_id)
-            if existing_project:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
-                )
+        existing_project = await db_get_project(data.id, user_id=data.user_id)
+        if existing_project:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
+            )
         
         logger.debug(f"Creating project {data.id} of type {data.project_type} for user {data.user_id}")
         
-        # If project ID already exists globally, try to make it unique by appending user_id suffix
+        # If project ID already exists globally (different user), try to make it unique by appending user_id suffix
         original_id = data.id
-        existing_project = await db_get_project(data.id)
-        if existing_project:
-            if existing_project.user_id == data.user_id:
-                # Same user, same ID - this is an error
-                raise HTTPException(
-                    status_code=409,
-                    detail=f"Project with ID '{data.id}' already exists. Please choose a different ID."
-                )
-            else:
-                # Different user has this ID - make it unique by appending user_id hash
-                # Use first 8 chars of user_id to keep ID readable
-                user_suffix = data.user_id[:8] if data.user_id else "user"
-                data.id = f"{original_id}-{user_suffix}"
-                logger.info(f"Project ID '{original_id}' already exists for another user. Using '{data.id}' instead.")
+        # Check globally (without user_id filter) to see if another user has this ID
+        # We need to query directly since get_project now requires user_id
+        db = await get_db_connection()
+        global_check_query = 'SELECT * FROM "Project" WHERE id = %s'
+        global_existing = await db.fetch_one(global_check_query, (data.id,))
+        
+        if global_existing:
+            # Different user has this ID - make it unique by appending user_id hash
+            # Use first 8 chars of user_id to keep ID readable
+            user_suffix = data.user_id[:8]
+            data.id = f"{original_id}-{user_suffix}"
+            logger.info(f"Project ID '{original_id}' already exists for another user. Using '{data.id}' instead.")
         
         try:
             project = await db_create_project(data)

@@ -169,26 +169,26 @@ async def get_project(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> Project | None:
-    """Retrieve a project by its ID, optionally filtered by user_id."""
+    """Retrieve a project by its ID, filtered by user_id. Returns None if user_id is None."""
     db = tx or await get_db_connection()
     if user_id:
         query = 'SELECT * FROM "Project" WHERE id = %s AND user_id = %s'
         result = await db.fetch_one(query, (project_id, user_id))
     else:
-        query = 'SELECT * FROM "Project" WHERE id = %s'
-        result = await db.fetch_one(query, (project_id,))
+        # Return None for unauthenticated users
+        return None
     return _deserialize_project(result)
 
 
 async def count_projects(user_id: Optional[str] = None) -> int:
-    """Count all projects, optionally filtered by user_id."""
+    """Count all projects, filtered by user_id. Returns 0 if user_id is None."""
     db = await get_db_connection()
     if user_id:
         query = 'SELECT COUNT(*) as count FROM "Project" WHERE user_id = %s'
         result = await db.fetch_one(query, (user_id,))
     else:
-        query = 'SELECT COUNT(*) as count FROM "Project"'
-        result = await db.fetch_one(query)
+        # Return 0 for unauthenticated users
+        return 0
     return result["count"] if result and "count" in result else 0
 
 
@@ -197,18 +197,18 @@ async def list_projects_paginated(
     offset: int = 0,
     user_id: Optional[str] = None,
 ) -> PaginatedResponse[Project]:
-    """List all projects with pagination, optionally filtered by user_id."""
+    """List all projects with pagination, filtered by user_id. Returns empty list if user_id is None."""
     db = await get_db_connection()
     if user_id:
         query = 'SELECT * FROM "Project" WHERE user_id = %s ORDER BY created_at DESC LIMIT %s OFFSET %s'
         results = await db.fetch_all(query, (user_id, limit, offset))
     else:
-        query = 'SELECT * FROM "Project" ORDER BY created_at DESC LIMIT %s OFFSET %s'
-        results = await db.fetch_all(query, (limit, offset))
+        # Return empty list for unauthenticated users
+        results = []
     projects = [_deserialize_project(row) for row in results if row]
     projects = [p for p in projects if p]
     total_items = await count_projects(user_id=user_id)
-    current_page = offset // limit + 1
+    current_page = offset // limit + 1 if limit > 0 else 1
 
     return PaginatedResponse(
         data=projects,
