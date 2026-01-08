@@ -1,5 +1,5 @@
 from litestar import Controller, Request, get, post, patch, delete
-from litestar.exceptions import NotFoundException
+from litestar.exceptions import NotFoundException, HTTPException
 from typing import Dict
 from litestar.params import Body
 
@@ -81,19 +81,27 @@ class GlobalTemplateController(Controller):
     async def update_global_template(
         self, request: Request, template_id: str, data: UpdateGlobalTemplate = Body()
     ) -> SingleResponse[GlobalTemplate]:
-        """Update a global template, filtered by current user."""
+        """Update a global template. Only allows updating user's own templates, not global templates."""
         user = await get_current_user_optional(request)
         user_id = user.id if user else None
         logger.debug(f"Updating global template {template_id} for user {user_id}")
-        template = await db_update_global_template(template_id, data, user_id=user_id)
-        if not template:
-            raise NotFoundException(f"Global template '{template_id}' not found.")
-        return SingleResponse(data=template)
+        try:
+            template = await db_update_global_template(template_id, data, user_id=user_id)
+            if not template:
+                raise NotFoundException(f"Global template '{template_id}' not found.")
+            return SingleResponse(data=template)
+        except ValueError as e:
+            # Handle read-only global template error
+            raise HTTPException(status_code=403, detail=str(e))
 
     @delete("/{template_id:str}")
     async def delete_global_template(self, request: Request, template_id: str) -> None:
-        """Delete a global template, filtered by current user."""
+        """Delete a global template. Only allows deleting user's own templates, not global templates."""
         user = await get_current_user_optional(request)
         user_id = user.id if user else None
         logger.debug(f"Deleting global template {template_id} for user {user_id}")
-        await db_delete_global_template(template_id, user_id=user_id)
+        try:
+            await db_delete_global_template(template_id, user_id=user_id)
+        except ValueError as e:
+            # Handle read-only global template error
+            raise HTTPException(status_code=403, detail=str(e))

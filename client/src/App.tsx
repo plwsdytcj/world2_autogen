@@ -65,7 +65,7 @@ function AuthCallback() {
 }
 
 export default function App() {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isLoading } = useAuthStore();
   
   // Show loading state while checking auth
   if (isLoading) {
