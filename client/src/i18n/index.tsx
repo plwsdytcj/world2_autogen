@@ -7,6 +7,7 @@ type Dict = Record<string, string>;
 const dicts: Record<Lang, Dict> = {
   en: {
     'app.title': 'SillyTavern Card Forge',
+    'nav.quickCreate': 'Quick Create',
     'nav.projects': 'Projects',
     'nav.credentials': 'Credentials',
     'nav.templates': 'Templates',
@@ -473,6 +474,7 @@ const dicts: Record<Lang, Dict> = {
   },
   zh: {
     'app.title': 'SillyTavern Card Forge',
+    'nav.quickCreate': '快速创建',
     'nav.projects': '项目',
     'nav.credentials': '凭证',
     'nav.templates': '模板',
@@ -922,6 +924,7 @@ const dicts: Record<Lang, Dict> = {
   },
   ja: {
     'app.title': 'SillyTavern Card Forge',
+    'nav.quickCreate': 'クイック作成',
     'nav.projects': 'プロジェクト',
     'nav.credentials': 'クレデンシャル',
     'nav.templates': 'テンプレート',

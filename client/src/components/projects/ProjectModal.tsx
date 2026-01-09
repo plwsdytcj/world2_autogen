@@ -66,7 +66,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
       credential_id: undefined,
       model_name: undefined,
       model_parameters: { temperature: 0.7 },
-      json_enforcement_mode: 'api_native',
+      json_enforcement_mode: 'prompt_engineering',
       templates: {
         search_params_generation: '',
         selector_generation: '',
@@ -90,7 +90,7 @@ export function ProjectModal({ opened, onClose, project }: ProjectModalProps) {
         ...project,
         prompt: project.prompt || '',
         model_parameters: project.model_parameters || { temperature: 0.7 },
-        json_enforcement_mode: project.json_enforcement_mode || 'api_native',
+        json_enforcement_mode: project.json_enforcement_mode || 'prompt_engineering',
         templates: {
           search_params_generation: project.templates.search_params_generation || '',
           selector_generation: project.templates.selector_generation || '',

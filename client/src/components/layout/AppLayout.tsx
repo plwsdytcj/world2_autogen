@@ -1,7 +1,7 @@
 import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle } from '@tabler/icons-react';
+import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle, IconRocket, IconFolder } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient, { authApi } from '../../services/api';
 import { notifications } from '@mantine/notifications';
@@ -183,9 +183,16 @@ export function AppLayout() {
           <NavLink
             component={Link}
             to="/"
+            label={t('nav.quickCreate') || 'Quick Create'}
+            leftSection={<IconRocket size="1rem" />}
+            active={pathname === '/'}
+          />
+          <NavLink
+            component={Link}
+            to="/projects"
             label={t('nav.projects')}
-            leftSection={<IconHome size="1rem" />}
-            active={pathname === '/' || pathname.startsWith('/projects')}
+            leftSection={<IconFolder size="1rem" />}
+            active={pathname.startsWith('/projects')}
           />
           <NavLink
             component={Link}

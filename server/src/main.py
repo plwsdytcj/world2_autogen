@@ -45,6 +45,7 @@ from controllers.health import HealthController  # noqa: E402
 from controllers.proxy import ProxyController  # noqa: E402
 from controllers.images import ImagesController  # noqa: E402
 from controllers.auth import AuthController  # noqa: E402
+from controllers.quick_create import QuickCreateController  # noqa: E402
 from exceptions import (  # noqa: E402
     generic_exception_handler,
     validation_exception_handler,
@@ -329,6 +330,7 @@ def create_app():
             ShareController,
             ProxyController,
             ImagesController,
+            QuickCreateController,
         ],
     )
 

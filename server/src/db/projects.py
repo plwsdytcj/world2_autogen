@@ -81,7 +81,7 @@ class CreateProject(BaseModel):
     credential_id: Optional[UUID] = None
     model_name: str
     model_parameters: Dict[str, Any]
-    json_enforcement_mode: JsonEnforcementMode = JsonEnforcementMode.API_NATIVE
+    json_enforcement_mode: JsonEnforcementMode = JsonEnforcementMode.prompt_engineering
     user_id: Optional[str] = None  # Owner of the project
 
     @field_serializer("credential_id")
@@ -138,8 +138,8 @@ def _deserialize_project(row: Optional[Dict[str, Any]]) -> Optional[Project]:
 async def create_project(project: CreateProject) -> Project:
     db = await get_db_connection()
     query = """
-        INSERT INTO "Project" (id, name, project_type, prompt, templates, credential_id, model_name, model_parameters, requests_per_minute, user_id)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO "Project" (id, name, project_type, prompt, templates, credential_id, model_name, model_parameters, requests_per_minute, json_enforcement_mode, user_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING *
     """
     params = (
@@ -152,6 +152,7 @@ async def create_project(project: CreateProject) -> Project:
         project.model_name,
         json.dumps(project.model_parameters),
         project.requests_per_minute,
+        project.json_enforcement_mode.value,
         project.user_id,
     )
     result = await db.execute_and_fetch_one(query, params)

@@ -2,6 +2,7 @@ import { Notifications } from '@mantine/notifications';
 import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
+import { QuickCreatePage } from './pages/QuickCreatePage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { GlobalTemplatesPage } from './pages/GlobalTemplatesPage';
@@ -90,7 +91,8 @@ export default function App() {
       <Notifications zIndex={9999} />
       <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<ProjectsPage />} />
+          <Route path="/" element={<QuickCreatePage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
           <Route path="/templates" element={<GlobalTemplatesPage />} />
           <Route path="/credentials" element={<CredentialsPage />} />
