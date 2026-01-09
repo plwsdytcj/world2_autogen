@@ -170,14 +170,20 @@ async def get_project(
     tx: Optional[AsyncDBTransaction] = None,
     user_id: Optional[str] = None,
 ) -> Project | None:
-    """Retrieve a project by its ID, filtered by user_id. Returns None if user_id is None."""
+    """
+    Retrieve a project by its ID.
+    
+    If user_id is provided, filters by user_id (for API calls).
+    If user_id is None, fetches by project_id only (for internal/worker use).
+    """
     db = tx or await get_db_connection()
     if user_id:
         query = 'SELECT * FROM "Project" WHERE id = %s AND user_id = %s'
         result = await db.fetch_one(query, (project_id, user_id))
     else:
-        # Return None for unauthenticated users
-        return None
+        # Internal use (worker, background jobs) - fetch by project_id only
+        query = 'SELECT * FROM "Project" WHERE id = %s'
+        result = await db.fetch_one(query, (project_id,))
     return _deserialize_project(result)
 
 
