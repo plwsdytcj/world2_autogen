@@ -41,6 +41,8 @@ class GlobalTemplateController(Controller):
             "character-generation-prompt": default_templates.character_generation_prompt,
             "character-field-regeneration-prompt": default_templates.character_field_regeneration_prompt,
             "json-formatter-prompt": default_templates.json_formatter_prompt,
+            "social-media-character-prompt": default_templates.social_media_character_prompt,
+            "social-media-lorebook-prompt": default_templates.social_media_lorebook_prompt,
         }
 
     @post("/")

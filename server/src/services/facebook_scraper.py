@@ -396,6 +396,82 @@ def format_facebook_content_for_llm(content: FacebookScrapedContent) -> str:
 
     # Posts section
     if content.posts:
+        # Content Analysis Section (helps AI understand patterns)
+        sections.append("## Content Analysis\n")
+        
+        # Engagement analysis
+        posts_with_text = [p for p in content.posts if p.text]
+        
+        if posts_with_text:
+            # Parse likes (handle string format like "1.2K")
+            def parse_engagement(val):
+                if not val:
+                    return 0
+                if isinstance(val, int):
+                    return val
+                val_str = str(val).upper().replace(",", "")
+                try:
+                    if "K" in val_str:
+                        return int(float(val_str.replace("K", "")) * 1000)
+                    elif "M" in val_str:
+                        return int(float(val_str.replace("M", "")) * 1000000)
+                    return int(float(val_str))
+                except:
+                    return 0
+            
+            total_likes = sum(parse_engagement(p.likes) for p in posts_with_text)
+            total_comments = sum(parse_engagement(p.comments_count) for p in posts_with_text)
+            total_shares = sum(parse_engagement(p.shares) for p in posts_with_text)
+            avg_likes = total_likes // len(posts_with_text) if posts_with_text else 0
+            
+            sections.append(f"**Total Posts Analyzed:** {len(posts_with_text)}")
+            sections.append(f"**Average Likes per Post:** {avg_likes:,}")
+            sections.append(f"**Total Engagement:** {total_likes + total_comments + total_shares:,}\n")
+            
+            # Find top post
+            top_post = max(posts_with_text, key=lambda p: parse_engagement(p.likes) + parse_engagement(p.shares))
+            top_likes = parse_engagement(top_post.likes)
+            if top_likes > avg_likes * 2:
+                top_text = (top_post.text or "")[:200]
+                sections.append(f"**Most Popular Post:**")
+                sections.append(f"> {top_text}...")
+                sections.append(f"*({top_likes:,} likes)*\n")
+        
+        # Post content patterns
+        all_texts = [p.text or "" for p in content.posts if p.text]
+        all_text_combined = " ".join(all_texts).lower()
+        
+        # Detect common patterns
+        patterns = []
+        if all_text_combined.count("http") > len(posts_with_text) * 0.3:
+            patterns.append("Frequently shares links")
+        if sum(1 for p in content.posts if p.images) > len(content.posts) * 0.5:
+            patterns.append("Visual content focused (lots of images)")
+        if any(len(t) > 500 for t in all_texts):
+            patterns.append("Uses long-form posts")
+        
+        # Emoji usage
+        import re
+        emoji_pattern = re.compile("["
+            u"\U0001F600-\U0001F64F"  # emoticons
+            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+            u"\U0001F1E0-\U0001F1FF"  # flags
+            u"\U00002702-\U000027B0"
+            u"\U000024C2-\U0001F251"
+            "]+", flags=re.UNICODE)
+        emoji_count = len(emoji_pattern.findall(all_text_combined))
+        if emoji_count > len(posts_with_text) * 2:
+            patterns.append("Heavy emoji user")
+        elif emoji_count < len(posts_with_text) * 0.2:
+            patterns.append("Minimal emoji usage")
+        
+        if patterns:
+            sections.append("**Posting Patterns:**")
+            for p in patterns:
+                sections.append(f"- {p}")
+            sections.append("")
+        
         sections.append(f"## Posts ({len(content.posts)} total)\n")
 
         for i, post in enumerate(content.posts, 1):

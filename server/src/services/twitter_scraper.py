@@ -406,13 +406,71 @@ def format_twitter_content_for_llm(content: TwitterScrapedContent) -> str:
 
     # Tweets section
     if content.tweets:
-        sections.append(f"## Tweets ({len(content.tweets)} total)\n")
+        # Filter out retweets for analysis
+        original_tweets = [t for t in content.tweets if not t.is_retweet]
+        
+        # Content Analysis Section (helps AI understand patterns)
+        sections.append("## Content Analysis\n")
+        
+        # Engagement analysis
+        if original_tweets:
+            total_likes = sum(t.likes or 0 for t in original_tweets)
+            total_retweets = sum(t.retweets or 0 for t in original_tweets)
+            total_replies = sum(t.replies or 0 for t in original_tweets)
+            avg_likes = total_likes // len(original_tweets) if original_tweets else 0
+            
+            sections.append(f"**Total Original Tweets:** {len(original_tweets)}")
+            sections.append(f"**Average Likes per Tweet:** {avg_likes:,}")
+            sections.append(f"**Total Engagement:** {total_likes + total_retweets + total_replies:,}\n")
+            
+            # Find top tweet
+            top_tweet = max(original_tweets, key=lambda t: (t.likes or 0) + (t.retweets or 0))
+            if top_tweet.likes and top_tweet.likes > avg_likes * 2:
+                top_text = (top_tweet.full_text or top_tweet.text or "")[:200]
+                sections.append(f"**Most Popular Tweet:**")
+                sections.append(f"> {top_text}...")
+                sections.append(f"*({top_tweet.likes:,} likes)*\n")
+        
+        # Tweet content patterns
+        all_texts = [t.full_text or t.text or "" for t in original_tweets]
+        all_text_combined = " ".join(all_texts).lower()
+        
+        # Detect common patterns
+        patterns = []
+        if all_text_combined.count("http") > len(original_tweets) * 0.3:
+            patterns.append("Frequently shares links")
+        if all_text_combined.count("@") > len(original_tweets) * 0.5:
+            patterns.append("Highly interactive (mentions others often)")
+        if any(len(t) > 200 for t in all_texts):
+            patterns.append("Uses long-form tweets/threads")
+        if sum(1 for t in original_tweets if t.images) > len(original_tweets) * 0.3:
+            patterns.append("Frequently posts images")
+        
+        # Emoji usage
+        import re
+        emoji_pattern = re.compile("["
+            u"\U0001F600-\U0001F64F"  # emoticons
+            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+            u"\U0001F1E0-\U0001F1FF"  # flags
+            u"\U00002702-\U000027B0"
+            u"\U000024C2-\U0001F251"
+            "]+", flags=re.UNICODE)
+        emoji_count = len(emoji_pattern.findall(all_text_combined))
+        if emoji_count > len(original_tweets) * 2:
+            patterns.append("Heavy emoji user")
+        elif emoji_count < len(original_tweets) * 0.2:
+            patterns.append("Minimal emoji usage")
+        
+        if patterns:
+            sections.append("**Posting Patterns:**")
+            for p in patterns:
+                sections.append(f"- {p}")
+            sections.append("")
+        
+        sections.append(f"## Tweets ({len(original_tweets)} original)\n")
 
-        for i, tweet in enumerate(content.tweets, 1):
-            # Skip retweets for cleaner content
-            if tweet.is_retweet:
-                continue
-                
+        for i, tweet in enumerate(original_tweets, 1):
             sections.append(f"### Tweet {i}")
             
             if tweet.created_at:

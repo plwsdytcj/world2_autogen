@@ -114,6 +114,16 @@ async def create_default_templates():
             name="JSON Formatter Prompt",
             content=default_templates.json_formatter_prompt,
         ),
+        CreateGlobalTemplate(
+            id="social-media-character-prompt",
+            name="social_media_character_prompt",
+            content=default_templates.social_media_character_prompt,
+        ),
+        CreateGlobalTemplate(
+            id="social-media-lorebook-prompt",
+            name="social_media_lorebook_prompt",
+            content=default_templates.social_media_lorebook_prompt,
+        ),
     ]
     for template in templates_to_create:
         existing_template = await get_global_template(template.id)

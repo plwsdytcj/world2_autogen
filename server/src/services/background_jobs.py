@@ -372,9 +372,34 @@ async def fetch_source_content(job: BackgroundJob, project: Project):
         )
 
 
+def _is_social_media_source(url: str) -> bool:
+    """Check if a URL is from a social media platform."""
+    return is_twitter_url(url) or is_facebook_url(url)
+
+
+def _get_social_media_template(sources: list, globals_dict: dict) -> str | None:
+    """
+    Check if sources are primarily from social media and return the appropriate template.
+    Returns the social media template if most sources are social media, None otherwise.
+    """
+    if not sources:
+        return None
+    
+    social_media_count = sum(1 for s in sources if _is_social_media_source(s.url))
+    
+    # If more than half of sources are social media, use specialized template
+    if social_media_count > 0 and social_media_count >= len(sources) / 2:
+        # Check if we have the social media template in globals
+        if "social_media_character_prompt" in globals_dict:
+            return globals_dict["social_media_character_prompt"]
+    
+    return None
+
+
 async def generate_character_card(job: BackgroundJob, project: Project):
     """
     Generates a full character card using all fetched content from project sources.
+    Automatically uses social media-specific prompts for Twitter/Facebook sources.
     """
     if not isinstance(job.payload, GenerateCharacterCardPayload):
         raise TypeError("Invalid payload for generate_character_card job.")
@@ -407,14 +432,22 @@ async def generate_character_card(job: BackgroundJob, project: Project):
         "globals": globals_dict,
     }
 
-    if not project.templates.character_generation:
+    # Check if we should use social media-specific template
+    template_to_use = project.templates.character_generation
+    social_media_template = _get_social_media_template(fetched_sources, globals_dict)
+    
+    if social_media_template:
+        logger.info(f"[{job.id}] Detected social media sources, using specialized template")
+        template_to_use = social_media_template
+
+    if not template_to_use:
         raise ValueError("Character generation template is missing for this project.")
 
     response = await provider.generate(
         ChatCompletionRequest(
             model=project.model_name,
             messages=create_messages_from_template(
-                project.templates.character_generation, context
+                template_to_use, context
             ),
             response_format=ResponseSchema(
                 name="character_card_data",
@@ -461,7 +494,9 @@ async def generate_character_card(job: BackgroundJob, project: Project):
     if project.project_type == ProjectType.CHARACTER_LOREBOOK:
         logger.info(f"[{job.id}] Project type is CHARACTER_LOREBOOK, generating lorebook entries...")
         try:
-            await _generate_lorebook_from_character_content(job, project, all_content, provider)
+            await _generate_lorebook_from_character_content(
+                job, project, all_content, provider, fetched_sources
+            )
         except Exception as lorebook_error:
             logger.error(f"[{job.id}] Failed to generate lorebook entries: {lorebook_error}", exc_info=True)
             # Don't fail the whole job, but log the error
@@ -482,11 +517,12 @@ async def generate_character_card(job: BackgroundJob, project: Project):
 
 
 async def _generate_lorebook_from_character_content(
-    job: BackgroundJob, project: Project, content: str, provider
+    job: BackgroundJob, project: Project, content: str, provider, sources: list = None
 ):
     """
     Generate lorebook entries from character source content.
     Used for CHARACTER_LOREBOOK project type.
+    Automatically uses social media-specific prompts for Twitter/Facebook sources.
     """
     logger.info(f"[{job.id}] Generating lorebook entries for CHARACTER_LOREBOOK project")
     
@@ -495,6 +531,15 @@ async def _generate_lorebook_from_character_content(
     
     # Use character_lorebook_generation template if available, otherwise use a default prompt
     template = project.templates.character_lorebook_generation
+    
+    # Check if we should use social media-specific lorebook template
+    if sources and not template:
+        social_media_count = sum(1 for s in sources if _is_social_media_source(s.url))
+        if social_media_count > 0 and social_media_count >= len(sources) / 2:
+            if "social_media_lorebook_prompt" in globals_dict:
+                logger.info(f"[{job.id}] Using social media lorebook template")
+                template = globals_dict["social_media_lorebook_prompt"]
+    
     if not template:
         # Default template for generating lorebook entries from character content
         template = """You are a creative writer helping to build a lorebook for a roleplay character.
