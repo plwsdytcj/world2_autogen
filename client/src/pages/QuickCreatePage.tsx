@@ -36,12 +36,10 @@ interface QuickCreateFormValues {
 }
 
 interface QuickCreateResponse {
-  data: {
-    project_id: string;
-    project_name: string;
-    fetch_job_id: string;
-    message: string;
-  };
+  project_id: string;
+  project_name: string;
+  fetch_job_id: string;
+  message: string;
 }
 
 interface JobStatus {
@@ -128,11 +126,11 @@ export function QuickCreatePage() {
       return response.data;
     },
     onSuccess: (data) => {
-      setCreatedProjectId(data.data.project_id);
-      setFetchJobId(data.data.fetch_job_id);
+      setCreatedProjectId(data.project_id);
+      setFetchJobId(data.fetch_job_id);
       notifications.show({
         title: 'Started!',
-        message: `Creating ${data.data.project_name}...`,
+        message: `Creating ${data.project_name}...`,
         color: 'blue',
       });
     },
