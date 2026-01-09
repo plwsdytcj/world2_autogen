@@ -1,6 +1,6 @@
 {
-  "name": "SillyTavern Card Forge - AI Character Card & Lorebook Generator",
-  "short_name": "SillyTavern Card Forge",
+  "name": "SillyCards - AI Character Card & Lorebook Generator",
+  "short_name": "SillyCards",
   "description": "Create stunning AI character cards and lorebooks. The ultimate web-based tool for roleplay enthusiasts.",
   "start_url": "/",
   "display": "standalone",
@@ -18,4 +18,3 @@
   "lang": "en",
   "dir": "ltr"
 }
-
