@@ -24,7 +24,7 @@ from db.background_jobs import (
     GenerateCharacterCardPayload,
     JobStatus,
     TaskName,
-    create_job,
+    create_background_job,
 )
 from db.connection import get_db_connection
 from db.credentials import list_credentials
@@ -209,7 +209,7 @@ class QuickCreateController(Controller):
         # Queue fetch job
         logger.info(f"Quick create: Queueing fetch job for source {source.id}")
         
-        fetch_job = await create_job(CreateBackgroundJob(
+        fetch_job = await create_background_job(CreateBackgroundJob(
             project_id=project.id,
             task_name=TaskName.FETCH_SOURCE_CONTENT,
             payload=FetchSourceContentPayload(source_ids=[source.id]),
