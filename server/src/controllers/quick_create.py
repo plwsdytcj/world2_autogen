@@ -18,14 +18,12 @@ from pydantic import BaseModel, Field
 
 from controllers.auth import require_auth
 from db.background_jobs import (
-    BackgroundJob,
     CreateBackgroundJob,
     FetchSourceContentPayload,
-    GenerateCharacterCardPayload,
-    JobStatus,
     TaskName,
     create_background_job,
 )
+from db.common import SingleResponse
 from db.connection import get_db_connection
 from db.credentials import list_credentials
 from db.projects import (
@@ -110,7 +108,7 @@ class QuickCreateController(Controller):
     @post("/")
     async def quick_create(
         self, request: Request, data: QuickCreateRequest = Body()
-    ) -> QuickCreateResponse:
+    ) -> SingleResponse[QuickCreateResponse]:
         """
         One-click character card generation from URL.
         
@@ -219,10 +217,10 @@ class QuickCreateController(Controller):
         # via the background job system (if we add auto-generate flag)
         # For now, frontend will poll and trigger generate when fetch completes
         
-        return QuickCreateResponse(
+        return SingleResponse(data=QuickCreateResponse(
             project_id=project.id,
             project_name=project.name,
             fetch_job_id=fetch_job.id,
             message=f"Started processing {project_name}. Check the project page for progress."
-        )
+        ))
 
