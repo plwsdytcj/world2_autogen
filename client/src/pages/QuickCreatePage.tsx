@@ -25,7 +25,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import { useCredentials } from '../hooks/useCredentials';
 import { useAuthStore } from '../stores/authStore';
-import { useI18n } from '../i18n';
 
 interface QuickCreateFormValues {
   url: string;
@@ -78,7 +77,6 @@ function getUrlTypeIcon(type: 'twitter' | 'facebook' | 'web') {
 }
 
 export function QuickCreatePage() {
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [advancedOpened, { toggle: toggleAdvanced }] = useDisclosure(false);

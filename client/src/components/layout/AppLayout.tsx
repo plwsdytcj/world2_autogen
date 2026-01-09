@@ -1,7 +1,7 @@
 import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconGift, IconHome, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle, IconRocket, IconFolder } from '@tabler/icons-react';
+import { IconGift, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle, IconRocket, IconFolder } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient, { authApi } from '../../services/api';
 import { notifications } from '@mantine/notifications';
