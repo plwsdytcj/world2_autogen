@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Paper, Text, Button, Group, Badge, CloseButton, Portal, Box } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { useTourStore } from '../../stores/tourStore';
@@ -18,14 +18,44 @@ export function ProductTour() {
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
 
   const currentStepData = steps[currentStep];
+  const ensureAttemptRef = useRef<{ target?: string; attempts: number }>({ attempts: 0 });
 
   const updatePosition = useCallback(() => {
     if (!currentStepData?.target) return;
 
     const element = document.querySelector(currentStepData.target);
     if (!element) {
-      // Element not found, try again after a short delay
-      setTimeout(updatePosition, 100);
+      // Try to reveal target by opening related UI (advanced options, append tab, etc.)
+      const target = currentStepData.target;
+      const last = ensureAttemptRef.current;
+      if (last.target !== target) {
+        ensureAttemptRef.current = { target, attempts: 0 };
+      }
+      if (ensureAttemptRef.current.attempts < 10) {
+        ensureAttemptRef.current.attempts++;
+        // Advanced options panel
+        const advancedSelectors = new Set([
+          '[data-tour="credential-select"]',
+          '[data-tour="model-name"]',
+          '[data-tour="temperature"]',
+        ]);
+        if (advancedSelectors.has(target)) {
+          const advToggle = document.querySelector('[data-tour="advanced-options"]') as HTMLElement | null;
+          advToggle?.click();
+        }
+        // Append tab
+        const appendSelectors = new Set([
+          '[data-tour="append-project"]',
+          '[data-tour="append-url"]',
+          '[data-tour="append-submit"]',
+        ]);
+        if (appendSelectors.has(target)) {
+          const appendTab = document.querySelector('[data-tour="append-tab"]') as HTMLElement | null;
+          appendTab?.click();
+        }
+      }
+      // Element not found yet, try again after a short delay
+      setTimeout(updatePosition, 120);
       return;
     }
 
