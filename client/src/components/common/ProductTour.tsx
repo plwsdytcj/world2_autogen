@@ -55,11 +55,16 @@ export function ProductTour() {
         }
       }
       // Element not found yet, try again after a short delay
-      setTimeout(updatePosition, 120);
+      setTimeout(updatePosition, 150);
       return;
     }
 
     const rect = element.getBoundingClientRect();
+    // If element is present but not yet laid out (collapsed/animating), retry
+    if (rect.width < 5 || rect.height < 5 || (element as HTMLElement).offsetParent === null) {
+      setTimeout(updatePosition, 150);
+      return;
+    }
     const padding = 12;
 
     setTargetRect({

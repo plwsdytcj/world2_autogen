@@ -33,30 +33,7 @@ export const getQuickCreateTourSteps = (t: (key: string) => string): TourStep[] 
       'Click to reveal expert settings. Next steps cover credential, model and temperature controls.',
     placement: 'top',
   },
-  {
-    target: '[data-tour="credential-select"]',
-    title: t('tour.quickCreate.credential.title') || 'API Credential',
-    content:
-      t('tour.quickCreate.credential.content') ||
-      'Pick which provider/key to use. If empty, add one under Credentials. Different providers unlock different models.',
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="model-name"]',
-    title: t('tour.quickCreate.model.title') || 'Model Name',
-    content:
-      t('tour.quickCreate.model.content') ||
-      'Override the default model if you need a specific provider/model string. Leave as-is if unsure.',
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="temperature"]',
-    title: t('tour.quickCreate.temperature.title') || 'Temperature',
-    content:
-      t('tour.quickCreate.temperature.content') ||
-      'Controls randomness. Lower (0–0.5) = more consistent; Higher (1–2) = more creative. 0.7 is a good starting point.',
-    placement: 'bottom',
-  },
+  // Steps 5, 6, 7 (advanced credential/model/temperature) intentionally omitted
   {
     target: '[data-tour="append-tab"]',
     title: t('tour.quickCreate.step5.title') || 'Append Mode',
@@ -65,20 +42,7 @@ export const getQuickCreateTourSteps = (t: (key: string) => string): TourStep[] 
       'Already have a project? Switch to this tab to add more content without losing existing details.',
     placement: 'bottom',
   },
-  {
-    target: '[data-tour="append-project"]',
-    title: t('tour.quickCreate.append.selectProject.title') || 'Select Project',
-    content: t('tour.quickCreate.append.selectProject.content') || 'Choose which existing project to append new content to.',
-    placement: 'bottom',
-  },
-  {
-    target: '[data-tour="append-url"]',
-    title: t('tour.quickCreate.append.newUrl.title') || 'New URL',
-    content:
-      t('tour.quickCreate.append.newUrl.content') ||
-      'Paste an additional URL to merge. The app fetches and integrates the content intelligently.',
-    placement: 'bottom',
-  },
+  // Steps 9, 10 (append project/url) intentionally omitted
   {
     target: '[data-tour="append-submit"]',
     title: t('tour.quickCreate.append.submit.title') || 'Append Content',
