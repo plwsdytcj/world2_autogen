@@ -77,6 +77,10 @@ class AppendContentRequest(BaseModel):
         default=True,
         description="Automatically regenerate character card and lorebook with new content"
     )
+    also_generate_lorebook: bool = Field(
+        default=False,
+        description="Generate lorebook entries even if project type is 'character' (will upgrade project)"
+    )
     tweets_limit: Optional[int] = Field(default=20, ge=5, le=100)
 
 
@@ -322,14 +326,25 @@ class QuickCreateController(Controller):
             ))
             generate_job_ids.append(char_job.id)
             
-            # If project type includes lorebook, queue lorebook generation
-            if project.project_type == ProjectType.CHARACTER_LOREBOOK:
+            # Generate lorebook if:
+            # 1. Project type is CHARACTER_LOREBOOK, OR
+            # 2. User explicitly requested lorebook generation (also_generate_lorebook=True)
+            should_generate_lorebook = (
+                project.project_type == ProjectType.CHARACTER_LOREBOOK or 
+                data.also_generate_lorebook
+            )
+            
+            if should_generate_lorebook:
                 lorebook_job = await create_background_job(CreateBackgroundJob(
                     project_id=project_id,
                     task_name=TaskName.GENERATE_LOREBOOK_ENTRIES,
                     payload=GenerateLorebookEntriesPayload(append_mode=True),
                 ))
                 generate_job_ids.append(lorebook_job.id)
+                
+                # If user requested lorebook but project was character-only, log it
+                if project.project_type != ProjectType.CHARACTER_LOREBOOK and data.also_generate_lorebook:
+                    logger.info(f"Append content: Generating lorebook for character-only project (user requested)")
         
         return SingleResponse(data=AppendContentResponse(
             project_id=project_id,

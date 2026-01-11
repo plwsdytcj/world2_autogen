@@ -16,6 +16,7 @@ import {
   Anchor,
   Tabs,
   Badge,
+  Checkbox,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -42,6 +43,7 @@ interface QuickAppendFormValues {
   projectId: string;
   url: string;
   tweetsLimit: number;
+  alsoGenerateLorebook: boolean;
 }
 
 interface QuickCreateResponse {
@@ -121,6 +123,7 @@ export function QuickCreatePage() {
       projectId: '',
       url: '',
       tweetsLimit: 20,
+      alsoGenerateLorebook: false,
     },
     validate: {
       projectId: (value) => (!value ? 'Please select a project' : null),
@@ -177,6 +180,7 @@ export function QuickCreatePage() {
       return quickCreateApi.appendContent(values.projectId, {
         url: values.url,
         auto_regenerate: true,
+        also_generate_lorebook: values.alsoGenerateLorebook,
         tweets_limit: values.tweetsLimit,
       });
     },
@@ -266,8 +270,12 @@ export function QuickCreatePage() {
   // Get projects for append dropdown
   const projectOptions = projectsData?.data?.map(p => ({
     value: p.id,
-    label: `${p.name} (${p.project_type === 'character_lorebook' ? '📚' : '🎭'})`,
+    label: `${p.name} (${p.project_type === 'character_lorebook' ? '🎭📚' : '🎭'})`,
   })) || [];
+
+  // Check if selected project is character-only (no lorebook)
+  const selectedProject = projectsData?.data?.find(p => p.id === appendForm.values.projectId);
+  const isCharacterOnly = selectedProject?.project_type === 'character';
 
   if (!user) {
     return (
@@ -501,10 +509,25 @@ export function QuickCreatePage() {
                     </div>
                   )}
 
+                  {/* Show lorebook option for character-only projects */}
+                  {isCharacterOnly && (
+                    <Checkbox
+                      label="Also generate Lorebook entries 📚"
+                      description="Create lorebook entries even though this project doesn't have them yet"
+                      {...appendForm.getInputProps('alsoGenerateLorebook', { type: 'checkbox' })}
+                      disabled={isProcessing}
+                    />
+                  )}
+
                   <Alert variant="light" color="blue" icon={<IconFilePlus size={16} />}>
                     <Text size="sm">
-                      Append mode will <strong>add</strong> new content to your existing character card 
-                      and lorebook without losing existing information.
+                      {selectedProject?.project_type === 'character_lorebook' ? (
+                        <>Append mode will <strong>add</strong> new content to your existing character card and lorebook without losing existing information.</>
+                      ) : appendForm.values.alsoGenerateLorebook ? (
+                        <>Will append to character card and <strong>create new</strong> lorebook entries.</>
+                      ) : (
+                        <>Will only append to character card. Check the box above to also generate lorebook entries.</>
+                      )}
                     </Text>
                   </Alert>
 

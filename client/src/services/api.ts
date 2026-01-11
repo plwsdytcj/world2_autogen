@@ -78,6 +78,7 @@ export const authApi = {
 export interface AppendContentRequest {
   url: string;
   auto_regenerate?: boolean;
+  also_generate_lorebook?: boolean;
   tweets_limit?: number;
 }
 
