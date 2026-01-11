@@ -14,7 +14,8 @@ import {
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { IconAlertCircle, IconCheck, IconPlus, IconLoader } from '@tabler/icons-react';
-import { quickCreateApi, AppendContentRequest } from '../../services/api';
+import { quickCreateApi } from '../../services/api';
+import type { AppendContentRequest } from '../../services/api';
 import apiClient from '../../services/api';
 import { useI18n } from '../../i18n';
 import { notifications } from '@mantine/notifications';
