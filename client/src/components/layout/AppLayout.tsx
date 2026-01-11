@@ -163,7 +163,7 @@ export function AppLayout() {
                 onClick={handleStartGuide}
                 style={{ color: 'var(--mantine-color-pink-5)' }}
               >
-                {t('tour.startUserGuide') || 'Start User Guide'}
+                {t('tour.startTour')}
               </Button>
               
               {user ? (
