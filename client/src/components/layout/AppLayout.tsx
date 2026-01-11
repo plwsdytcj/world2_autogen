@@ -123,17 +123,16 @@ export function AppLayout() {
             href="https://www.world2.app/"
             target="_blank"
             rel="noopener noreferrer"
+            className="world2-banner"
             style={{
               marginLeft: 16,
               padding: '8px 16px',
               borderRadius: 20,
-              background: 'linear-gradient(135deg, #ff6b9d 0%, #c44dff 50%, #6366f1 100%)',
               border: 'none',
               color: 'white',
               fontWeight: 600,
               fontSize: '0.85rem',
               letterSpacing: 0.3,
-              boxShadow: '0 4px 15px rgba(196, 77, 255, 0.4), 0 2px 6px rgba(0,0,0,0.2)',
               display: 'flex',
               alignItems: 'center',
               gap: 8,
@@ -142,11 +141,11 @@ export function AppLayout() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(196, 77, 255, 0.5), 0 4px 10px rgba(0,0,0,0.3)';
+              e.currentTarget.style.boxShadow = '0 6px 26px rgba(196, 77, 255, 0.55), 0 4px 12px rgba(0,0,0,0.35)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 15px rgba(196, 77, 255, 0.4), 0 2px 6px rgba(0,0,0,0.2)';
+              e.currentTarget.style.boxShadow = '';
             }}
           >
             <IconDeviceMobile size={18} />
@@ -159,6 +158,7 @@ export function AppLayout() {
               <Button
                 variant="subtle"
                 size="xs"
+                className="start-tour-button"
                 leftSection={<IconPlayerPlay size={14} />}
                 onClick={handleStartGuide}
                 style={{ color: 'var(--mantine-color-pink-5)' }}
