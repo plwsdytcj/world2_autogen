@@ -135,12 +135,12 @@ export function ProjectsPage() {
               </ActionIcon>
             </Tooltip>
           </Group>
-          <Button onClick={handleOpenCreateModal}>{t('projects.create')}</Button>
+          <Button onClick={handleOpenCreateModal} data-tour="create-project">{t('projects.create')}</Button>
         </Group>
 
         {error && <Text color="red">{t('projects.loadFailed')}: {error.message}</Text>}
 
-        <Table striped highlightOnHover>
+        <Table striped highlightOnHover data-tour="projects-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>{t('common.nameId')}</Table.Th>

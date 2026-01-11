@@ -1,7 +1,7 @@
 import { AppShell, Burger, Group, Title, NavLink, Box, Text, Anchor, Stack, Avatar, Menu, UnstyledButton, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { IconGift, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle, IconRocket, IconFolder } from '@tabler/icons-react';
+import { IconGift, IconKey, IconTemplate, IconDeviceMobile, IconExternalLink, IconLogout, IconChevronDown, IconBrandGoogle, IconRocket, IconFolder, IconPlayerPlay } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import apiClient, { authApi } from '../../services/api';
 import { notifications } from '@mantine/notifications';
@@ -9,6 +9,8 @@ import { useEffect } from 'react';
 import { useI18n } from '../../i18n';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { useAuthStore } from '../../stores/authStore';
+import { useTourStore } from '../../stores/tourStore';
+import { getQuickCreateTourSteps, getProjectsTourSteps, getCredentialsTourSteps } from '../../tours/quickCreateTour';
 
 interface AppInfo {
   current_version: string;
@@ -39,6 +41,29 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user, refreshToken, logout } = useAuthStore();
+  const { startTour, resetTour } = useTourStore();
+
+  const handleStartGuide = () => {
+    // Determine which tour to start based on current path
+    if (pathname === '/') {
+      resetTour('quick-create');
+      startTour('quick-create', getQuickCreateTourSteps(t));
+    } else if (pathname === '/projects') {
+      resetTour('projects');
+      startTour('projects', getProjectsTourSteps(t));
+    } else if (pathname === '/credentials') {
+      resetTour('credentials');
+      startTour('credentials', getCredentialsTourSteps(t));
+    } else if (pathname.startsWith('/projects/')) {
+      // Character workspace - we can add tour later
+      resetTour('quick-create');
+      startTour('quick-create', getQuickCreateTourSteps(t));
+    } else {
+      // Default to quick create tour
+      resetTour('quick-create');
+      startTour('quick-create', getQuickCreateTourSteps(t));
+    }
+  };
   const { data: appInfo } = useQuery({
     queryKey: ['appInfo'],
     queryFn: fetchAppInfo,
@@ -131,6 +156,15 @@ export function AppLayout() {
           <Box ml="auto">
             <Group gap="md">
               <LanguageSwitcher />
+              <Button
+                variant="subtle"
+                size="xs"
+                leftSection={<IconPlayerPlay size={14} />}
+                onClick={handleStartGuide}
+                style={{ color: 'var(--mantine-color-pink-5)' }}
+              >
+                {t('tour.startTour') || 'Start Tour'}
+              </Button>
               
               {user ? (
                 <Menu shadow="md" width={200} position="bottom-end">

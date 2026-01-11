@@ -104,7 +104,7 @@ export function CredentialsPage() {
               </ActionIcon>
             </Tooltip>
           </Group>
-          <Button onClick={handleOpenCreateModal}>{t('credentials.create')}</Button>
+          <Button onClick={handleOpenCreateModal} data-tour="create-credential">{t('credentials.create')}</Button>
         </Group>
 
         {error && <Text color="red">{t('credentials.loadFailed')}: {error.message}</Text>}
