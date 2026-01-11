@@ -126,12 +126,12 @@ export function AppLayout() {
             className="world2-banner"
             style={{
               marginLeft: 16,
-              padding: '8px 16px',
-              borderRadius: 20,
+              padding: '12px 22px',
+              borderRadius: 24,
               border: 'none',
               color: 'white',
               fontWeight: 600,
-              fontSize: '0.85rem',
+              fontSize: '0.95rem',
               letterSpacing: 0.3,
               display: 'flex',
               alignItems: 'center',
@@ -148,20 +148,20 @@ export function AppLayout() {
               e.currentTarget.style.boxShadow = '';
             }}
           >
-            <IconDeviceMobile size={18} />
+            <IconDeviceMobile size={20} />
             <span>Try <strong>World2</strong> (IOS's version of SillyTavern), but better</span>
-            <IconExternalLink size={14} style={{ opacity: 0.8 }} />
+            <IconExternalLink size={16} style={{ opacity: 0.8 }} />
           </Anchor>
           <Box ml="auto">
             <Group gap="md">
               <LanguageSwitcher />
               <Button
                 variant="subtle"
-                size="xs"
+                size="sm"
                 className="start-tour-button"
                 leftSection={<IconPlayerPlay size={14} />}
                 onClick={handleStartGuide}
-                style={{ color: 'var(--mantine-color-pink-5)' }}
+                style={{ color: 'var(--mantine-color-pink-5)', fontSize: '0.95rem', fontWeight: 700 }}
               >
                 {t('tour.startTour')}
               </Button>
