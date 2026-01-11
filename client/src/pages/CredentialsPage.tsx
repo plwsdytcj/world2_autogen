@@ -1,5 +1,5 @@
-import { Title, Table, Group, Text, ActionIcon, Stack, Skeleton, Button } from '@mantine/core';
-import { IconPencil, IconTrash } from '@tabler/icons-react';
+import { Title, Table, Group, Text, ActionIcon, Stack, Skeleton, Button, Tooltip, Box } from '@mantine/core';
+import { IconPencil, IconTrash, IconHelp } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
 import type { Credential } from '../types';
@@ -87,7 +87,23 @@ export function CredentialsPage() {
       <CredentialModal opened={modalOpened} onClose={closeModal} credential={selectedCredential} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>{t('nav.credentials')}</Title>
+          <Group gap="xs">
+            <Title order={1}>{t('nav.credentials')}</Title>
+            <Tooltip 
+              label={
+                <Box style={{ whiteSpace: 'pre-line' }}>
+                  {t('guide.credentials') || '🔑 **Credentials Page**\n\n• Add API keys for AI providers (OpenAI, Anthropic, Google, etc.)\n• Add Apify token for Twitter/Facebook scraping\n• Test credentials before using them\n• Each user has their own private credentials'}
+                </Box>
+              } 
+              multiline 
+              w={320}
+              position="bottom-start"
+            >
+              <ActionIcon variant="subtle" color="gray" size="sm">
+                <IconHelp size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
           <Button onClick={handleOpenCreateModal}>{t('credentials.create')}</Button>
         </Group>
 

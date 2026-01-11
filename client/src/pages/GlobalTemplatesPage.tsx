@@ -1,6 +1,6 @@
-import { Title, Table, Group, Text, ActionIcon, Stack, Skeleton, Button, Pagination } from '@mantine/core';
+import { Title, Table, Group, Text, ActionIcon, Stack, Skeleton, Button, Pagination, Tooltip, Box } from '@mantine/core';
 import { useGlobalTemplates } from '../hooks/useGlobalTemplates';
-import { IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconPencil, IconTrash, IconHelp } from '@tabler/icons-react';
 import { formatDate } from '../utils/formatDate';
 import { useDisclosure } from '@mantine/hooks';
 import { useState, useEffect } from 'react';
@@ -130,7 +130,23 @@ export function GlobalTemplatesPage() {
       <GlobalTemplateModal opened={modalOpened} onClose={closeModal} template={selectedTemplate} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>{t('templates.title')}</Title>
+          <Group gap="xs">
+            <Title order={1}>{t('templates.title')}</Title>
+            <Tooltip 
+              label={
+                <Box style={{ whiteSpace: 'pre-line' }}>
+                  {t('guide.templates') || '📝 **Templates Page**\n\n• Templates control how AI generates content\n• Global templates (📌) are read-only defaults\n• Create custom templates to override defaults\n• Use Jinja2 syntax for dynamic prompts'}
+                </Box>
+              } 
+              multiline 
+              w={320}
+              position="bottom-start"
+            >
+              <ActionIcon variant="subtle" color="gray" size="sm">
+                <IconHelp size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
           <Button onClick={handleOpenCreateModal}>{t('templates.create')}</Button>
         </Group>
 

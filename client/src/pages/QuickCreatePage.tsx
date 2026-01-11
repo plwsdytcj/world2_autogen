@@ -23,7 +23,7 @@ import {
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus, IconInfoCircle } from '@tabler/icons-react';
+import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus, IconInfoCircle, IconPlayerPlay } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -32,6 +32,8 @@ import { useCredentials } from '../hooks/useCredentials';
 import { useAuthStore } from '../stores/authStore';
 import { useProjects } from '../hooks/useProjects';
 import { useI18n } from '../i18n';
+import { useTourStore } from '../stores/tourStore';
+import { getQuickCreateTourSteps } from '../tours/quickCreateTour';
 
 interface QuickCreateFormValues {
   url: string;
@@ -94,6 +96,7 @@ export function QuickCreatePage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { t } = useI18n();
+  const { startTour } = useTourStore();
   const [advancedOpened, { toggle: toggleAdvanced }] = useDisclosure(false);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [fetchJobId, setFetchJobId] = useState<string | null>(null);
@@ -310,7 +313,19 @@ export function QuickCreatePage() {
       <Stack gap="lg">
         <div style={{ textAlign: 'center' }}>
           <IconRocket size={48} stroke={1.5} color="var(--mantine-color-pink-5)" />
-          <Title order={1} mt="sm">{t('quickCreate.title') || 'Quick Create'}</Title>
+          <Group justify="center" gap="xs" mt="sm">
+            <Title order={1}>{t('quickCreate.title') || 'Quick Create'}</Title>
+            <Tooltip label={t('tour.startTour') || 'Start Tour'}>
+              <ActionIcon 
+                variant="subtle" 
+                color="pink" 
+                size="sm"
+                onClick={() => startTour('quick-create', getQuickCreateTourSteps(t))}
+              >
+                <IconPlayerPlay size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
           <Text c="dimmed" size="lg">
             {t('quickCreate.subtitle') || 'Paste a URL → Get a character card'}
           </Text>
@@ -322,7 +337,7 @@ export function QuickCreatePage() {
               <Tabs.Tab value="create" leftSection={<IconPlus size={16} />}>
                 {t('quickCreate.tabNewProject') || 'New Project'}
               </Tabs.Tab>
-              <Tabs.Tab value="append" leftSection={<IconFilePlus size={16} />}>
+              <Tabs.Tab value="append" leftSection={<IconFilePlus size={16} />} data-tour="append-tab">
                 {t('quickCreate.tabAppend') || 'Append to Existing'}
                 {projectOptions.length > 0 && (
                   <Badge size="xs" ml={6} variant="light">{projectOptions.length}</Badge>
@@ -334,7 +349,7 @@ export function QuickCreatePage() {
             <Tabs.Panel value="create">
               <form onSubmit={form.onSubmit(handleSubmit)}>
                 <Stack gap="md">
-                  <Group gap="xs" align="flex-start">
+                  <Group gap="xs" align="flex-start" data-tour="url-input">
                     <TextInput
                       size="lg"
                       placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/elonmusk'}
@@ -351,7 +366,7 @@ export function QuickCreatePage() {
                     </Tooltip>
                   </Group>
 
-                  <Group gap="xs" align="flex-start">
+                  <Group gap="xs" align="flex-start" data-tour="project-type">
                     <SegmentedControl
                       fullWidth
                       data={[
@@ -413,6 +428,7 @@ export function QuickCreatePage() {
                     fullWidth
                     loading={isProcessing && activeTab === 'create'}
                     leftSection={!isProcessing && <IconRocket size={20} />}
+                    data-tour="generate-btn"
                   >
                     {isProcessing && activeTab === 'create' 
                       ? (t('quickCreate.processing') || 'Processing...') 
@@ -420,7 +436,7 @@ export function QuickCreatePage() {
                   </Button>
 
                   {/* Advanced options toggle */}
-                  <Group justify="center">
+                  <Group justify="center" data-tour="advanced-options">
                     <Tooltip label={t('quickCreate.advancedOptionsTooltip') || 'Fine-tune API settings, model selection, and generation parameters'} multiline w={300}>
                       <Anchor
                         component="button"

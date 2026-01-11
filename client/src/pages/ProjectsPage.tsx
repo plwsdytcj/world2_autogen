@@ -1,6 +1,6 @@
-import { Title, Table, Group, Text, ActionIcon, Badge, Stack, Skeleton, Button } from '@mantine/core';
+import { Title, Table, Group, Text, ActionIcon, Badge, Stack, Skeleton, Button, Tooltip, Box } from '@mantine/core';
 import { useProjects } from '../hooks/useProjects';
-import { IconEye, IconPencil, IconTrash } from '@tabler/icons-react';
+import { IconEye, IconPencil, IconTrash, IconHelp } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../utils/formatDate';
 import { ProjectModal } from '../components/projects/ProjectModal';
@@ -118,7 +118,23 @@ export function ProjectsPage() {
       <ProjectModal opened={modalOpened} onClose={closeModal} project={selectedProject} />
       <Stack>
         <Group justify="space-between">
-          <Title order={1}>{t('nav.projects')}</Title>
+          <Group gap="xs">
+            <Title order={1}>{t('nav.projects')}</Title>
+            <Tooltip 
+              label={
+                <Box style={{ whiteSpace: 'pre-line' }}>
+                  {t('guide.projects') || '📋 **Projects Page**\n\n• Click "Create New Project" to start\n• Choose Character Card for simple profiles\n• Choose Character + Lorebook for detailed backgrounds\n• Add URLs (Twitter, Facebook, websites) as sources\n• View/Edit projects anytime'}
+                </Box>
+              } 
+              multiline 
+              w={320}
+              position="bottom-start"
+            >
+              <ActionIcon variant="subtle" color="gray" size="sm">
+                <IconHelp size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
           <Button onClick={handleOpenCreateModal}>{t('projects.create')}</Button>
         </Group>
 

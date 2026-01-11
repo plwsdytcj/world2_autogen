@@ -22,7 +22,7 @@ import { AppendContentModal } from './AppendContentModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconBrandFacebook, IconBrandX, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug, IconFilePlus } from '@tabler/icons-react';
+import { IconBrandFacebook, IconBrandX, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug, IconFilePlus, IconHelp } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
 import { DebugSourceModal } from './DebugSourceModal';
@@ -134,7 +134,23 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
       />
       <Stack>
         <Group justify="space-between">
-          <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
+          <Group gap="xs">
+            <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
+            <Tooltip 
+              label={
+                <Box style={{ whiteSpace: 'pre-line' }}>
+                  {t('guide.character') || '🎭 **Character Workspace**\n\n• **Sources**: Add URLs, fetch content, select for generation\n• **Editor**: Edit character fields, regenerate with custom prompts\n• **Lorebook**: View/manage background entries\n• **Append**: Add more content without losing existing data'}
+                </Box>
+              } 
+              multiline 
+              w={320}
+              position="bottom-start"
+            >
+              <ActionIcon variant="subtle" color="gray" size="sm">
+                <IconHelp size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
           <Group gap="xs">
             {hasExistingContent && (
               <Tooltip label={t('append.tooltip') || 'Add more content and merge with existing'}>

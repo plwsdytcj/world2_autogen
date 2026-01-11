@@ -9,6 +9,7 @@ import { GlobalTemplatesPage } from './pages/GlobalTemplatesPage';
 import { CredentialsPage } from './pages/CredentialsPage';
 import { useAuthStore } from './stores/authStore';
 import { authApi } from './services/api';
+import { ProductTour } from './components/common/ProductTour';
 
 // Component to handle auth callback from URL hash
 function AuthCallback() {
@@ -89,6 +90,7 @@ export default function App() {
     <>
       <AuthCallback />
       <Notifications zIndex={9999} />
+      <ProductTour />
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<QuickCreatePage />} />
