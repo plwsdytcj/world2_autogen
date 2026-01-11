@@ -14,17 +14,20 @@ import {
   Alert,
   Progress,
   Anchor,
+  Tabs,
+  Badge,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle } from '@tabler/icons-react';
+import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import apiClient from '../services/api';
+import apiClient, { quickCreateApi } from '../services/api';
 import { useCredentials } from '../hooks/useCredentials';
 import { useAuthStore } from '../stores/authStore';
+import { useProjects } from '../hooks/useProjects';
 
 interface QuickCreateFormValues {
   url: string;
@@ -32,6 +35,12 @@ interface QuickCreateFormValues {
   credentialId: string;
   modelName: string;
   temperature: number;
+  tweetsLimit: number;
+}
+
+interface QuickAppendFormValues {
+  projectId: string;
+  url: string;
   tweetsLimit: number;
 }
 
@@ -83,8 +92,10 @@ export function QuickCreatePage() {
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [fetchJobId, setFetchJobId] = useState<string | null>(null);
   const [generatingCharacter, setGeneratingCharacter] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>('create');
 
   const { data: credentials } = useCredentials();
+  const { data: projectsData } = useProjects();
 
   const form = useForm<QuickCreateFormValues>({
     initialValues: {
@@ -99,6 +110,22 @@ export function QuickCreatePage() {
       url: (value) => {
         if (!value.trim()) return 'URL is required';
         // Basic URL validation
+        if (!value.includes('.')) return 'Please enter a valid URL';
+        return null;
+      },
+    },
+  });
+
+  const appendForm = useForm<QuickAppendFormValues>({
+    initialValues: {
+      projectId: '',
+      url: '',
+      tweetsLimit: 20,
+    },
+    validate: {
+      projectId: (value) => (!value ? 'Please select a project' : null),
+      url: (value) => {
+        if (!value.trim()) return 'URL is required';
         if (!value.includes('.')) return 'Please enter a valid URL';
         return null;
       },
@@ -133,6 +160,32 @@ export function QuickCreatePage() {
       notifications.show({
         title: 'Started!',
         message: `Creating ${data.data.project_name}...`,
+        color: 'blue',
+      });
+    },
+    onError: (error: Error & { response?: { data?: { detail?: string } } }) => {
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data?.detail || error.message,
+        color: 'red',
+      });
+    },
+  });
+
+  const quickAppendMutation = useMutation({
+    mutationFn: async (values: QuickAppendFormValues) => {
+      return quickCreateApi.appendContent(values.projectId, {
+        url: values.url,
+        auto_regenerate: true,
+        tweets_limit: values.tweetsLimit,
+      });
+    },
+    onSuccess: (data) => {
+      setCreatedProjectId(data.project_id);
+      setFetchJobId(data.fetch_job_id);
+      notifications.show({
+        title: 'Appending Content',
+        message: data.message,
         color: 'blue',
       });
     },
@@ -190,7 +243,8 @@ export function QuickCreatePage() {
   }, [jobStatus, createdProjectId, generatingCharacter, navigate]);
 
   const urlType = detectUrlType(form.values.url);
-  const isProcessing = quickCreateMutation.isPending || !!fetchJobId;
+  const appendUrlType = detectUrlType(appendForm.values.url);
+  const isProcessing = quickCreateMutation.isPending || quickAppendMutation.isPending || !!fetchJobId;
   const jobProgress = jobStatus?.data?.progress_current && jobStatus?.data?.progress_total
     ? (jobStatus.data.progress_current / jobStatus.data.progress_total) * 100
     : undefined;
@@ -201,6 +255,19 @@ export function QuickCreatePage() {
     setGeneratingCharacter(false);
     quickCreateMutation.mutate(values);
   };
+
+  const handleAppendSubmit = (values: QuickAppendFormValues) => {
+    setCreatedProjectId(null);
+    setFetchJobId(null);
+    setGeneratingCharacter(false);
+    quickAppendMutation.mutate(values);
+  };
+
+  // Get projects for append dropdown
+  const projectOptions = projectsData?.data?.map(p => ({
+    value: p.id,
+    label: `${p.name} (${p.project_type === 'character_lorebook' ? '📚' : '🎭'})`,
+  })) || [];
 
   if (!user) {
     return (
@@ -238,123 +305,186 @@ export function QuickCreatePage() {
         </div>
 
         <Paper p="xl" radius="md" withBorder>
-          <form onSubmit={form.onSubmit(handleSubmit)}>
-            <Stack gap="md">
-              <TextInput
-                size="lg"
-                placeholder="https://x.com/elonmusk"
-                leftSection={getUrlTypeIcon(urlType)}
-                {...form.getInputProps('url')}
-                disabled={isProcessing}
-                autoFocus
-              />
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List grow mb="md">
+              <Tabs.Tab value="create" leftSection={<IconPlus size={16} />}>
+                New Project
+              </Tabs.Tab>
+              <Tabs.Tab value="append" leftSection={<IconFilePlus size={16} />}>
+                Append to Existing
+                {projectOptions.length > 0 && (
+                  <Badge size="xs" ml={6} variant="light">{projectOptions.length}</Badge>
+                )}
+              </Tabs.Tab>
+            </Tabs.List>
 
-              <SegmentedControl
-                fullWidth
-                data={[
-                  { label: '🎭 Character Card', value: 'character' },
-                  { label: '🎭📚 Character + Lorebook', value: 'character_lorebook' },
-                ]}
-                {...form.getInputProps('projectType')}
-                disabled={isProcessing}
-              />
-
-              {/* Progress display */}
-              {isProcessing && (
-                <Stack gap="xs">
-                  <Group gap="xs">
-                    {jobStatus?.data?.status === 'completed' ? (
-                      <IconCheck size={16} color="var(--mantine-color-green-5)" />
-                    ) : (
-                      <div className="animate-spin" style={{ width: 16, height: 16 }}>⏳</div>
-                    )}
-                    <Text size="sm">
-                      {!jobStatus && 'Starting...'}
-                      {jobStatus?.data?.status === 'pending' && 'Waiting...'}
-                      {jobStatus?.data?.status === 'in_progress' && 'Fetching content...'}
-                      {jobStatus?.data?.status === 'completed' && 'Generating character card...'}
-                      {jobStatus?.data?.status === 'failed' && 'Failed'}
-                    </Text>
-                  </Group>
-                  <Progress 
-                    value={jobProgress || (jobStatus?.data?.status === 'completed' ? 100 : 30)} 
-                    animated={jobStatus?.data?.status !== 'completed' && jobStatus?.data?.status !== 'failed'}
-                    color={jobStatus?.data?.status === 'failed' ? 'red' : 'pink'}
+            {/* New Project Tab */}
+            <Tabs.Panel value="create">
+              <form onSubmit={form.onSubmit(handleSubmit)}>
+                <Stack gap="md">
+                  <TextInput
+                    size="lg"
+                    placeholder="https://x.com/elonmusk"
+                    leftSection={getUrlTypeIcon(urlType)}
+                    {...form.getInputProps('url')}
+                    disabled={isProcessing}
+                    autoFocus
                   />
-                  {jobStatus?.data?.status === 'failed' && (
-                    <Alert color="red" icon={<IconAlertCircle size={16} />}>
-                      {jobStatus.data.error_message || 'An error occurred'}
-                    </Alert>
+
+                  <SegmentedControl
+                    fullWidth
+                    data={[
+                      { label: '🎭 Character Card', value: 'character' },
+                      { label: '🎭📚 Character + Lorebook', value: 'character_lorebook' },
+                    ]}
+                    {...form.getInputProps('projectType')}
+                    disabled={isProcessing}
+                  />
+
+                  {/* Progress display */}
+                  {isProcessing && activeTab === 'create' && (
+                    <Stack gap="xs">
+                      <Group gap="xs">
+                        {jobStatus?.data?.status === 'completed' ? (
+                          <IconCheck size={16} color="var(--mantine-color-green-5)" />
+                        ) : (
+                          <div className="animate-spin" style={{ width: 16, height: 16 }}>⏳</div>
+                        )}
+                        <Text size="sm">
+                          {!jobStatus && 'Starting...'}
+                          {jobStatus?.data?.status === 'pending' && 'Waiting...'}
+                          {jobStatus?.data?.status === 'in_progress' && 'Fetching content...'}
+                          {jobStatus?.data?.status === 'completed' && 'Generating character card...'}
+                          {jobStatus?.data?.status === 'failed' && 'Failed'}
+                        </Text>
+                      </Group>
+                      <Progress 
+                        value={jobProgress || (jobStatus?.data?.status === 'completed' ? 100 : 30)} 
+                        animated={jobStatus?.data?.status !== 'completed' && jobStatus?.data?.status !== 'failed'}
+                        color={jobStatus?.data?.status === 'failed' ? 'red' : 'pink'}
+                      />
+                      {jobStatus?.data?.status === 'failed' && (
+                        <Alert color="red" icon={<IconAlertCircle size={16} />}>
+                          {jobStatus.data.error_message || 'An error occurred'}
+                        </Alert>
+                      )}
+                    </Stack>
                   )}
-                </Stack>
-              )}
 
-              <Button
-                type="submit"
-                size="lg"
-                fullWidth
-                loading={isProcessing}
-                leftSection={!isProcessing && <IconRocket size={20} />}
-              >
-                {isProcessing ? 'Processing...' : 'Generate'}
-              </Button>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    fullWidth
+                    loading={isProcessing && activeTab === 'create'}
+                    leftSection={!isProcessing && <IconRocket size={20} />}
+                  >
+                    {isProcessing && activeTab === 'create' ? 'Processing...' : 'Generate'}
+                  </Button>
 
-              {/* Advanced options toggle */}
-              <Group justify="center">
-                <Anchor
-                  component="button"
-                  type="button"
-                  size="sm"
-                  c="dimmed"
-                  onClick={toggleAdvanced}
-                >
-                  <Group gap={4}>
-                    <IconSettings size={14} />
-                    {advancedOpened ? 'Hide' : 'Show'} Advanced Options
+                  {/* Advanced options toggle */}
+                  <Group justify="center">
+                    <Anchor
+                      component="button"
+                      type="button"
+                      size="sm"
+                      c="dimmed"
+                      onClick={toggleAdvanced}
+                    >
+                      <Group gap={4}>
+                        <IconSettings size={14} />
+                        {advancedOpened ? 'Hide' : 'Show'} Advanced Options
+                      </Group>
+                    </Anchor>
                   </Group>
-                </Anchor>
-              </Group>
 
-              <Collapse in={advancedOpened}>
-                <Stack gap="md" pt="md">
+                  <Collapse in={advancedOpened}>
+                    <Stack gap="md" pt="md">
+                      <Select
+                        label="API Credential"
+                        placeholder="Select credential"
+                        data={credentials?.map(c => ({
+                          value: c.id,
+                          label: `${c.name} (${c.provider_type})`,
+                        })) || []}
+                        {...form.getInputProps('credentialId')}
+                        disabled={isProcessing}
+                      />
+
+                      <TextInput
+                        label="Model Name"
+                        placeholder="google/gemini-2.0-flash-001"
+                        {...form.getInputProps('modelName')}
+                        disabled={isProcessing}
+                      />
+
+                      <div>
+                        <Text size="sm" fw={500} mb="xs">Temperature: {form.values.temperature}</Text>
+                        <Slider
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          marks={[
+                            { value: 0, label: '0' },
+                            { value: 1, label: '1' },
+                            { value: 2, label: '2' },
+                          ]}
+                          {...form.getInputProps('temperature')}
+                          disabled={isProcessing}
+                        />
+                      </div>
+
+                      {(urlType === 'twitter' || urlType === 'facebook') && (
+                        <div>
+                          <Text size="sm" fw={500} mb="xs">
+                            {urlType === 'twitter' ? 'Tweets' : 'Posts'} to fetch: {form.values.tweetsLimit}
+                          </Text>
+                          <Slider
+                            min={5}
+                            max={50}
+                            step={5}
+                            marks={[
+                              { value: 5, label: '5' },
+                              { value: 25, label: '25' },
+                              { value: 50, label: '50' },
+                            ]}
+                            {...form.getInputProps('tweetsLimit')}
+                            disabled={isProcessing}
+                          />
+                        </div>
+                      )}
+                    </Stack>
+                  </Collapse>
+                </Stack>
+              </form>
+            </Tabs.Panel>
+
+            {/* Append to Existing Tab */}
+            <Tabs.Panel value="append">
+              <form onSubmit={appendForm.onSubmit(handleAppendSubmit)}>
+                <Stack gap="md">
                   <Select
-                    label="API Credential"
-                    placeholder="Select credential"
-                    data={credentials?.map(c => ({
-                      value: c.id,
-                      label: `${c.name} (${c.provider_type})`,
-                    })) || []}
-                    {...form.getInputProps('credentialId')}
+                    size="lg"
+                    label="Select Project"
+                    placeholder="Choose a project to append to"
+                    data={projectOptions}
+                    searchable
+                    {...appendForm.getInputProps('projectId')}
                     disabled={isProcessing}
                   />
 
                   <TextInput
-                    label="Model Name"
-                    placeholder="google/gemini-2.0-flash-001"
-                    {...form.getInputProps('modelName')}
+                    size="lg"
+                    label="New URL to Add"
+                    placeholder="https://x.com/username"
+                    leftSection={getUrlTypeIcon(appendUrlType)}
+                    {...appendForm.getInputProps('url')}
                     disabled={isProcessing}
                   />
 
-                  <div>
-                    <Text size="sm" fw={500} mb="xs">Temperature: {form.values.temperature}</Text>
-                    <Slider
-                      min={0}
-                      max={2}
-                      step={0.1}
-                      marks={[
-                        { value: 0, label: '0' },
-                        { value: 1, label: '1' },
-                        { value: 2, label: '2' },
-                      ]}
-                      {...form.getInputProps('temperature')}
-                      disabled={isProcessing}
-                    />
-                  </div>
-
-                  {(urlType === 'twitter' || urlType === 'facebook') && (
+                  {(appendUrlType === 'twitter' || appendUrlType === 'facebook') && (
                     <div>
                       <Text size="sm" fw={500} mb="xs">
-                        {urlType === 'twitter' ? 'Tweets' : 'Posts'} to fetch: {form.values.tweetsLimit}
+                        {appendUrlType === 'twitter' ? 'Tweets' : 'Posts'} to fetch: {appendForm.values.tweetsLimit}
                       </Text>
                       <Slider
                         min={5}
@@ -365,18 +495,69 @@ export function QuickCreatePage() {
                           { value: 25, label: '25' },
                           { value: 50, label: '50' },
                         ]}
-                        {...form.getInputProps('tweetsLimit')}
+                        {...appendForm.getInputProps('tweetsLimit')}
                         disabled={isProcessing}
                       />
                     </div>
                   )}
-                </Stack>
-              </Collapse>
-            </Stack>
-          </form>
-        </Paper>
 
-        {/* Recent projects could go here */}
+                  <Alert variant="light" color="blue" icon={<IconFilePlus size={16} />}>
+                    <Text size="sm">
+                      Append mode will <strong>add</strong> new content to your existing character card 
+                      and lorebook without losing existing information.
+                    </Text>
+                  </Alert>
+
+                  {/* Progress display */}
+                  {isProcessing && activeTab === 'append' && (
+                    <Stack gap="xs">
+                      <Group gap="xs">
+                        {jobStatus?.data?.status === 'completed' ? (
+                          <IconCheck size={16} color="var(--mantine-color-green-5)" />
+                        ) : (
+                          <div className="animate-spin" style={{ width: 16, height: 16 }}>⏳</div>
+                        )}
+                        <Text size="sm">
+                          {!jobStatus && 'Starting...'}
+                          {jobStatus?.data?.status === 'pending' && 'Waiting...'}
+                          {jobStatus?.data?.status === 'in_progress' && 'Fetching new content...'}
+                          {jobStatus?.data?.status === 'completed' && 'Merging with existing card...'}
+                          {jobStatus?.data?.status === 'failed' && 'Failed'}
+                        </Text>
+                      </Group>
+                      <Progress 
+                        value={jobProgress || (jobStatus?.data?.status === 'completed' ? 100 : 30)} 
+                        animated={jobStatus?.data?.status !== 'completed' && jobStatus?.data?.status !== 'failed'}
+                        color={jobStatus?.data?.status === 'failed' ? 'red' : 'green'}
+                      />
+                      {jobStatus?.data?.status === 'failed' && (
+                        <Alert color="red" icon={<IconAlertCircle size={16} />}>
+                          {jobStatus.data.error_message || 'An error occurred'}
+                        </Alert>
+                      )}
+                    </Stack>
+                  )}
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    fullWidth
+                    color="green"
+                    loading={isProcessing && activeTab === 'append'}
+                    leftSection={!isProcessing && <IconFilePlus size={20} />}
+                    disabled={projectOptions.length === 0}
+                  >
+                    {projectOptions.length === 0
+                      ? 'No projects yet - create one first'
+                      : isProcessing && activeTab === 'append'
+                        ? 'Processing...'
+                        : 'Append Content'}
+                  </Button>
+                </Stack>
+              </form>
+            </Tabs.Panel>
+          </Tabs>
+        </Paper>
       </Stack>
     </Container>
   );
