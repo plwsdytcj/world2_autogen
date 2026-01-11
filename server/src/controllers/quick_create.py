@@ -4,14 +4,16 @@ Quick Create Controller - Simplified one-click character/lorebook generation.
 This controller provides a streamlined API for creating character cards from URLs
 with minimal user input. It handles project creation, source addition, content
 fetching, and generation in a single flow.
+
+Also provides an append endpoint for adding new sources to existing projects.
 """
 
 import re
 import time
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
-from litestar import Controller, Request, post
+from litestar import Controller, Request, get, post
 from litestar.exceptions import HTTPException
 from litestar.params import Body
 from pydantic import BaseModel, Field
@@ -20,6 +22,8 @@ from controllers.auth import require_auth
 from db.background_jobs import (
     CreateBackgroundJob,
     FetchSourceContentPayload,
+    GenerateCharacterCardPayload,
+    GenerateLorebookEntriesPayload,
     TaskName,
     create_background_job,
 )
@@ -30,12 +34,13 @@ from db.projects import (
     CreateProject,
     JsonEnforcementMode,
     Project,
+    ProjectStatus,
     ProjectTemplates,
     ProjectType,
     create_project as db_create_project,
     get_project as db_get_project,
 )
-from db.sources import CreateProjectSource, create_project_source
+from db.sources import CreateProjectSource, create_project_source, list_sources_by_project
 from logging_config import get_logger
 from services.facebook_scraper import is_facebook_url
 from services.twitter_scraper import is_twitter_url
@@ -62,6 +67,25 @@ class QuickCreateResponse(BaseModel):
     project_id: str
     project_name: str
     fetch_job_id: UUID
+    message: str
+
+
+class AppendContentRequest(BaseModel):
+    """Request payload for appending content to existing project."""
+    url: str = Field(..., description="New URL to add to the project")
+    auto_regenerate: bool = Field(
+        default=True,
+        description="Automatically regenerate character card and lorebook with new content"
+    )
+    tweets_limit: Optional[int] = Field(default=20, ge=5, le=100)
+
+
+class AppendContentResponse(BaseModel):
+    """Response from append content."""
+    project_id: str
+    source_id: UUID
+    fetch_job_id: UUID
+    generate_job_ids: List[UUID] = []
     message: str
 
 
@@ -222,5 +246,96 @@ class QuickCreateController(Controller):
             project_name=project.name,
             fetch_job_id=fetch_job.id,
             message=f"Started processing {project_name}. Check the project page for progress."
+        ))
+
+    @post("/{project_id:str}/append")
+    async def append_content(
+        self, request: Request, project_id: str, data: AppendContentRequest = Body()
+    ) -> SingleResponse[AppendContentResponse]:
+        """
+        Append new content to an existing project.
+        
+        This endpoint:
+        1. Adds a new URL as a source to the project
+        2. Queues a fetch job for the new source
+        3. Optionally queues generation jobs in append mode
+        
+        The append mode ensures:
+        - Existing character card is enhanced, not replaced
+        - New lorebook entries are added without duplicating existing ones
+        """
+        user = await require_auth(request)
+        user_id = user.id
+        
+        # Get existing project
+        project = await db_get_project(project_id, user_id=user_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Validate URL
+        url = data.url.strip()
+        if not url.startswith(('http://', 'https://')):
+            url = f"https://{url}"
+        
+        # Check if URL already exists as a source
+        existing_sources = await list_sources_by_project(project_id)
+        for source in existing_sources:
+            if source.url.lower() == url.lower():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"URL already exists as a source in this project"
+                )
+        
+        # Create new source
+        logger.info(f"Append content: Adding source URL {url} to project {project_id}")
+        
+        facebook_limit = data.tweets_limit or 20
+        
+        source = await create_project_source(CreateProjectSource(
+            project_id=project_id,
+            url=url,
+            max_pages_to_crawl=1,
+            max_crawl_depth=0,
+            facebook_results_limit=facebook_limit,
+        ))
+        
+        # Queue fetch job
+        logger.info(f"Append content: Queueing fetch job for new source {source.id}")
+        
+        fetch_job = await create_background_job(CreateBackgroundJob(
+            project_id=project_id,
+            task_name=TaskName.FETCH_SOURCE_CONTENT,
+            payload=FetchSourceContentPayload(source_ids=[source.id]),
+        ))
+        
+        generate_job_ids = []
+        
+        # Queue generation jobs in append mode if auto_regenerate is enabled
+        if data.auto_regenerate:
+            logger.info(f"Append content: Queueing generation jobs in append mode")
+            
+            # Queue character card generation in append mode
+            char_job = await create_background_job(CreateBackgroundJob(
+                project_id=project_id,
+                task_name=TaskName.GENERATE_CHARACTER_CARD,
+                payload=GenerateCharacterCardPayload(append_mode=True),
+            ))
+            generate_job_ids.append(char_job.id)
+            
+            # If project type includes lorebook, queue lorebook generation
+            if project.project_type == ProjectType.CHARACTER_LOREBOOK:
+                lorebook_job = await create_background_job(CreateBackgroundJob(
+                    project_id=project_id,
+                    task_name=TaskName.GENERATE_LOREBOOK_ENTRIES,
+                    payload=GenerateLorebookEntriesPayload(append_mode=True),
+                ))
+                generate_job_ids.append(lorebook_job.id)
+        
+        return SingleResponse(data=AppendContentResponse(
+            project_id=project_id,
+            source_id=source.id,
+            fetch_job_id=fetch_job.id,
+            generate_job_ids=generate_job_ids,
+            message=f"Added new source and queued processing. {'Generation jobs will run in append mode.' if data.auto_regenerate else 'Fetch only.'}"
         ))
 

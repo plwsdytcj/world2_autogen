@@ -47,7 +47,8 @@ from db.links import (
     get_processable_links_for_project,
     update_link,
 )
-from db.lorebook_entries import CreateLorebookEntry, create_lorebook_entry
+from db.lorebook_entries import CreateLorebookEntry, create_lorebook_entry, list_all_entries_by_project
+from db.character_cards import get_character_card_by_project
 from db.character_cards import (
     CreateCharacterCard,
     UpdateCharacterCard,
@@ -400,10 +401,13 @@ async def generate_character_card(job: BackgroundJob, project: Project):
     """
     Generates a full character card using all fetched content from project sources.
     Automatically uses social media-specific prompts for Twitter/Facebook sources.
+    Supports append_mode to enhance existing character card with new content.
     """
     if not isinstance(job.payload, GenerateCharacterCardPayload):
         raise TypeError("Invalid payload for generate_character_card job.")
 
+    append_mode = job.payload.append_mode
+    
     if job.payload.source_ids:
         # If specific sources are provided, fetch them directly
         source_futures = [get_project_source(sid) for sid in job.payload.source_ids]
@@ -426,19 +430,74 @@ async def generate_character_card(job: BackgroundJob, project: Project):
     provider = await _get_provider_for_project(project)
     global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
+    
+    # Get existing character card if in append mode
+    existing_card = None
+    if append_mode:
+        existing_card = await get_character_card_by_project(project.id)
+        if existing_card:
+            logger.info(f"[{job.id}] Append mode: enhancing existing character card")
+    
     context = {
         "project": project.model_dump(),
         "content": all_content,
         "globals": globals_dict,
+        "append_mode": append_mode,
+        "existing_card": existing_card.model_dump() if existing_card else None,
     }
 
-    # Check if we should use social media-specific template
-    template_to_use = project.templates.character_generation
-    social_media_template = _get_social_media_template(fetched_sources, globals_dict)
+    # Determine which template to use
+    template_to_use = None
     
-    if social_media_template:
-        logger.info(f"[{job.id}] Detected social media sources, using specialized template")
-        template_to_use = social_media_template
+    if append_mode and existing_card:
+        # Use append-specific template
+        if "character_append_prompt" in globals_dict:
+            template_to_use = globals_dict["character_append_prompt"]
+            logger.info(f"[{job.id}] Using character_append_prompt template")
+        else:
+            # Fallback append template if the global template doesn't exist
+            template_to_use = """--- role: system
+{{globals.character_card_definition}}
+---
+
+--- role: system
+You are **enhancing an existing character card** with new information from additional sources.
+
+**Project Goal/Prompt:** {{ project.prompt }}
+
+### EXISTING CHARACTER CARD (to be enhanced, not replaced)
+**Name:** {{ existing_card.name or 'Not set' }}
+**Description:** {{ existing_card.description or 'Not set' }}
+**Persona:** {{ existing_card.persona or 'Not set' }}
+**Scenario:** {{ existing_card.scenario or 'Not set' }}
+**First Message:** {{ existing_card.first_message or 'Not set' }}
+**Example Messages:** {{ existing_card.example_messages or 'Not set' }}
+
+### INSTRUCTIONS
+1. PRESERVE all existing information that is still accurate
+2. EXPAND each field with new details from the additional sources
+3. INTEGRATE old and new information seamlessly
+4. DO NOT remove existing valid information
+
+Generate a complete, enhanced character card with all fields.
+---
+
+--- role: user
+**NEW SOURCE MATERIAL:**
+
+{{ content }}
+---
+"""
+            logger.info(f"[{job.id}] Using fallback append template")
+    
+    if not template_to_use:
+        # Check if we should use social media-specific template
+        template_to_use = project.templates.character_generation
+        social_media_template = _get_social_media_template(fetched_sources, globals_dict)
+        
+        if social_media_template:
+            logger.info(f"[{job.id}] Detected social media sources, using specialized template")
+            template_to_use = social_media_template
 
     if not template_to_use:
         raise ValueError("Character generation template is missing for this project.")
@@ -495,7 +554,7 @@ async def generate_character_card(job: BackgroundJob, project: Project):
         logger.info(f"[{job.id}] Project type is CHARACTER_LOREBOOK, generating lorebook entries...")
         try:
             await _generate_lorebook_from_character_content(
-                job, project, all_content, provider, fetched_sources
+                job, project, all_content, provider, fetched_sources, append_mode=append_mode
             )
         except Exception as lorebook_error:
             logger.error(f"[{job.id}] Failed to generate lorebook entries: {lorebook_error}", exc_info=True)
@@ -517,20 +576,38 @@ async def generate_character_card(job: BackgroundJob, project: Project):
 
 
 async def _generate_lorebook_from_character_content(
-    job: BackgroundJob, project: Project, content: str, provider, sources: list = None
+    job: BackgroundJob, project: Project, content: str, provider, sources: list = None, append_mode: bool = False
 ):
     """
     Generate lorebook entries from character source content.
     Used for CHARACTER_LOREBOOK project type.
     Automatically uses social media-specific prompts for Twitter/Facebook sources.
+    Supports append_mode to add new entries without duplicating existing ones.
     """
-    logger.info(f"[{job.id}] Generating lorebook entries for CHARACTER_LOREBOOK project")
+    logger.info(f"[{job.id}] Generating lorebook entries for CHARACTER_LOREBOOK project (append_mode={append_mode})")
     
     global_templates = await list_all_global_templates(user_id=project.user_id)
     globals_dict = {gt.name: gt.content for gt in global_templates}
     
-    # Use character_lorebook_generation template if available, otherwise use a default prompt
-    template = project.templates.character_lorebook_generation
+    # Get existing entries if in append mode
+    existing_entries = []
+    if append_mode:
+        existing_entries = await list_all_entries_by_project(project.id)
+        if existing_entries:
+            logger.info(f"[{job.id}] Append mode: found {len(existing_entries)} existing entries")
+    
+    # Determine which template to use
+    template = None
+    
+    # First, check for append-specific template
+    if append_mode and existing_entries:
+        if "lorebook_append_prompt" in globals_dict:
+            template = globals_dict["lorebook_append_prompt"]
+            logger.info(f"[{job.id}] Using lorebook_append_prompt template")
+    
+    # If no append template, use character_lorebook_generation
+    if not template:
+        template = project.templates.character_lorebook_generation
     
     # Check if we should use social media-specific lorebook template
     if sources and not template:
@@ -540,9 +617,30 @@ async def _generate_lorebook_from_character_content(
                 logger.info(f"[{job.id}] Using social media lorebook template")
                 template = globals_dict["social_media_lorebook_prompt"]
     
+    # Fallback to default templates
     if not template:
-        # Default template for generating lorebook entries from character content
-        template = """You are a creative writer helping to build a lorebook for a roleplay character.
+        if append_mode and existing_entries:
+            template = """You are a creative writer helping to expand a lorebook for a roleplay character.
+
+There are already existing entries in the lorebook. Your task is to create ONLY NEW entries for information not yet covered.
+
+=== EXISTING ENTRIES (DO NOT DUPLICATE) ===
+{% for entry in existing_entries %}
+- {{ entry.title }}: {{ entry.content[:100] }}... (keywords: {{ entry.keywords | join(', ') }})
+{% endfor %}
+=== END EXISTING ENTRIES ===
+
+{{ content }}
+
+Create 3-10 NEW lorebook entries that capture information NOT already in existing entries.
+Each entry should have:
+- A clear, unique title (different from existing entries)
+- Detailed content (2-4 sentences) 
+- 3-5 keywords that would trigger this entry in conversation
+
+Respond with a JSON object containing an "entries" array."""
+        else:
+            template = """You are a creative writer helping to build a lorebook for a roleplay character.
 
 Based on the following source content about a character, generate a list of lorebook entries.
 Each entry should capture important information that would be useful during roleplay.
@@ -565,10 +663,23 @@ Generate 5-15 relevant lorebook entries. Each entry should have:
 
 Respond with a JSON object containing an "entries" array."""
 
+    # Convert existing entries to dict format for template rendering
+    existing_entries_data = [
+        {
+            "title": e.title,
+            "content": e.content,
+            "keywords": e.keywords,
+        }
+        for e in existing_entries
+    ] if existing_entries else []
+
     context = {
         "project": project.model_dump(),
         "content": content,
         "globals": globals_dict,
+        "append_mode": append_mode,
+        "existing_entries": existing_entries_data,
+        "existing_entries_count": len(existing_entries) if existing_entries else 0,
     }
     
     try:
@@ -639,9 +750,12 @@ async def generate_lorebook_entries(job: BackgroundJob, project: Project):
     """
     Standalone job to generate lorebook entries from source content.
     Can be used for CHARACTER_LOREBOOK projects to regenerate entries.
+    Supports append_mode to add new entries without duplicating existing ones.
     """
     if not isinstance(job.payload, GenerateLorebookEntriesPayload):
         raise TypeError("Invalid payload for generate_lorebook_entries job.")
+
+    append_mode = job.payload.append_mode
 
     # Get sources
     if job.payload.source_ids:
@@ -666,7 +780,7 @@ async def generate_lorebook_entries(job: BackgroundJob, project: Project):
     
     try:
         entries_count = await _generate_lorebook_from_character_content(
-            job, project, all_content, provider
+            job, project, all_content, provider, sources=fetched_sources, append_mode=append_mode
         )
         
         async with (await get_db_connection()).transaction() as tx:

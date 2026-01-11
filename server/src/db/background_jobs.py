@@ -71,6 +71,7 @@ class FetchSourceContentPayload(BaseModel):
 
 class GenerateCharacterCardPayload(BaseModel):
     source_ids: Optional[List[UUID]] = None
+    append_mode: bool = False  # If True, enhance existing card instead of replacing
 
 
 class RegenerateCharacterFieldContextOptions(BaseModel):
@@ -86,6 +87,7 @@ class RegenerateCharacterFieldPayload(BaseModel):
 
 class GenerateLorebookEntriesPayload(BaseModel):
     source_ids: Optional[List[UUID]] = None
+    append_mode: bool = False  # If True, add to existing entries with deduplication
 
 
 TaskPayload = Union[

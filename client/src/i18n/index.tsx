@@ -19,6 +19,22 @@ const dicts: Record<Lang, Dict> = {
     'auth.termsNotice': 'By signing in, you agree to our Terms of Service',
     'auth.logout': 'Logout',
 
+    // Append Content
+    'append.title': 'Add More Content',
+    'append.description': 'Add a new URL to this project. The new content will be intelligently merged with the existing character card and lorebook entries.',
+    'append.urlLabel': 'URL',
+    'append.autoRegenerate': 'Auto-regenerate character card',
+    'append.autoRegenerateDesc': 'Automatically enhance the existing character card with new content',
+    'append.autoRegenerateDescLorebook': 'Automatically enhance character card and add new lorebook entries',
+    'append.appendModeInfo': 'Append mode will intelligently merge new information with existing content, avoiding duplicates and preserving important details.',
+    'append.addContent': 'Add Content',
+    'append.started': 'Processing Started',
+    'append.completed': 'Content Appended',
+    'append.completedMsg': 'New content has been added and regeneration is in progress.',
+    'append.failed': 'Failed to process content. Please try again.',
+    'append.tooltip': 'Add more content and merge with existing',
+    'append.buttonLabel': 'Append Content',
+
     // Character editor
     'character.title': 'Character Card',
     'character.avatar': 'Avatar',
@@ -93,6 +109,8 @@ const dicts: Record<Lang, Dict> = {
     'common.hide': 'Hide',
     'common.copy': 'Copy',
     'common.copied': 'Copied',
+    'common.processing': 'Processing',
+    'common.failed': 'Failed',
 
     // Projects (lists + modal + notifications)
     'projects.create': 'Create New Project',

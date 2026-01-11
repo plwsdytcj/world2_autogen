@@ -73,3 +73,25 @@ export const authApi = {
     return `${baseUrl}/api/auth/login/google`;
   },
 };
+
+// Quick Create API functions
+export interface AppendContentRequest {
+  url: string;
+  auto_regenerate?: boolean;
+  tweets_limit?: number;
+}
+
+export interface AppendContentResponse {
+  project_id: string;
+  source_id: string;
+  fetch_job_id: string;
+  generate_job_ids: string[];
+  message: string;
+}
+
+export const quickCreateApi = {
+  appendContent: async (projectId: string, data: AppendContentRequest): Promise<AppendContentResponse> => {
+    const response = await apiClient.post(`/quick-create/${projectId}/append`, data);
+    return response.data.data;
+  },
+};

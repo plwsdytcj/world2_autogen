@@ -18,10 +18,11 @@ import { useModals } from '@mantine/modals';
 import type { Project, ProjectSource } from '../../types';
 import { useProjectSources, useDeleteProjectSource } from '../../hooks/useProjectSources';
 import { ProjectSourceModal } from './ProjectSourceModal';
+import { AppendContentModal } from './AppendContentModal';
 import { useFetchContentJob } from '../../hooks/useJobMutations';
 import { useLatestJob } from '../../hooks/useProjectJobs';
 import { JobStatusIndicator } from '../common/JobStatusIndicator';
-import { IconBrandFacebook, IconBrandX, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug } from '@tabler/icons-react';
+import { IconBrandFacebook, IconBrandX, IconDownload, IconEye, IconPlus, IconTrash, IconWorld, IconBug, IconFilePlus } from '@tabler/icons-react';
 import { formatDate } from '../../utils/formatDate';
 import { ViewSourceContentModal } from './ViewSourceContentModal';
 import { DebugSourceModal } from './DebugSourceModal';
@@ -36,6 +37,7 @@ interface CharacterSourcesProps {
 export function CharacterSources({ project, selectedSourceIds, setSelectedSourceIds }: CharacterSourcesProps) {
   const { data: sources, isLoading: isLoadingSources } = useProjectSources(project.id);
   const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
+  const [appendModalOpened, { open: openAppendModal, close: closeAppendModal }] = useDisclosure(false);
   const [viewModalOpened, { open: openViewModal, close: closeViewModal }] = useDisclosure(false);
   const [debugModalOpened, { open: openDebugModal, close: closeDebugModal }] = useDisclosure(false);
   const [selectedSource, setSelectedSource] = useState<ProjectSource | null>(null);
@@ -99,6 +101,10 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
 
   const isFetchJobActive = fetchContentJob?.status === 'pending' || fetchContentJob?.status === 'in_progress';
 
+  // Check if project has existing content (character card generated)
+  const hasExistingContent = sources && sources.some(s => s.last_crawled_at);
+  const projectType = project.project_type === 'character_lorebook' ? 'character_lorebook' : 'character';
+
   return (
     <>
       <ProjectSourceModal
@@ -107,6 +113,12 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
         projectId={project.id}
         source={selectedSource}
         projectType="character"
+      />
+      <AppendContentModal
+        opened={appendModalOpened}
+        onClose={closeAppendModal}
+        projectId={project.id}
+        projectType={projectType}
       />
       <ViewSourceContentModal
         opened={viewModalOpened}
@@ -123,9 +135,24 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
       <Stack>
         <Group justify="space-between">
           <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
-          <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreateModal} size="xs">
-            {t('sources.add')}
-          </Button>
+          <Group gap="xs">
+            {hasExistingContent && (
+              <Tooltip label={t('append.tooltip') || 'Add more content and merge with existing'}>
+                <Button 
+                  leftSection={<IconFilePlus size={16} />} 
+                  onClick={openAppendModal} 
+                  size="xs"
+                  variant="light"
+                  color="green"
+                >
+                  {t('append.buttonLabel') || 'Append Content'}
+                </Button>
+              </Tooltip>
+            )}
+            <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreateModal} size="xs">
+              {t('sources.add')}
+            </Button>
+          </Group>
         </Group>
         <Text size="sm" c="dimmed">{t('character.sourcesTip') || 'Add source URLs, fetch their content, then select which ones to use for generation.'}</Text>
 

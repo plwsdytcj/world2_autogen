@@ -373,6 +373,102 @@ For `example_messages`:
 ---
 """
 
+# --- Append Mode Templates ---
+
+character_append_prompt = """--- role: system
+{{globals.character_card_definition}}
+---
+
+--- role: system
+You are **enhancing an existing character card** with new information from additional sources.
+
+**Project Goal/Prompt:** {{ project.prompt }}
+
+---
+
+### EXISTING CHARACTER CARD
+The following is the current character card that you need to **enhance** (not replace):
+
+**Name:** {{ existing_card.name or 'Not set' }}
+**Description:** {{ existing_card.description or 'Not set' }}
+**Persona:** {{ existing_card.persona or 'Not set' }}
+**Scenario:** {{ existing_card.scenario or 'Not set' }}
+**First Message:** {{ existing_card.first_message or 'Not set' }}
+**Example Messages:** {{ existing_card.example_messages or 'Not set' }}
+
+---
+
+### IMPORTANT INSTRUCTIONS FOR APPENDING
+
+1. **PRESERVE** all existing information that is still accurate and relevant
+2. **EXPAND** each field with new details from the additional sources
+3. **ENRICH** the character by adding:
+   - New personality insights discovered in the new content
+   - Additional context and background information
+   - Fresh example dialogues that showcase newly discovered traits
+4. **INTEGRATE** old and new information seamlessly - don't just append, blend them
+5. **DO NOT** contradict or remove existing valid information
+6. **DO NOT** repeat the same information verbatim - rephrase and enhance
+
+### OUTPUT
+Generate a complete, enhanced character card with all fields populated. The result should feel like a natural evolution of the existing card, enriched with the new details.
+
+---
+
+--- role: user
+**NEW SOURCE MATERIAL TO INTEGRATE:**
+
+{{ content }}
+---
+"""
+
+lorebook_append_prompt = """--- role: system
+{{globals.lorebook_definition}}
+---
+
+--- role: system
+You are **adding new entries** to an existing lorebook. Your task is to create ONLY entries that provide NEW, unique information.
+
+**Project Goal/Prompt:** {{ project.prompt }}
+
+---
+
+### EXISTING LOREBOOK ENTRIES
+The following entries already exist in the lorebook. **DO NOT duplicate these topics:**
+
+{% for entry in existing_entries %}
+- **{{ entry.title }}**: {{ entry.content[:150] }}... (keywords: {{ entry.keywords | join(', ') }})
+{% endfor %}
+
+---
+
+### IMPORTANT INSTRUCTIONS FOR APPENDING
+
+1. **ANALYZE** the existing entries to understand what topics are already covered
+2. **IDENTIFY** new information in the source material that is NOT already captured
+3. **CREATE** entries ONLY for genuinely new topics, facts, or perspectives
+4. **AVOID** creating entries that overlap significantly with existing ones
+5. **COMPLEMENT** existing entries - if an existing entry covers "Background", don't create another "Background" entry; instead, create entries for specific events or details
+6. **QUALITY OVER QUANTITY** - it's better to create 3 excellent unique entries than 10 redundant ones
+
+### TYPES OF NEW ENTRIES TO LOOK FOR
+- Specific events or incidents not yet documented
+- New relationships or connections discovered
+- Recent developments or news
+- Detailed sub-topics that existing general entries don't cover
+- Different perspectives or aspects of known topics
+
+---
+
+--- role: user
+**NEW SOURCE MATERIAL:**
+
+{{ content }}
+
+Based on this new content and the existing entries above, generate 3-10 NEW lorebook entries that add unique information not already covered.
+---
+"""
+
 social_media_lorebook_prompt = """--- role: system
 {{globals.lorebook_definition}}
 ---

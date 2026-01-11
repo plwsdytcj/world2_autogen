@@ -125,6 +125,16 @@ async def create_default_templates():
             name="social_media_lorebook_prompt",
             content=default_templates.social_media_lorebook_prompt,
         ),
+        CreateGlobalTemplate(
+            id="character-append-prompt",
+            name="character_append_prompt",
+            content=default_templates.character_append_prompt,
+        ),
+        CreateGlobalTemplate(
+            id="lorebook-append-prompt",
+            name="lorebook_append_prompt",
+            content=default_templates.lorebook_append_prompt,
+        ),
     ]
     for template in templates_to_create:
         existing_template = await get_global_template(template.id)
