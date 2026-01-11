@@ -17,11 +17,13 @@ import {
   Tabs,
   Badge,
   Checkbox,
+  Tooltip,
+  ActionIcon,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus } from '@tabler/icons-react';
+import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus, IconInfoCircle, IconHelp } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -332,24 +334,48 @@ export function QuickCreatePage() {
             <Tabs.Panel value="create">
               <form onSubmit={form.onSubmit(handleSubmit)}>
                 <Stack gap="md">
-                  <TextInput
-                    size="lg"
-                    placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/elonmusk'}
-                    leftSection={getUrlTypeIcon(urlType)}
-                    {...form.getInputProps('url')}
-                    disabled={isProcessing}
-                    autoFocus
-                  />
+                  <Group gap="xs" align="flex-start">
+                    <TextInput
+                      size="lg"
+                      placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/elonmusk'}
+                      leftSection={getUrlTypeIcon(urlType)}
+                      {...form.getInputProps('url')}
+                      disabled={isProcessing}
+                      autoFocus
+                      style={{ flex: 1 }}
+                    />
+                    <Tooltip label={t('quickCreate.urlTooltip') || 'Supported URLs: Twitter/X profiles (x.com/username), Facebook pages (facebook.com/page), or any website URL'} multiline w={300}>
+                      <ActionIcon variant="subtle" color="gray" size="lg" mt={4}>
+                        <IconInfoCircle size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
 
-                  <SegmentedControl
-                    fullWidth
-                    data={[
-                      { label: `🎭 ${t('quickCreate.characterCard') || 'Character Card'}`, value: 'character' },
-                      { label: `🎭📚 ${t('quickCreate.characterLorebook') || 'Character + Lorebook'}`, value: 'character_lorebook' },
-                    ]}
-                    {...form.getInputProps('projectType')}
-                    disabled={isProcessing}
-                  />
+                  <Group gap="xs" align="flex-start">
+                    <SegmentedControl
+                      fullWidth
+                      data={[
+                        { label: `🎭 ${t('quickCreate.characterCard') || 'Character Card'}`, value: 'character' },
+                        { label: `🎭📚 ${t('quickCreate.characterLorebook') || 'Character + Lorebook'}`, value: 'character_lorebook' },
+                      ]}
+                      {...form.getInputProps('projectType')}
+                      disabled={isProcessing}
+                      style={{ flex: 1 }}
+                    />
+                    <Tooltip 
+                      label={
+                        form.values.projectType === 'character'
+                          ? (t('quickCreate.characterCardTooltip') || 'Generate only a character card with personality, description, and example messages')
+                          : (t('quickCreate.characterLorebookTooltip') || 'Generate both a character card and lorebook entries with detailed background information')
+                      } 
+                      multiline 
+                      w={300}
+                    >
+                      <ActionIcon variant="subtle" color="gray" size="lg" mt={4}>
+                        <IconInfoCircle size={18} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
 
                   {/* Progress display */}
                   {isProcessing && activeTab === 'create' && (
@@ -395,20 +421,22 @@ export function QuickCreatePage() {
 
                   {/* Advanced options toggle */}
                   <Group justify="center">
-                    <Anchor
-                      component="button"
-                      type="button"
-                      size="sm"
-                      c="dimmed"
-                      onClick={toggleAdvanced}
-                    >
-                      <Group gap={4}>
-                        <IconSettings size={14} />
-                        {advancedOpened 
-                          ? (t('quickCreate.hideAdvanced') || 'Hide Advanced Options')
-                          : (t('quickCreate.showAdvanced') || 'Show Advanced Options')}
-                      </Group>
-                    </Anchor>
+                    <Tooltip label={t('quickCreate.advancedOptionsTooltip') || 'Fine-tune API settings, model selection, and generation parameters'} multiline w={300}>
+                      <Anchor
+                        component="button"
+                        type="button"
+                        size="sm"
+                        c="dimmed"
+                        onClick={toggleAdvanced}
+                      >
+                        <Group gap={4}>
+                          <IconSettings size={14} />
+                          {advancedOpened 
+                            ? (t('quickCreate.hideAdvanced') || 'Hide Advanced Options')
+                            : (t('quickCreate.showAdvanced') || 'Show Advanced Options')}
+                        </Group>
+                      </Anchor>
+                    </Tooltip>
                   </Group>
 
                   <Collapse in={advancedOpened}>
@@ -432,7 +460,14 @@ export function QuickCreatePage() {
                   />
 
                   <div>
-                    <Text size="sm" fw={500} mb="xs">{t('quickCreate.temperature') || 'Temperature'}: {form.values.temperature}</Text>
+                    <Group gap="xs" mb="xs">
+                      <Text size="sm" fw={500}>{t('quickCreate.temperature') || 'Temperature'}: {form.values.temperature}</Text>
+                      <Tooltip label={t('quickCreate.temperatureTooltip') || 'Controls randomness: Lower (0-0.5) = more consistent, Higher (1-2) = more creative'} multiline w={300}>
+                        <ActionIcon variant="subtle" color="gray" size="sm">
+                          <IconInfoCircle size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
                         <Slider
                           min={0}
                           max={2}
@@ -449,9 +484,16 @@ export function QuickCreatePage() {
 
                       {(urlType === 'twitter' || urlType === 'facebook') && (
                         <div>
-                          <Text size="sm" fw={500} mb="xs">
-                            {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {form.values.tweetsLimit}
-                          </Text>
+                          <Group gap="xs" mb="xs">
+                            <Text size="sm" fw={500}>
+                              {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {form.values.tweetsLimit}
+                            </Text>
+                            <Tooltip label={t('quickCreate.tweetsLimitTooltip') || 'Number of recent posts/tweets to fetch from social media profiles. More posts = richer character data'} multiline w={300}>
+                              <ActionIcon variant="subtle" color="gray" size="sm">
+                                <IconInfoCircle size={14} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
                           <Slider
                             min={5}
                             max={50}
@@ -476,30 +518,55 @@ export function QuickCreatePage() {
             <Tabs.Panel value="append">
               <form onSubmit={appendForm.onSubmit(handleAppendSubmit)}>
                 <Stack gap="md">
-                  <Select
-                    size="lg"
-                    label={t('quickCreate.append.selectProject') || 'Select Project'}
-                    placeholder={t('quickCreate.append.selectProjectPlaceholder') || 'Choose a project to append to'}
-                    data={projectOptions}
-                    searchable
-                    {...appendForm.getInputProps('projectId')}
-                    disabled={isProcessing}
-                  />
+                  <div>
+                    <Group gap="xs" mb={4}>
+                      <Text size="sm" fw={500}>{t('quickCreate.append.selectProject') || 'Select Project'}</Text>
+                      <Tooltip label={t('quickCreate.appendTooltip') || 'Add new content to an existing project. The AI will intelligently merge new information without losing existing details.'} multiline w={300}>
+                        <ActionIcon variant="subtle" color="gray" size="sm">
+                          <IconInfoCircle size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                    <Select
+                      size="lg"
+                      placeholder={t('quickCreate.append.selectProjectPlaceholder') || 'Choose a project to append to'}
+                      data={projectOptions}
+                      searchable
+                      {...appendForm.getInputProps('projectId')}
+                      disabled={isProcessing}
+                    />
+                  </div>
 
-                  <TextInput
-                    size="lg"
-                    label={t('quickCreate.append.newUrlLabel') || 'New URL to Add'}
-                    placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/username'}
-                    leftSection={getUrlTypeIcon(appendUrlType)}
-                    {...appendForm.getInputProps('url')}
-                    disabled={isProcessing}
-                  />
+                  <div>
+                    <Group gap="xs" mb={4}>
+                      <Text size="sm" fw={500}>{t('quickCreate.append.newUrlLabel') || 'New URL to Add'}</Text>
+                      <Tooltip label={t('quickCreate.urlTooltip') || 'Supported URLs: Twitter/X profiles (x.com/username), Facebook pages (facebook.com/page), or any website URL'} multiline w={300}>
+                        <ActionIcon variant="subtle" color="gray" size="sm">
+                          <IconInfoCircle size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                    <TextInput
+                      size="lg"
+                      placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/username'}
+                      leftSection={getUrlTypeIcon(appendUrlType)}
+                      {...appendForm.getInputProps('url')}
+                      disabled={isProcessing}
+                    />
+                  </div>
 
                   {(appendUrlType === 'twitter' || appendUrlType === 'facebook') && (
                     <div>
-                      <Text size="sm" fw={500} mb="xs">
-                        {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {appendForm.values.tweetsLimit}
-                      </Text>
+                      <Group gap="xs" mb="xs">
+                        <Text size="sm" fw={500}>
+                          {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {appendForm.values.tweetsLimit}
+                        </Text>
+                        <Tooltip label={t('quickCreate.tweetsLimitTooltip') || 'Number of recent posts/tweets to fetch from social media profiles. More posts = richer character data'} multiline w={300}>
+                          <ActionIcon variant="subtle" color="gray" size="sm">
+                            <IconInfoCircle size={14} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
                       <Slider
                         min={5}
                         max={50}
@@ -517,12 +584,14 @@ export function QuickCreatePage() {
 
                   {/* Show lorebook option for character-only projects */}
                   {isCharacterOnly && (
-                    <Checkbox
-                      label={t('quickCreate.append.alsoGenerateLorebook') || 'Also generate Lorebook entries 📚'}
-                      description={t('quickCreate.append.alsoGenerateLorebookDesc') || 'Create lorebook entries even though this project doesn\'t have them yet'}
-                      {...appendForm.getInputProps('alsoGenerateLorebook', { type: 'checkbox' })}
-                      disabled={isProcessing}
-                    />
+                    <Tooltip label={t('quickCreate.alsoGenerateLorebookTooltip') || 'Even if your project was created as "Character Card" only, you can add lorebook entries now'} multiline w={300}>
+                      <Checkbox
+                        label={t('quickCreate.append.alsoGenerateLorebook') || 'Also generate Lorebook entries 📚'}
+                        description={t('quickCreate.append.alsoGenerateLorebookDesc') || 'Create lorebook entries even though this project doesn\'t have them yet'}
+                        {...appendForm.getInputProps('alsoGenerateLorebook', { type: 'checkbox' })}
+                        disabled={isProcessing}
+                      />
+                    </Tooltip>
                   )}
 
                   <Alert variant="light" color="blue" icon={<IconFilePlus size={16} />}>
