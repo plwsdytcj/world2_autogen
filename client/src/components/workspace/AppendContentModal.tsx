@@ -178,7 +178,7 @@ export function AppendContentModal({ opened, onClose, projectId, projectType }: 
 
         <TextInput
           label={t('append.urlLabel') || 'URL'}
-          placeholder="https://twitter.com/username or https://..."
+          placeholder={t('append.urlPlaceholder') || 'https://twitter.com/username or https://...'}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           disabled={isProcessing}

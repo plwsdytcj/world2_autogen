@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import type { CharacterCard, SingleResponse, UpdateCharacterCardPayload } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 // --- Fetch ---
 const fetchCharacterCard = async (projectId: string): Promise<SingleResponse<CharacterCard>> => {
@@ -31,21 +32,22 @@ const updateCharacterCard = async ({
 
 export const useUpdateCharacterCard = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: updateCharacterCard,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['characterCard', projectId] });
       notifications.show({
-        title: 'Character Saved',
-        message: 'Your changes have been saved successfully.',
+        title: t('character.savedTitle') || 'Character Saved',
+        message: t('character.savedMsg') || 'Your changes have been saved successfully.',
         color: 'green',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to save character: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('character.failedToSave') || 'Failed to save character'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },

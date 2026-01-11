@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/api';
 import { notifications } from '@mantine/notifications';
 import type { LorebookEntry, SingleResponse, UpdateLorebookEntryPayload } from '../types';
+import { useI18n } from '../i18n';
 
 const updateLorebookEntry = async ({
   entryId,
@@ -16,21 +17,22 @@ const updateLorebookEntry = async ({
 
 export const useUpdateLorebookEntry = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: updateLorebookEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries', projectId] });
       notifications.show({
-        title: 'Entry Updated',
-        message: 'The lorebook entry has been updated successfully.',
+        title: t('entries.updatedTitle') || 'Entry Updated',
+        message: t('entries.updatedMsg') || 'The lorebook entry has been updated successfully.',
         color: 'green',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to update entry: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('entries.failedToUpdate') || 'Failed to update entry'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },
@@ -43,22 +45,23 @@ const deleteLorebookEntry = async (entryId: string): Promise<void> => {
 
 export const useDeleteLorebookEntry = (projectId: string) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: deleteLorebookEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['entries', projectId] });
       notifications.show({
-        title: 'Entry Deleted',
-        message: 'The lorebook entry has been successfully deleted.',
+        title: t('entries.deletedTitle') || 'Entry Deleted',
+        message: t('entries.deletedMsg') || 'The lorebook entry has been successfully deleted.',
         color: 'green',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to delete entry: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('entries.failedToDelete') || 'Failed to delete entry'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },

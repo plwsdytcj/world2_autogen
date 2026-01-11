@@ -29,6 +29,7 @@ import apiClient, { quickCreateApi } from '../services/api';
 import { useCredentials } from '../hooks/useCredentials';
 import { useAuthStore } from '../stores/authStore';
 import { useProjects } from '../hooks/useProjects';
+import { useI18n } from '../i18n';
 
 interface QuickCreateFormValues {
   url: string;
@@ -90,6 +91,7 @@ function getUrlTypeIcon(type: 'twitter' | 'facebook' | 'web') {
 export function QuickCreatePage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useI18n();
   const [advancedOpened, { toggle: toggleAdvanced }] = useDisclosure(false);
   const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [fetchJobId, setFetchJobId] = useState<string | null>(null);
@@ -110,9 +112,9 @@ export function QuickCreatePage() {
     },
     validate: {
       url: (value) => {
-        if (!value.trim()) return 'URL is required';
+        if (!value.trim()) return t('quickCreate.urlRequired') || 'URL is required';
         // Basic URL validation
-        if (!value.includes('.')) return 'Please enter a valid URL';
+        if (!value.includes('.')) return t('quickCreate.urlInvalid') || 'Please enter a valid URL';
         return null;
       },
     },
@@ -126,10 +128,10 @@ export function QuickCreatePage() {
       alsoGenerateLorebook: false,
     },
     validate: {
-      projectId: (value) => (!value ? 'Please select a project' : null),
+      projectId: (value) => (!value ? (t('quickCreate.append.selectProjectRequired') || 'Please select a project') : null),
       url: (value) => {
-        if (!value.trim()) return 'URL is required';
-        if (!value.includes('.')) return 'Please enter a valid URL';
+        if (!value.trim()) return t('quickCreate.urlRequired') || 'URL is required';
+        if (!value.includes('.')) return t('quickCreate.urlInvalid') || 'Please enter a valid URL';
         return null;
       },
     },
@@ -161,14 +163,14 @@ export function QuickCreatePage() {
       setCreatedProjectId(data.data.project_id);
       setFetchJobId(data.data.fetch_job_id);
       notifications.show({
-        title: 'Started!',
-        message: `Creating ${data.data.project_name}...`,
+        title: t('quickCreate.started') || 'Started!',
+        message: (t('quickCreate.startedMsg') || 'Creating {name}...').replace('{name}', data.data.project_name),
         color: 'blue',
       });
     },
     onError: (error: Error & { response?: { data?: { detail?: string } } }) => {
       notifications.show({
-        title: 'Error',
+        title: t('quickCreate.error') || 'Error',
         message: error.response?.data?.detail || error.message,
         color: 'red',
       });
@@ -188,14 +190,14 @@ export function QuickCreatePage() {
       setCreatedProjectId(data.project_id);
       setFetchJobId(data.fetch_job_id);
       notifications.show({
-        title: 'Appending Content',
+        title: t('append.started') || 'Appending Content',
         message: data.message,
         color: 'blue',
       });
     },
     onError: (error: Error & { response?: { data?: { detail?: string } } }) => {
       notifications.show({
-        title: 'Error',
+        title: t('quickCreate.error') || 'Error',
         message: error.response?.data?.detail || error.message,
         color: 'red',
       });
@@ -228,8 +230,8 @@ export function QuickCreatePage() {
         project_id: createdProjectId,
       }).then(() => {
         notifications.show({
-          title: 'Generating Character Card',
-          message: 'Content fetched! Now generating character card...',
+          title: t('quickCreate.generatingCharacterCardNotification') || 'Generating Character Card',
+          message: t('quickCreate.contentFetchedNotification') || 'Content fetched! Now generating character card...',
           color: 'blue',
         });
         // Navigate to project page to see progress
@@ -238,8 +240,8 @@ export function QuickCreatePage() {
         }, 1500);
       }).catch((err) => {
         notifications.show({
-          title: 'Error',
-          message: err.response?.data?.detail || 'Failed to start character generation',
+          title: t('quickCreate.error') || 'Error',
+          message: err.response?.data?.detail || (t('quickCreate.failedToStartGeneration') || 'Failed to start character generation'),
           color: 'red',
         });
       });
@@ -283,9 +285,9 @@ export function QuickCreatePage() {
         <Paper p="xl" radius="md" withBorder>
           <Stack align="center" gap="md">
             <IconRocket size={48} stroke={1.5} color="var(--mantine-color-pink-5)" />
-            <Title order={2}>Quick Create</Title>
+            <Title order={2}>{t('quickCreate.title') || 'Quick Create'}</Title>
             <Text c="dimmed" ta="center">
-              Generate character cards from Twitter, Facebook, or any URL in seconds.
+              {t('quickCreate.signInPrompt') || 'Generate character cards from Twitter, Facebook, or any URL in seconds.'}
             </Text>
             <Button
               component="a"
@@ -293,7 +295,7 @@ export function QuickCreatePage() {
               size="lg"
               leftSection={<IconRocket size={20} />}
             >
-              Sign in to Get Started
+              {t('quickCreate.signInButton') || 'Sign in to Get Started'}
             </Button>
           </Stack>
         </Paper>
@@ -306,9 +308,9 @@ export function QuickCreatePage() {
       <Stack gap="lg">
         <div style={{ textAlign: 'center' }}>
           <IconRocket size={48} stroke={1.5} color="var(--mantine-color-pink-5)" />
-          <Title order={1} mt="sm">Quick Create</Title>
+          <Title order={1} mt="sm">{t('quickCreate.title') || 'Quick Create'}</Title>
           <Text c="dimmed" size="lg">
-            Paste a URL → Get a character card
+            {t('quickCreate.subtitle') || 'Paste a URL → Get a character card'}
           </Text>
         </div>
 
@@ -316,10 +318,10 @@ export function QuickCreatePage() {
           <Tabs value={activeTab} onChange={setActiveTab}>
             <Tabs.List grow mb="md">
               <Tabs.Tab value="create" leftSection={<IconPlus size={16} />}>
-                New Project
+                {t('quickCreate.tabNewProject') || 'New Project'}
               </Tabs.Tab>
               <Tabs.Tab value="append" leftSection={<IconFilePlus size={16} />}>
-                Append to Existing
+                {t('quickCreate.tabAppend') || 'Append to Existing'}
                 {projectOptions.length > 0 && (
                   <Badge size="xs" ml={6} variant="light">{projectOptions.length}</Badge>
                 )}
@@ -332,7 +334,7 @@ export function QuickCreatePage() {
                 <Stack gap="md">
                   <TextInput
                     size="lg"
-                    placeholder="https://x.com/elonmusk"
+                    placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/elonmusk'}
                     leftSection={getUrlTypeIcon(urlType)}
                     {...form.getInputProps('url')}
                     disabled={isProcessing}
@@ -342,8 +344,8 @@ export function QuickCreatePage() {
                   <SegmentedControl
                     fullWidth
                     data={[
-                      { label: '🎭 Character Card', value: 'character' },
-                      { label: '🎭📚 Character + Lorebook', value: 'character_lorebook' },
+                      { label: `🎭 ${t('quickCreate.characterCard') || 'Character Card'}`, value: 'character' },
+                      { label: `🎭📚 ${t('quickCreate.characterLorebook') || 'Character + Lorebook'}`, value: 'character_lorebook' },
                     ]}
                     {...form.getInputProps('projectType')}
                     disabled={isProcessing}
@@ -359,11 +361,11 @@ export function QuickCreatePage() {
                           <div className="animate-spin" style={{ width: 16, height: 16 }}>⏳</div>
                         )}
                         <Text size="sm">
-                          {!jobStatus && 'Starting...'}
-                          {jobStatus?.data?.status === 'pending' && 'Waiting...'}
-                          {jobStatus?.data?.status === 'in_progress' && 'Fetching content...'}
-                          {jobStatus?.data?.status === 'completed' && 'Generating character card...'}
-                          {jobStatus?.data?.status === 'failed' && 'Failed'}
+                          {!jobStatus && (t('quickCreate.starting') || 'Starting...')}
+                          {jobStatus?.data?.status === 'pending' && (t('quickCreate.waiting') || 'Waiting...')}
+                          {jobStatus?.data?.status === 'in_progress' && (t('quickCreate.fetchingContent') || 'Fetching content...')}
+                          {jobStatus?.data?.status === 'completed' && (t('quickCreate.generatingCharacterCard') || 'Generating character card...')}
+                          {jobStatus?.data?.status === 'failed' && (t('common.failed') || 'Failed')}
                         </Text>
                       </Group>
                       <Progress 
@@ -386,7 +388,9 @@ export function QuickCreatePage() {
                     loading={isProcessing && activeTab === 'create'}
                     leftSection={!isProcessing && <IconRocket size={20} />}
                   >
-                    {isProcessing && activeTab === 'create' ? 'Processing...' : 'Generate'}
+                    {isProcessing && activeTab === 'create' 
+                      ? (t('quickCreate.processing') || 'Processing...') 
+                      : (t('quickCreate.generate') || 'Generate')}
                   </Button>
 
                   {/* Advanced options toggle */}
@@ -400,33 +404,35 @@ export function QuickCreatePage() {
                     >
                       <Group gap={4}>
                         <IconSettings size={14} />
-                        {advancedOpened ? 'Hide' : 'Show'} Advanced Options
+                        {advancedOpened 
+                          ? (t('quickCreate.hideAdvanced') || 'Hide Advanced Options')
+                          : (t('quickCreate.showAdvanced') || 'Show Advanced Options')}
                       </Group>
                     </Anchor>
                   </Group>
 
                   <Collapse in={advancedOpened}>
                     <Stack gap="md" pt="md">
-                      <Select
-                        label="API Credential"
-                        placeholder="Select credential"
-                        data={credentials?.map(c => ({
-                          value: c.id,
-                          label: `${c.name} (${c.provider_type})`,
-                        })) || []}
-                        {...form.getInputProps('credentialId')}
-                        disabled={isProcessing}
-                      />
+                  <Select
+                    label={t('quickCreate.apiCredential') || 'API Credential'}
+                    placeholder={t('quickCreate.selectCredential') || 'Select credential'}
+                    data={credentials?.map(c => ({
+                      value: c.id,
+                      label: `${c.name} (${c.provider_type})`,
+                    })) || []}
+                    {...form.getInputProps('credentialId')}
+                    disabled={isProcessing}
+                  />
 
-                      <TextInput
-                        label="Model Name"
-                        placeholder="google/gemini-2.0-flash-001"
-                        {...form.getInputProps('modelName')}
-                        disabled={isProcessing}
-                      />
+                  <TextInput
+                    label={t('quickCreate.modelName') || 'Model Name'}
+                    placeholder="google/gemini-2.0-flash-001"
+                    {...form.getInputProps('modelName')}
+                    disabled={isProcessing}
+                  />
 
-                      <div>
-                        <Text size="sm" fw={500} mb="xs">Temperature: {form.values.temperature}</Text>
+                  <div>
+                    <Text size="sm" fw={500} mb="xs">{t('quickCreate.temperature') || 'Temperature'}: {form.values.temperature}</Text>
                         <Slider
                           min={0}
                           max={2}
@@ -444,7 +450,7 @@ export function QuickCreatePage() {
                       {(urlType === 'twitter' || urlType === 'facebook') && (
                         <div>
                           <Text size="sm" fw={500} mb="xs">
-                            {urlType === 'twitter' ? 'Tweets' : 'Posts'} to fetch: {form.values.tweetsLimit}
+                            {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {form.values.tweetsLimit}
                           </Text>
                           <Slider
                             min={5}
@@ -472,8 +478,8 @@ export function QuickCreatePage() {
                 <Stack gap="md">
                   <Select
                     size="lg"
-                    label="Select Project"
-                    placeholder="Choose a project to append to"
+                    label={t('quickCreate.append.selectProject') || 'Select Project'}
+                    placeholder={t('quickCreate.append.selectProjectPlaceholder') || 'Choose a project to append to'}
                     data={projectOptions}
                     searchable
                     {...appendForm.getInputProps('projectId')}
@@ -482,8 +488,8 @@ export function QuickCreatePage() {
 
                   <TextInput
                     size="lg"
-                    label="New URL to Add"
-                    placeholder="https://x.com/username"
+                    label={t('quickCreate.append.newUrlLabel') || 'New URL to Add'}
+                    placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/username'}
                     leftSection={getUrlTypeIcon(appendUrlType)}
                     {...appendForm.getInputProps('url')}
                     disabled={isProcessing}
@@ -492,7 +498,7 @@ export function QuickCreatePage() {
                   {(appendUrlType === 'twitter' || appendUrlType === 'facebook') && (
                     <div>
                       <Text size="sm" fw={500} mb="xs">
-                        {appendUrlType === 'twitter' ? 'Tweets' : 'Posts'} to fetch: {appendForm.values.tweetsLimit}
+                        {t('quickCreate.tweetsLimit') || 'Posts to fetch'}: {appendForm.values.tweetsLimit}
                       </Text>
                       <Slider
                         min={5}
@@ -512,8 +518,8 @@ export function QuickCreatePage() {
                   {/* Show lorebook option for character-only projects */}
                   {isCharacterOnly && (
                     <Checkbox
-                      label="Also generate Lorebook entries 📚"
-                      description="Create lorebook entries even though this project doesn't have them yet"
+                      label={t('quickCreate.append.alsoGenerateLorebook') || 'Also generate Lorebook entries 📚'}
+                      description={t('quickCreate.append.alsoGenerateLorebookDesc') || 'Create lorebook entries even though this project doesn\'t have them yet'}
                       {...appendForm.getInputProps('alsoGenerateLorebook', { type: 'checkbox' })}
                       disabled={isProcessing}
                     />
@@ -522,11 +528,11 @@ export function QuickCreatePage() {
                   <Alert variant="light" color="blue" icon={<IconFilePlus size={16} />}>
                     <Text size="sm">
                       {selectedProject?.project_type === 'character_lorebook' ? (
-                        <>Append mode will <strong>add</strong> new content to your existing character card and lorebook without losing existing information.</>
+                        <>{t('quickCreate.append.infoWithLorebook') || 'Append mode will add new content to your existing character card and lorebook without losing existing information.'}</>
                       ) : appendForm.values.alsoGenerateLorebook ? (
-                        <>Will append to character card and <strong>create new</strong> lorebook entries.</>
+                        <>{t('quickCreate.append.infoCreateLorebook') || 'Will append to character card and create new lorebook entries.'}</>
                       ) : (
-                        <>Will only append to character card. Check the box above to also generate lorebook entries.</>
+                        <>{t('quickCreate.append.infoCharacterOnly') || 'Will only append to character card. Check the box above to also generate lorebook entries.'}</>
                       )}
                     </Text>
                   </Alert>
@@ -541,11 +547,11 @@ export function QuickCreatePage() {
                           <div className="animate-spin" style={{ width: 16, height: 16 }}>⏳</div>
                         )}
                         <Text size="sm">
-                          {!jobStatus && 'Starting...'}
-                          {jobStatus?.data?.status === 'pending' && 'Waiting...'}
-                          {jobStatus?.data?.status === 'in_progress' && 'Fetching new content...'}
-                          {jobStatus?.data?.status === 'completed' && 'Merging with existing card...'}
-                          {jobStatus?.data?.status === 'failed' && 'Failed'}
+                          {!jobStatus && (t('quickCreate.starting') || 'Starting...')}
+                          {jobStatus?.data?.status === 'pending' && (t('quickCreate.waiting') || 'Waiting...')}
+                          {jobStatus?.data?.status === 'in_progress' && (t('quickCreate.append.fetchingNewContent') || 'Fetching new content...')}
+                          {jobStatus?.data?.status === 'completed' && (t('quickCreate.append.mergingWithExisting') || 'Merging with existing card...')}
+                          {jobStatus?.data?.status === 'failed' && (t('common.failed') || 'Failed')}
                         </Text>
                       </Group>
                       <Progress 
@@ -555,7 +561,7 @@ export function QuickCreatePage() {
                       />
                       {jobStatus?.data?.status === 'failed' && (
                         <Alert color="red" icon={<IconAlertCircle size={16} />}>
-                          {jobStatus.data.error_message || 'An error occurred'}
+                          {jobStatus.data.error_message || (t('quickCreate.anErrorOccurred') || 'An error occurred')}
                         </Alert>
                       )}
                     </Stack>
@@ -571,10 +577,10 @@ export function QuickCreatePage() {
                     disabled={projectOptions.length === 0}
                   >
                     {projectOptions.length === 0
-                      ? 'No projects yet - create one first'
+                      ? (t('quickCreate.append.noProjects') || 'No projects yet - create one first')
                       : isProcessing && activeTab === 'append'
-                        ? 'Processing...'
-                        : 'Append Content'}
+                        ? (t('quickCreate.processing') || 'Processing...')
+                        : (t('quickCreate.append.appendContent') || 'Append Content')}
                   </Button>
                 </Stack>
               </form>

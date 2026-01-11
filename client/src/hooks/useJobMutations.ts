@@ -9,6 +9,7 @@ import type {
   GenerateCharacterCardPayload,
 } from '../types';
 import { notifications } from '@mantine/notifications';
+import { useI18n } from '../i18n';
 
 interface CreateJobForProjectPayload {
   project_id: string;
@@ -66,9 +67,10 @@ const useJobMutation = <
     | GenerateCharacterCardPayload,
 >(
   endpoint: string,
-  notificationTitle: string
+  notificationTitleKey: string
 ) => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: createJob<T>(endpoint),
@@ -80,16 +82,16 @@ const useJobMutation = <
       queryClient.invalidateQueries({ queryKey: ['sources', newJob.project_id] });
       queryClient.invalidateQueries({ queryKey: ['sourcesHierarchy', newJob.project_id] });
       notifications.show({
-        title: notificationTitle,
-        message: 'The background job has been started successfully.',
+        title: t(notificationTitleKey) || notificationTitleKey,
+        message: t('jobs.startedSuccessfully') || 'The background job has been started successfully.',
         color: 'blue',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to start job: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('jobs.failedToStart') || 'Failed to start job'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },
@@ -97,22 +99,22 @@ const useJobMutation = <
 };
 
 export const useGenerateSearchParamsJob = () =>
-  useJobMutation<CreateJobForProjectPayload>('generate-search-params', 'Search Parameter Generation Started');
+  useJobMutation<CreateJobForProjectPayload>('generate-search-params', 'jobs.searchParamsStarted');
 export const useDiscoverAndCrawlJob = () =>
-  useJobMutation<CreateJobForSourcePayload>('discover-and-crawl', 'Discovery & Crawl Started');
+  useJobMutation<CreateJobForSourcePayload>('discover-and-crawl', 'jobs.discoveryStarted');
 export const useProcessProjectEntriesJob = () =>
-  useJobMutation<ProcessProjectEntriesPayload>('process-project-entries', 'Lorebook Generation Started');
-export const useRescanLinksJob = () => useJobMutation<CreateJobForSourcePayload>('rescan-links', 'Link Rescan Started');
+  useJobMutation<ProcessProjectEntriesPayload>('process-project-entries', 'jobs.lorebookGenerationStarted');
+export const useRescanLinksJob = () => useJobMutation<CreateJobForSourcePayload>('rescan-links', 'jobs.linkRescanStarted');
 
 // Character Jobs
 export const useFetchContentJob = () =>
-  useJobMutation<CreateJobForSourcePayload>('fetch-content', 'Content Fetching Started');
+  useJobMutation<CreateJobForSourcePayload>('fetch-content', 'jobs.contentFetchingStarted');
 export const useGenerateCharacterJob = () =>
-  useJobMutation<GenerateCharacterCardPayload>('generate-character', 'Character Generation Started');
+  useJobMutation<GenerateCharacterCardPayload>('generate-character', 'jobs.characterGenerationStarted');
 export const useRegenerateFieldJob = () =>
-  useJobMutation<RegenerateCharacterFieldPayload>('regenerate-field', 'Field Regeneration Started');
+  useJobMutation<RegenerateCharacterFieldPayload>('regenerate-field', 'jobs.fieldRegenerationStarted');
 export const useGenerateLorebookEntriesJob = () =>
-  useJobMutation<GenerateCharacterCardPayload>('generate-lorebook-entries', 'Lorebook Generation Started');
+  useJobMutation<GenerateCharacterCardPayload>('generate-lorebook-entries', 'jobs.lorebookGenerationStarted');
 
 // The confirm-links job for the confirmation step.
 interface ConfirmLinksPayload {
@@ -126,6 +128,7 @@ const createConfirmLinksJob = async (payload: ConfirmLinksPayload): Promise<Sing
 
 export const useConfirmLinksJob = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   return useMutation({
     mutationFn: createConfirmLinksJob,
     onSuccess: (response) => {
@@ -135,16 +138,16 @@ export const useConfirmLinksJob = () => {
       queryClient.invalidateQueries({ queryKey: ['project', newJob.project_id] });
       queryClient.invalidateQueries({ queryKey: ['links', newJob.project_id] });
       notifications.show({
-        title: 'Link Confirmation Started',
-        message: 'The selected links are being confirmed and saved to the project.',
+        title: t('jobs.linkConfirmationStarted') || 'Link Confirmation Started',
+        message: t('jobs.linkConfirmationMsg') || 'The selected links are being confirmed and saved to the project.',
         color: 'blue',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to confirm links: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('jobs.failedToConfirmLinks') || 'Failed to confirm links'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },
@@ -158,6 +161,7 @@ const cancelJob = async (jobId: string): Promise<SingleResponse<BackgroundJob>> 
 
 export const useCancelJob = () => {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   return useMutation({
     mutationFn: cancelJob,
@@ -166,16 +170,16 @@ export const useCancelJob = () => {
       queryClient.invalidateQueries({ queryKey: ['jobs', projectId] });
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       notifications.show({
-        title: 'Cancellation Requested',
-        message: 'The job cancellation request has been sent.',
+        title: t('jobs.cancellationRequested') || 'Cancellation Requested',
+        message: t('jobs.cancellationRequestedMsg') || 'The job cancellation request has been sent.',
         color: 'yellow',
       });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       notifications.show({
-        title: 'Error',
-        message: `Failed to cancel job: ${error.response?.data?.detail || error.message}`,
+        title: t('common.error') || 'Error',
+        message: `${t('jobs.failedToCancel') || 'Failed to cancel job'}: ${error.response?.data?.detail || error.message}`,
         color: 'red',
       });
     },
