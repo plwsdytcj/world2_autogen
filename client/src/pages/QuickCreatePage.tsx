@@ -23,7 +23,7 @@ import {
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus, IconInfoCircle, IconHelp } from '@tabler/icons-react';
+import { IconRocket, IconSettings, IconBrandX, IconBrandFacebook, IconWorld, IconCheck, IconAlertCircle, IconPlus, IconFilePlus, IconInfoCircle } from '@tabler/icons-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
