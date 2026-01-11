@@ -109,7 +109,7 @@ export function CredentialsPage() {
 
         {error && <Text color="red">{t('credentials.loadFailed')}: {error.message}</Text>}
 
-        <Table striped highlightOnHover>
+        <Table striped highlightOnHover data-tour="credentials-table">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>{t('common.name')}</Table.Th>

@@ -133,7 +133,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
         sourceId={sourceToDebugId}
       />
       <Stack>
-        <Group justify="space-between">
+        <Group justify="space-between" data-tour="sources-section">
           <Group gap="xs">
             <Title order={4}>{t('character.contextSources') || 'Context Sources'}</Title>
             <Tooltip 
@@ -160,6 +160,7 @@ export function CharacterSources({ project, selectedSourceIds, setSelectedSource
                   size="xs"
                   variant="light"
                   color="green"
+                  data-tour="append-button"
                 >
                   {t('append.buttonLabel') || 'Append Content'}
                 </Button>

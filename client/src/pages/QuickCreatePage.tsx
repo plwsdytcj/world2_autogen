@@ -469,6 +469,7 @@ export function QuickCreatePage() {
                     })) || []}
                     {...form.getInputProps('credentialId')}
                     disabled={isProcessing}
+                    data-tour="credential-select"
                   />
 
                   <TextInput
@@ -476,6 +477,7 @@ export function QuickCreatePage() {
                     placeholder="google/gemini-2.0-flash-001"
                     {...form.getInputProps('modelName')}
                     disabled={isProcessing}
+                    data-tour="model-name"
                   />
 
                   <div>
@@ -498,6 +500,7 @@ export function QuickCreatePage() {
                           ]}
                           {...form.getInputProps('temperature')}
                           disabled={isProcessing}
+                          data-tour="temperature"
                         />
                       </div>
 
@@ -553,6 +556,7 @@ export function QuickCreatePage() {
                       searchable
                       {...appendForm.getInputProps('projectId')}
                       disabled={isProcessing}
+                      data-tour="append-project"
                     />
                   </div>
 
@@ -571,6 +575,7 @@ export function QuickCreatePage() {
                       leftSection={getUrlTypeIcon(appendUrlType)}
                       {...appendForm.getInputProps('url')}
                       disabled={isProcessing}
+                      data-tour="append-url"
                     />
                   </div>
 
@@ -663,6 +668,7 @@ export function QuickCreatePage() {
                     loading={isProcessing && activeTab === 'append'}
                     leftSection={!isProcessing && <IconFilePlus size={20} />}
                     disabled={projectOptions.length === 0}
+                    data-tour="append-submit"
                   >
                     {projectOptions.length === 0
                       ? (t('quickCreate.append.noProjects') || 'No projects yet - create one first')

@@ -10,7 +10,7 @@ import { useI18n } from '../../i18n';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { useAuthStore } from '../../stores/authStore';
 import { useTourStore } from '../../stores/tourStore';
-import { getQuickCreateTourSteps, getProjectsTourSteps, getCredentialsTourSteps } from '../../tours/quickCreateTour';
+import { getQuickCreateTourSteps, getProjectsTourSteps, getCredentialsTourSteps, getCharacterTourSteps } from '../../tours/quickCreateTour';
 
 interface AppInfo {
   current_version: string;
@@ -55,9 +55,9 @@ export function AppLayout() {
       resetTour('credentials');
       startTour('credentials', getCredentialsTourSteps(t));
     } else if (pathname.startsWith('/projects/')) {
-      // Character workspace - we can add tour later
-      resetTour('quick-create');
-      startTour('quick-create', getQuickCreateTourSteps(t));
+      // Character workspace
+      resetTour('character');
+      startTour('character', getCharacterTourSteps(t));
     } else {
       // Default to quick create tour
       resetTour('quick-create');

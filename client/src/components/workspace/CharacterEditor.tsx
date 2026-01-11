@@ -218,7 +218,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
             contentType="character"
             defaultFormat="png"
           />
-          <Group justify="space-between">
+          <Group justify="space-between" data-tour="character-editor">
             <Title order={4}>{t('character.title')}</Title>
             <Group>
               <Button
@@ -229,6 +229,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 disabled={!canGenerate || isGenerationJobActive}
                 loading={isGenerationJobActive}
                 title={!canGenerate ? 'Select at least one fetched source to enable generation.' : ''}
+                data-tour="generate-character"
               >
                 {t('btn.generate')}
               </Button>
@@ -238,6 +239,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 variant="default"
                 disabled={!form.isDirty()}
                 loading={updateCardMutation.isPending}
+                data-tour="save-character"
               >
                 {t('btn.save')}
               </Button>
@@ -247,6 +249,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 onClick={handleExport}
                 loading={isDownloading}
                 disabled={!characterCardResponse?.data.name}
+                data-tour="export-card"
               >
                 {t('btn.exportCard')}
               </Button>
@@ -256,6 +259,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 onClick={handleExportJson}
                 loading={isDownloadingJson}
                 disabled={!characterCardResponse?.data.name}
+                data-tour="export-json"
               >
                 {t('btn.exportJson')}
               </Button>
@@ -263,6 +267,7 @@ export function CharacterEditor({ project, selectedSourceIds }: CharacterEditorP
                 variant="default"
                 onClick={() => setExportMobileOpened(true)}
                 disabled={!characterCardResponse?.data.name}
+                data-tour="export-mobile"
               >
                 {t('btn.exportMobile')}
               </Button>

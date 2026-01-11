@@ -30,7 +30,7 @@ export function ProductTour() {
     }
 
     const rect = element.getBoundingClientRect();
-    const padding = 8;
+    const padding = 12;
 
     setTargetRect({
       top: rect.top - padding + window.scrollY,
@@ -40,8 +40,8 @@ export function ProductTour() {
     });
 
     // Calculate popover position
-    const popoverWidth = 340;
-    const popoverHeight = 180;
+    const popoverWidth = 420;
+    const popoverHeight = 220;
     const placement = currentStepData.placement || 'bottom';
 
     let top = 0;
@@ -125,10 +125,10 @@ export function ProductTour() {
               left: targetRect.left,
               width: targetRect.width,
               height: targetRect.height,
-              border: '4px solid var(--mantine-color-pink-5)',
-              borderRadius: '8px',
-              boxShadow: '0 0 0 6px rgba(236, 72, 153, 0.35), 0 10px 30px rgba(0,0,0,0.35)',
-              background: 'rgba(236, 72, 153, 0.15)',
+              border: '6px solid var(--mantine-color-pink-5)',
+              borderRadius: 10,
+              boxShadow: '0 0 0 8px rgba(236, 72, 153, 0.35), 0 12px 36px rgba(0,0,0,0.4)',
+              background: 'rgba(236, 72, 153, 0.2)',
               pointerEvents: 'none',
             }}
           />
@@ -138,36 +138,36 @@ export function ProductTour() {
       {/* Popover */}
       <Paper
         shadow="xl"
-        p="md"
-        radius="md"
+        p="lg"
+        radius="lg"
         style={{
           position: 'absolute',
           top: popoverPosition.top,
           left: popoverPosition.left,
-          width: 340,
+          width: 420,
           zIndex: 9999,
           border: '1px solid var(--mantine-color-gray-3)',
         }}
       >
-        <Group justify="space-between" mb="xs">
-          <Badge size="sm" color="pink" variant="filled">
+        <Group justify="space-between" mb="sm">
+          <Badge size="md" color="pink" variant="filled">
             {currentStep + 1} / {steps.length}
           </Badge>
-          <CloseButton onClick={closeTour} size="sm" />
+          <CloseButton onClick={closeTour} size="md" />
         </Group>
 
-        <Text fw={600} size="lg" mb="xs">
+        <Text fw={700} size="xl" mb="sm">
           {currentStepData.title}
         </Text>
 
-        <Text size="sm" c="dimmed" mb="md" style={{ whiteSpace: 'pre-line' }}>
+        <Text size="md" c="dimmed" mb="lg" style={{ whiteSpace: 'pre-line', lineHeight: 1.5 }}>
           {currentStepData.content}
         </Text>
 
         <Group justify="space-between">
           <Button
             variant="subtle"
-            size="xs"
+            size="sm"
             onClick={skipTour}
             c="dimmed"
           >
@@ -177,16 +177,16 @@ export function ProductTour() {
           <Group gap="xs">
             <Button
               variant="default"
-              size="sm"
-              leftSection={<IconChevronLeft size={16} />}
+              size="md"
+              leftSection={<IconChevronLeft size={18} />}
               onClick={prevStep}
               disabled={currentStep === 0}
             >
               {t('tour.prev') || 'Previous'}
             </Button>
             <Button
-              size="sm"
-              rightSection={currentStep < steps.length - 1 ? <IconChevronRight size={16} /> : null}
+              size="md"
+              rightSection={currentStep < steps.length - 1 ? <IconChevronRight size={18} /> : null}
               onClick={nextStep}
             >
               {currentStep < steps.length - 1 
