@@ -349,7 +349,7 @@ export function QuickCreatePage() {
             <Tabs.Panel value="create">
               <form onSubmit={form.onSubmit(handleSubmit)}>
                 <Stack gap="md">
-                  <Group gap="xs" align="flex-start" data-tour="url-input">
+                  <Group gap="xs" align="flex-start">
                     <TextInput
                       size="lg"
                       placeholder={t('quickCreate.urlPlaceholder') || 'https://x.com/elonmusk'}
@@ -358,6 +358,7 @@ export function QuickCreatePage() {
                       disabled={isProcessing}
                       autoFocus
                       style={{ flex: 1 }}
+                      data-tour="url-input"
                     />
                     <Tooltip label={t('quickCreate.urlTooltip') || 'Supported URLs: Twitter/X profiles (x.com/username), Facebook pages (facebook.com/page), or any website URL'} multiline w={300}>
                       <ActionIcon variant="subtle" color="gray" size="lg" mt={4}>
@@ -366,7 +367,7 @@ export function QuickCreatePage() {
                     </Tooltip>
                   </Group>
 
-                  <Group gap="xs" align="flex-start" data-tour="project-type">
+                  <Group gap="xs" align="flex-start">
                     <SegmentedControl
                       fullWidth
                       data={[
@@ -376,6 +377,7 @@ export function QuickCreatePage() {
                       {...form.getInputProps('projectType')}
                       disabled={isProcessing}
                       style={{ flex: 1 }}
+                      data-tour="project-type"
                     />
                     <Tooltip 
                       label={
@@ -436,7 +438,7 @@ export function QuickCreatePage() {
                   </Button>
 
                   {/* Advanced options toggle */}
-                  <Group justify="center" data-tour="advanced-options">
+                  <Group justify="center">
                     <Tooltip label={t('quickCreate.advancedOptionsTooltip') || 'Fine-tune API settings, model selection, and generation parameters'} multiline w={300}>
                       <Anchor
                         component="button"
@@ -444,6 +446,7 @@ export function QuickCreatePage() {
                         size="sm"
                         c="dimmed"
                         onClick={toggleAdvanced}
+                        data-tour="advanced-options"
                       >
                         <Group gap={4}>
                           <IconSettings size={14} />
@@ -676,4 +679,3 @@ export function QuickCreatePage() {
     </Container>
   );
 }
-

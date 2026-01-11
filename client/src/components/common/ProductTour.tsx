@@ -106,40 +106,15 @@ export function ProductTour() {
           pointerEvents: 'none',
         }}
       >
-        {/* Dark overlay with cutout */}
-        <svg
+        {/* Solid dim overlay (no cutout) */}
+        <Box
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(2px)',
           }}
-        >
-          <defs>
-            <mask id="tour-mask">
-              <rect x="0" y="0" width="100%" height="100%" fill="white" />
-              {targetRect && (
-                <rect
-                  x={targetRect.left}
-                  y={targetRect.top}
-                  width={targetRect.width}
-                  height={targetRect.height}
-                  rx="8"
-                  fill="black"
-                />
-              )}
-            </mask>
-          </defs>
-          <rect
-            x="0"
-            y="0"
-            width="100%"
-            height="100%"
-            fill="rgba(0, 0, 0, 0.6)"
-            mask="url(#tour-mask)"
-          />
-        </svg>
+        />
 
         {/* Highlight border */}
         {targetRect && (
@@ -150,9 +125,10 @@ export function ProductTour() {
               left: targetRect.left,
               width: targetRect.width,
               height: targetRect.height,
-              border: '3px solid var(--mantine-color-pink-5)',
+              border: '4px solid var(--mantine-color-pink-5)',
               borderRadius: '8px',
-              boxShadow: '0 0 0 4px rgba(236, 72, 153, 0.3)',
+              boxShadow: '0 0 0 6px rgba(236, 72, 153, 0.35), 0 10px 30px rgba(0,0,0,0.35)',
+              background: 'rgba(236, 72, 153, 0.15)',
               pointerEvents: 'none',
             }}
           />
@@ -223,4 +199,3 @@ export function ProductTour() {
     </Portal>
   );
 }
-

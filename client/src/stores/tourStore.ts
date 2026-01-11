@@ -40,11 +40,7 @@ export const useTourStore = create<TourState>()(
       steps: [],
 
       startTour: (tourId: string, steps: TourStep[]) => {
-        const { completedTours } = get();
-        // Don't start if already completed (unless reset)
-        if (completedTours.includes(tourId)) {
-          return;
-        }
+        // Always allow (re)starting a tour. Persisted completion is informational only.
         set({
           isOpen: true,
           currentStep: 0,
@@ -116,4 +112,3 @@ export const useTourStore = create<TourState>()(
     }
   )
 );
-
